@@ -77,3 +77,8 @@ No hay código que compilar ni probar en esta tarea.
   coherencia fase/carpeta, el índice y los enlaces se revisan a mano por ahora.
 - Los datos de las entradas 001 y 002 son retroactivos: no consta qué verificaciones se corrieron
   en su momento.
+
+---
+
+**Nota (2026-11-16):** el flujo con rama de fase (`fase/N-…`) descrito en esta entrada se reemplazó
+por `develop → tarea/N.M` (entrada 004). Lo escrito aquí describe lo que se decidió entonces.

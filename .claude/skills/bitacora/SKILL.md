@@ -5,7 +5,7 @@ description: Escribe o actualiza la entrada de bitácora (docs/bitacora/fase-N/)
 
 # bitacora
 
-Cada tarea (una rama `tarea/N.M-<tema>` → `fase/N-…`) tiene **una** entrada en
+Cada tarea (una rama `tarea/N.M-<tema>` → `develop`) tiene **una** entrada en
 `docs/bitacora/fase-N/NNN-<tema>.md`, que viaja en el mismo commit que el cambio. Formato y
 reglas: `docs/bitacora/README.md`.
 
@@ -29,7 +29,7 @@ El orquestador convierte esos bloques en **una** entrada coherente (no los pega 
 ## Pasos
 
 1. **Fase, número y nombre.** Si la rama ya tiene su entrada
-   (`git diff --name-only <fase> -- docs/bitacora/`), actualízala; nunca agregues una segunda.
+   (`git diff --name-only develop -- docs/bitacora/`), actualízala; nunca agregues una segunda.
    Si no: la fase es la de la rama (`tarea/4.2-…` → `fase-4`); el número es el siguiente al mayor
    del índice (global, no se reinicia); el tema es el de la rama sin el `N.M-`.
 2. **Contenido**, con estas fuentes:
@@ -37,7 +37,7 @@ El orquestador convierte esos bloques en **una** entrada coherente (no los pega 
    - **Motivación:** problema → daño real.
    - **Diseño técnico:** decisiones con su porqué y alternativas descartadas; indica cuáles tomó el
      autor. Aquí va la historia que no debe quedar en comentarios del código.
-   - **Archivos:** `git diff --stat <fase>` y una línea por archivo.
+   - **Archivos:** `git diff --stat develop` y una línea por archivo.
    - **Cómo verificar:** comandos que de verdad se corrieron, con su resultado; los que no se
      corrieron, dicho así.
    - **Pendientes:** lo que quedó fuera; si toca el plan de la fase, que coincida.
