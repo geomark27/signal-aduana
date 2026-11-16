@@ -220,53 +220,6 @@ pub async fn leer_horas(f: &Fuente, claves: &[String], desde_ms: i64, yo: Option
     Ok(ResultadoHoras { por_clave, fallidas, error: ultimo.map(|e| e.to_string()) })
 }
 
-/// Lo que hace la interfaz al cargar (sin documentos ni PR): tareas + horas propias desde el lunes de
-/// `hoy - 98 días` (instante 00:00 de ese lunes en UTC-5). Cada tarea queda con `worklogs`, `wlTotal` y,
-/// si `spent` era 0, `spent` = suma de sus registros. Devuelve el formato de entrada de `calcular_vista`.
-pub async fn cargar_para_resumen(
-    f: &Fuente,
-    yo: Option<&str>,
-    hoy: chrono::NaiveDate,
-) -> Resultado<Vec<serde_json::Map<String, Value>>> {
-    use chrono::{Datelike, Duration};
-
-    let tareas = cargar_tareas(f, yo).await?;
-    let mut tareas: Vec<serde_json::Map<String, Value>> = tareas
-        .iter()
-        .map(|t| match serde_json::to_value(t) {
-            Ok(Value::Object(m)) => Ok(m),
-            _ => Err(ErrorApp::Formato("tarea no serializable".into())),
-        })
-        .collect::<Resultado<_>>()?;
-
-    let atras = hoy - Duration::days(98);
-    let desde_lunes = atras - Duration::days(i64::from(atras.weekday().num_days_from_monday()));
-    let desde = desde_lunes.format("%Y-%m-%d").to_string();
-    let despues_ms = desde_lunes
-        .and_hms_opt(5, 0, 0)
-        .ok_or_else(|| ErrorApp::Formato("hora no válida".into()))?
-        .and_utc()
-        .timestamp_millis();
-
-    let claves = claves_con_horas(f, &desde).await?;
-    let horas = if claves.is_empty() { None } else { Some(leer_horas(f, &claves, despues_ms, yo).await?) };
-
-    for t in &mut tareas {
-        let clave = t.get("key").and_then(Value::as_str).unwrap_or_default().to_string();
-        let wl = match horas.as_ref().and_then(|h| h.por_clave.get(&clave)) {
-            Some(r) => serde_json::to_value(r).map_err(|e| ErrorApp::Formato(e.to_string()))?,
-            None => Value::Array(Vec::new()),
-        };
-        let suma: i64 = wl.as_array().map(|a| a.iter().filter_map(|w| w["s"].as_i64()).sum()).unwrap_or(0);
-        t.insert("wlTotal".into(), Value::from(wl.as_array().map_or(0, Vec::len)));
-        if t.get("spent").and_then(Value::as_i64).unwrap_or(0) == 0 {
-            t.insert("spent".into(), Value::from(suma));
-        }
-        t.insert("worklogs".into(), wl);
-    }
-    Ok(tareas)
-}
-
 /// Busca el «Documento de Despliegue» de cada tarea: primero en Confluence (por título) y, para las
 /// que no aparecen, en los enlaces remotos de la tarea. Devuelve `clave → url`.
 pub async fn buscar_documentos(f: &Fuente, claves: &[String]) -> Resultado<HashMap<String, String>> {
