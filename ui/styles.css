@@ -228,4 +228,21 @@ footer code{font-family:var(--mono);font-size:11.5px;background:var(--sunk);padd
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600;padding:9px 14px}
 .btn.primary:hover{filter:brightness(1.08)}
 .formerr{border:1px solid var(--crit);background:var(--crit-soft);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+/* preferencias */
+dialog{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:0;width:min(480px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto}
+dialog::backdrop{background:rgba(14,22,28,.55)}
+.prefs{display:grid;gap:14px;padding:20px 22px}
+.prefs h2{font:600 20px/1.2 var(--display);margin:0}
+.prefs p{margin:0}
+.prefs fieldset{border:0;margin:0;padding:0;display:grid;gap:12px;min-width:0}
+.prefs legend{padding:0;margin-bottom:2px}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{margin:3px 0 0;width:16px;height:16px;flex:none;accent-color:var(--accent)}
+.check input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.check span{display:grid;gap:1px}
+.check small{color:var(--muted);font-size:12px}
+.check:has(input:disabled),.field:has(input:disabled){opacity:.5;cursor:default}
+.field input[type="time"]{max-width:150px;font-family:var(--mono)}
+.pactions{display:flex;justify-content:flex-end;gap:8px}
+@media (max-width:520px){.prefs{padding:16px}}
 .simtag{justify-self:start;font-size:11px;font-weight:600;letter-spacing:.04em;padding:2px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}

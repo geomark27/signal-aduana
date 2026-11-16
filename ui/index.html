@@ -16,6 +16,7 @@
     <div class="sync">
       <span><span class="dot" id="syncDot"></span> <span id="syncText">Sin datos todavía</span></span>
       <button class="btn" id="refreshBtn" type="button" disabled hidden>Actualizar desde Jira</button>
+      <button class="btn" id="prefsBtn" type="button" aria-haspopup="dialog">Preferencias</button>
       <button class="btn" id="logoutBtn" type="button" hidden>Cerrar sesión</button>
     </div>
   </header>
@@ -100,6 +101,31 @@
   <footer id="trace"></footer>
   </div>
 </div>
+
+<dialog id="prefsDlg" aria-labelledby="prefsTitle">
+  <form class="prefs" id="prefsForm" novalidate>
+    <h2 id="prefsTitle">Preferencias</h2>
+    <p class="mini">Se guardan en este equipo; no dependen de tu cuenta de Jira y no se borran al cerrar sesión.</p>
+    <div class="notice" id="prefsSimNote" hidden>En modo simulado no se registra el inicio con Windows y los avisos salen marcados como [Simulado].</div>
+    <fieldset>
+      <legend class="label">Avisos de Windows</legend>
+      <label class="check"><input type="checkbox" id="prefAvisos"><span>Avisos activos<small>Te avisa si faltan horas al cierre de la jornada y si no hay conexión con Jira.</small></span></label>
+      <label class="field"><span class="label">Hora de cierre de la jornada (hora de Ecuador)</span>
+        <input type="time" id="prefHora" step="60"></label>
+      <label class="check"><input type="checkbox" id="prefLunes"><span>Resumen del lunes<small>El lunes te avisa si la semana pasada quedó incompleta.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Aplicación</legend>
+      <label class="check"><input type="checkbox" id="prefInicio"><span>Iniciar con Windows<small>Arranca oculta en la bandeja al iniciar sesión en el equipo.</small></span></label>
+      <label class="check"><input type="checkbox" id="prefBandeja"><span>Minimizar a la bandeja al cerrar<small>Cerrar la ventana la esconde; para salir usa «Salir» en el menú de la bandeja.</small></span></label>
+    </fieldset>
+    <div class="formerr" id="prefsError" role="alert" hidden></div>
+    <div class="pactions">
+      <button class="btn" id="prefsCancel" type="button">Cancelar</button>
+      <button class="btn primary" id="prefsSave" type="submit">Guardar</button>
+    </div>
+  </form>
+</dialog>
 <script src="app.js" defer></script>
 </body>
 </html>

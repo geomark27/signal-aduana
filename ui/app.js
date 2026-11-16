@@ -3,10 +3,41 @@ const JQL = "assignee = currentUser() OR worklogAuthor = currentUser() ORDER BY 
 const WEEK_TARGET = 40, DAY_TARGET = 8, TZ_OFFSET_H = -5; // Ecuador, sin horario de verano
 /* Feriados nacionales de Ecuador (días hábiles de descanso obligatorio). Cada persona puede marcar o desmarcar días con clic en «Horas por día». */
 const FERIADOS_BASE = ["2026-01-01","2026-02-16","2026-02-17","2026-04-03","2026-05-01","2026-05-25","2026-08-10","2026-10-09","2026-11-02","2026-11-03","2026-12-25","2027-01-01"];
-let feriadosExtra = {};
-try { feriadosExtra = JSON.parse(localStorage.getItem("spe.feriados") || "{}") || {}; } catch(e){}
+/* Preferencias del equipo (contrato E): viven en Rust (preferencias.toml), no en el navegador. `feriadosExtra` es lo que dibuja la vista. */
+const PREFS_DEFECTO = { avisos: { activos: true, horaCierre: "16:30", resumenLunes: true }, iniciarConWindows: false, minimizarABandeja: true, feriadosExtra: {} };
+let prefs = PREFS_DEFECTO, feriadosExtra = {}, prefsBusy = false, prefsNotice = "";
 function isFeriado(ymd){ return ymd in feriadosExtra ? feriadosExtra[ymd] : FERIADOS_BASE.includes(ymd); }
-function toggleFeriado(ymd){ feriadosExtra[ymd] = !isFeriado(ymd); if (feriadosExtra[ymd] === FERIADOS_BASE.includes(ymd)) delete feriadosExtra[ymd]; try { localStorage.setItem("spe.feriados", JSON.stringify(feriadosExtra)); } catch(e){} }
+function aplicarPrefs(p){ prefs = p; feriadosExtra = p.feriadosExtra || {}; }
+/* Guarda las preferencias completas (Rust las normaliza y devuelve como quedaron) y las aplica. */
+async function guardarPrefs(p){ aplicarPrefs(await invoke("guardar_preferencias", { preferencias: p })); }
+/* Marca o quita un feriado. No cambia nada en pantalla hasta que Rust confirma; si guardar falla, queda como estaba y se avisa en #notice. */
+async function toggleFeriado(ymd){
+  if (prefsBusy) return false;
+  const nuevo = { ...feriadosExtra }; nuevo[ymd] = !isFeriado(ymd); if (nuevo[ymd] === FERIADOS_BASE.includes(ymd)) delete nuevo[ymd];
+  prefsBusy = true;
+  try { await guardarPrefs({ ...prefs, feriadosExtra: nuevo }); }
+  catch(e){ prefsNotice = `No se pudo guardar el feriado: ${errText(e)}`; showNotice(prefsNotice); return false; }
+  finally { prefsBusy = false; }
+  if (prefsNotice){ if ($("notice").textContent === prefsNotice) showNotice(""); prefsNotice = ""; }
+  return true;
+}
+/* Migración única: los feriados que antes se guardaban en localStorage pasan a las preferencias (solo si estas vienen sin feriados). */
+async function migrarFeriados(){
+  const CLAVE = "spe.feriados", quitar = () => { try { localStorage.removeItem(CLAVE); } catch(e){} };
+  let raw = null; try { raw = localStorage.getItem(CLAVE); } catch(e){}
+  if (raw === null) return;
+  if (Object.keys(feriadosExtra).length){ quitar(); return; }
+  const viejos = {};
+  try { const o = JSON.parse(raw); if (o && typeof o === "object" && !Array.isArray(o)) for (const [k, v] of Object.entries(o)) if (/^\d{4}-\d{2}-\d{2}$/.test(k) && typeof v === "boolean") viejos[k] = v; } catch(e){}
+  if (!Object.keys(viejos).length){ quitar(); return; }
+  try { await guardarPrefs({ ...prefs, feriadosExtra: viejos }); quitar(); }
+  catch(e){ feriadosExtra = viejos; console.warn("No se pudieron migrar los feriados guardados en el navegador; se reintentará al abrir:", errText(e)); } /* la clave se conserva para el próximo arranque */
+}
+async function cargarPrefs(){
+  try { aplicarPrefs(await invoke("leer_preferencias")); }
+  catch(e){ console.warn("No se pudieron leer las preferencias:", errText(e)); return; }
+  await migrarFeriados();
+}
 let ME = null;
 const BOARD_COLORS = {"Tablero Kanban":"var(--b1)","Tablero AFO":"var(--b3)","Tablero DAI":"var(--b2)","Tablero ADN":"var(--b6)"};
 const PALETTE = ["var(--b1)","var(--b2)","var(--b3)","var(--b4)","var(--b5)","var(--b6)"];
@@ -296,7 +327,7 @@ function renderTrace(){
   const when = new Date(syncedAt);
   $("trace").innerHTML = `<div><b>Fuente:</b> ${issues.length} tareas y ${wl} registros de horas de Jira (proyectos ${[...new Set(issues.map(i=>i.projectName))].map(esc).join(", ")}). Tablero = tablero de Jira de donde viene la tarea: el del sprint si tiene sprint; Tablero ADN para el proyecto ADN; Tablero Kanban si cumple su filtro (proyectos GPS, APP, TLP, CTT, RPA y tipo Tarea o Levantamiento); si no, el backlog del tablero de su componente. El componente se muestra aparte. Semana laboral = lunes a viernes, hora de Ecuador; la meta es ${WEEK_TARGET} h menos ${DAY_TARGET} h por cada feriado nacional (puedes marcar o quitar feriados en la franja de días del resumen; se guarda en este equipo). Solo se cuentan tus propios registros de horas. Las horas y cierres de sábado o domingo no suman a la semana y se avisan aparte. Horas = tus propios registros de las últimas 14 semanas, leídos tarea por tarea desde Jira y asignados al día en que se inició el registro. Fechas: Inicio = cuándo debe iniciar, Vence = fecha de entrega, Fin desarrollo = cuándo se concluyó (si falta en una tarea finalizada, se usa su último cambio de estado). Documento de despliegue = página de Confluence titulada «Documento de Despliegue - CLAVE - …», buscada en Confluence y, si aún no aparece en el buscador, en los enlaces de la tarea en Jira; se revisan las tareas concluidas en las últimas 12 semanas y las que están en pruebas. Solo se exige a tareas con pull requests vinculados en Jira (panel de desarrollo); las tareas sin PR, como soporte o reuniones, no aplican. Si no se puede leer el panel de desarrollo, se excluyen por palabra: reuniones, capacitaciones, soporte, análisis y revisiones de tarea.</div>
   <div><b>Consulta:</b> <code>${esc(JQL)}</code></div>
-  <div>${source === "cache" ? "Datos guardados en este equipo, pendientes de actualizar" : simulado ? "Datos ficticios del modo simulado" : "Datos en vivo de Jira"} del ${when.toLocaleString("es-EC",{dateStyle:"medium",timeStyle:"short"})}. Los últimos datos cargados se guardan en este equipo para abrir más rápido y se borran al cerrar sesión; la app los actualiza sola cada 15 minutos mientras está abierta.</div>`;
+  <div>${source === "cache" ? "Datos guardados en este equipo, pendientes de actualizar" : simulado ? "Datos ficticios del modo simulado" : "Datos en vivo de Jira"} del ${when.toLocaleString("es-EC",{dateStyle:"medium",timeStyle:"short"})}. Los últimos datos cargados se guardan en este equipo para abrir más rápido y se borran al cerrar sesión; la app los actualiza sola cada 15 minutos mientras está abierta. Si la dejas en la bandeja de Windows, te avisa al cierre de la jornada si faltan horas y los lunes si la semana pasada quedó incompleta; puedes ajustarlo en «Preferencias».</div>`;
 }
 
 function paint(){
@@ -336,7 +367,7 @@ $("nextW").onclick = () => { if (weekKey >= mondayOf(hoyAct())) return; weekKey 
 $("todayW").onclick = () => { weekKey = mondayOf(hoyAct()); render(); };
 $("boardChips").onclick = e => { const b = e.target.closest("[data-b]"); if(!b) return; board = b.dataset.b; try{localStorage.setItem("spe.board",board)}catch(err){} render(); };
 $("weeklyChart").onclick = e => { const r = e.target.closest("[data-wk]"); if(r){ weekKey = r.dataset.wk; render(); } };
-$("hoursAlert").onclick = e => { const r = e.target.closest("[data-fer]"); if(r){ toggleFeriado(r.dataset.fer); render(); } };
+$("hoursAlert").onclick = async e => { const r = e.target.closest("[data-fer]"); if (r && await toggleFeriado(r.dataset.fer)) render(); };
 document.querySelector("thead").onclick = e => { const th = e.target.closest("[data-sort]"); if(!th) return; const k = th.dataset.sort; if (sortKey===k) sortDir*=-1; else { sortKey=k; sortDir = ["act","wk","spent","resDay","due","start"].includes(k)?-1:1; } repaint(); };
 
 /* ---------- datos: comandos de Tauri (Rust) ---------- */
@@ -559,10 +590,50 @@ document.addEventListener("click", e => {
   try { Promise.resolve(window.__TAURI__.opener.openUrl(a.href)).catch(() => {}); } catch(err){}
 });
 
+/* ---------- preferencias: panel ---------- */
+const prefsAvisosDependientes = () => { $("prefHora").disabled = $("prefLunes").disabled = !$("prefAvisos").checked; };
+function abrirPrefs(){
+  $("prefAvisos").checked = prefs.avisos.activos; $("prefHora").value = prefs.avisos.horaCierre; $("prefLunes").checked = prefs.avisos.resumenLunes;
+  $("prefInicio").checked = prefs.iniciarConWindows; $("prefBandeja").checked = prefs.minimizarABandeja;
+  prefsAvisosDependientes();
+  $("prefsSimNote").hidden = !simulado; $("prefsError").hidden = true; $("prefsSave").disabled = false;
+  if (!$("prefsDlg").open) $("prefsDlg").showModal();
+}
+function errorPrefs(msg){ $("prefsError").textContent = msg; $("prefsError").hidden = false; }
+$("prefsBtn").onclick = abrirPrefs;
+$("prefsCancel").onclick = () => $("prefsDlg").close();
+$("prefAvisos").onchange = prefsAvisosDependientes;
+$("prefsForm").onsubmit = async ev => {
+  ev.preventDefault();
+  if (prefsBusy) return;
+  const activos = $("prefAvisos").checked, hora = $("prefHora").value;
+  if (activos && !hora){ errorPrefs("Indica la hora de cierre de la jornada (HH:MM)."); return; }
+  const nuevas = { ...prefs, avisos: { activos, horaCierre: hora || prefs.avisos.horaCierre, resumenLunes: $("prefLunes").checked },
+    iniciarConWindows: $("prefInicio").checked, minimizarABandeja: $("prefBandeja").checked, feriadosExtra };
+  prefsBusy = true; $("prefsSave").disabled = true; $("prefsError").hidden = true;
+  try { await guardarPrefs(nuevas); $("prefsDlg").close(); }
+  catch(e){ errorPrefs(errText(e)); }
+  finally { prefsBusy = false; $("prefsSave").disabled = false; }
+};
+
+/* ---------- eventos de Rust (bandeja y monitor) ---------- */
+function escucharEventos(){
+  const listen = window.__TAURI__?.event?.listen; if (!listen) return;
+  const en = (nombre, fn) => { try { Promise.resolve(listen(nombre, fn)).catch(e => console.warn(`No se pudo escuchar ${nombre}:`, errText(e))); } catch(e){ console.warn(`No se pudo escuchar ${nombre}:`, errText(e)); } };
+  en("signal://actualizar", () => { if (sessionActive && !(busy && busyGen === gen)) refresh(true); });
+  en("signal://preferencias", async () => {
+    try { aplicarPrefs(await invoke("leer_preferencias")); } catch(e){ console.warn("No se pudieron releer las preferencias:", errText(e)); return; }
+    if ($("prefsDlg").open) $("prefInicio").checked = prefs.iniciarConWindows; /* lo que Rust cambia por su cuenta; no pisa lo que la persona está editando */
+    render(); /* los feriados pueden haber cambiado; sin tareas cargadas no hace nada */
+  });
+}
+
 /* ---------- arranque ---------- */
 weekKey = mondayOf(todayLocal());
 setSync("", "Sin datos todavía");
+escucharEventos();
 (async () => {
+  await cargarPrefs(); /* no requiere sesión y no lanza: las preferencias (feriados) deben estar antes de pedir la primera vista */
   try { const info = await invoke("restaurar_sesion"); if (info.conectado) enterApp(info); else showConnect(info); }
   catch(e){ showConnect(null, `No se pudo iniciar la aplicación: ${errText(e)}`); }
 })();
