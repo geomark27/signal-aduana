@@ -1,0 +1,15 @@
+{
+  "rama_base": "fase/4-bandeja-avisos",
+  "instrucciones": ["CLAUDE.md", "docs/PLAN-FASE-4.md", "docs/bitacora/README.md"],
+  "instalar": "",
+  "verificar_agente": [
+    "export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo test",
+    "export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo clippy --all-targets",
+    "node --check ui/app.js"
+  ],
+  "verificar_cierre": "export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo test && cargo clippy --all-targets && cargo build",
+  "build": "export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo build",
+  "fusionar": "git add -A && git commit -m \"Tarea: <id> <tema>\" && git push -u origin HEAD && gh pr create --base fase/4-bandeja-avisos --fill",
+  "comandos_denegados": ["cargo install*", "cargo publish*", "cargo tauri*"],
+  "archivos_orquestador": ["CLAUDE.md", ".claude/", "docs/bitacora/", "docs/PLAN-FASE-4.md"]
+}
