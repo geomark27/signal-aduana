@@ -18,6 +18,46 @@ en modo simulado con caché, actualización automática y fuentes locales; los c
 Fuera de alcance: firma de código del instalador, actualizaciones automáticas de la app, prueba con el
 Jira real (la hace el autor).
 
+## Estado al cierre (2026-11-16)
+
+La fase se ejecutó con un reparto distinto del de la tabla de abajo: la tarea 3 se dividió en cuatro y
+se sumaron tareas de normas y de cierre. El flujo de ramas pasó a `develop → tarea/N.M`, sin rama de
+fase (ver `CLAUDE.md`). El detalle de cada tarea, sus decisiones y lo que no se probó está en su
+entrada de `docs/bitacora/fase-4/`; el índice `docs/bitacora/README.md` es la fuente de verdad.
+
+| Tarea | Qué quedó hecho | Entrada |
+|---|---|---|
+| 4.1 | Preferencias, resumen y avisos en Rust (tarea 1 del plan) | 001 |
+| 4.2 | Interfaz de preferencias (tarea 2 del plan) | 002 |
+| 4.0 | Normas, bitácora y flujo de ramas (no estaba en el plan) | 003, 004 |
+| 4.3 | Monitor: ciclo de lectura, tooltip y avisos sin Tauri (tarea 3) | 005 |
+| 4.4 | Bandeja, cierre a la bandeja, una instancia y arranque oculto (tarea 3) | 006 |
+| 4.5 | Integración: monitor en marcha, notificaciones, inicio con Windows y ganchos de sesión (tarea 3) | 007 |
+| 4.6 | `docs/COMPILAR-WINDOWS.md` (tarea 3, punto 4) | 008 |
+| 4.7 | Este cierre, el arreglo del índice de la bitácora y el `Makefile` con los atajos del flujo (`make` lista todo) | 009 |
+| 4.8 | Aviso en la interfaz si falla «Iniciar con Windows» (en curso al escribir este cierre) | 010 |
+| 4.9 | `scripts/verificar-bitacora.sh` (en curso al escribir este cierre) | 011 |
+
+**Verificación.** Todo se hizo y se probó en WSL, en modo simulado. Última cuenta registrada: 135
+pruebas de la librería y 1 de paridad (reporte de la 4.5); el autor repite `cargo test`,
+`cargo clippy --all-targets` y `cargo build` al cerrar cada tarea.
+
+**No verificado todavía** (solo se puede en Windows; la lista de comprobación está en
+`docs/COMPILAR-WINDOWS.md`): ícono, menú y tooltip de la bandeja, cerrar a la bandeja con y sin la
+preferencia, segunda instancia, arranque con `--oculto`, registro real del inicio con Windows, los tres
+avisos de Windows, la migración de los feriados guardados en el navegador y el aspecto del panel de
+preferencias (la ventana nunca se vio funcionando).
+
+**Pendientes que quedan abiertos:**
+
+- Seguir la guía en un equipo Windows y resolver sus seis puntos «a verificar».
+- Falta una prueba directa de `cargar_para_resumen` y de algunos casos de `decidir` (hora de cierre
+  inválida, lunes con fecha de una semana anterior, lunes feriado); ver la entrada 001.
+- Los cambios de preferencias (hora de cierre, feriados) llegan al monitor en el siguiente ciclo, hasta
+  15 minutos después.
+- Si el ciclo del monitor entrara en pánico, su tarea terminaría sin reanudarse (entrada 007).
+- La publicación `develop → main` (PR con merge commit) y el número de versión los decide el autor.
+
 ## Reglas para todos los agentes
 
 Las 8 reglas de `docs/PLAN-FASE-1.md` (léelas allí): solo tus archivos; ninguna conexión a servicios
@@ -33,7 +73,7 @@ llevan el prefijo «[Simulado]». No dejes procesos de la app corriendo al termi
 |---|---|---|
 | 1 | `src/preferencias.rs`, `src/avisos.rs`, `src/resumen.rs` (nuevos), `src/jira/mod.rs`, `examples/volcar_simulado.rs`, `src/comandos.rs`, `src/lib.rs` (solo `mod` y registrar comandos), `src/sesion.rs` (solo si hace falta) | Primera ola |
 | 2 | `ui/app.js`, `ui/index.html`, `ui/styles.css` | Primera ola, en paralelo con la 1 |
-| 3 | `src/escritorio.rs` (nuevo), `src/lib.rs`, `src/main.rs`, `Cargo.toml`, `tauri.conf.json`, `capabilities/`, `docs/COMPILAR-WINDOWS.md` (nuevo) | Segunda ola, después de la 1 y la 2 |
+| 3 | `src/escritorio.rs` (nuevo), `src/lib.rs`, `src/main.rs`, `Cargo.toml`, `tauri.conf.json`, `capabilities/`, `docs/COMPILAR-WINDOWS.md` (nuevo) | Segunda ola, después de la 1 y la 2. **Hecha como las tareas 4.3 a 4.6** (ver «Estado al cierre») |
 
 ---
 
