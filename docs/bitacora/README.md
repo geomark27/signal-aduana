@@ -29,6 +29,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [007](./fase-4/007-integracion.md) | 4.5 Integración: monitor en marcha, avisos, inicio con Windows y ganchos de sesión | `tarea/4.5-integracion` | 2026-11-16 | `vigilancia.rs` (bucle de 15 min sin ciclos simultáneos) e `inicio.rs` (inicio con Windows según la preferencia; en simulado no toca el sistema); notificaciones reales, tooltip al cambiar de sesión y plugins `notification` y `autostart` |
 | [008](./fase-4/008-guia-windows.md) | 4.6 Guía para compilar, instalar y probar en Windows | `tarea/4.6-guia-windows` | 2026-11-16 | `docs/COMPILAR-WINDOWS.md`: requisitos, instalador, SmartScreen, modo simulado y real, lista de comprobación en Windows, datos y desinstalación; lo no confirmable queda «a verificar» |
 | [009](./fase-4/009-cierre-fase-4.md) | 4.7 Cierre de la fase 4 | `tarea/4.7-cierre-fase-4` | 2026-11-16 | Quita las marcas de conflicto que quedaron en este índice; `PLAN-FASE-4.md` con el reparto real (4.1 a 4.9), el estado y los pendientes; `Makefile` con los atajos del flujo para worktrees (`tarea`, `commit`, `ship`, `finish`, `prune`, `check`…) |
+| [010](./fase-4/010-aviso-inicio.md) | 4.8 Aviso si falla «Iniciar con Windows» | `tarea/4.8-aviso-inicio` | 2026-11-16 | Si se pide activar el inicio con Windows y vuelve apagado, el panel de preferencias lo explica y sigue abierto; si cambia por dentro con la interfaz activa, aviso en `#notice` |
 
 ## Formato de cada entrada
 
