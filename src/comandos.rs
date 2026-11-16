@@ -6,15 +6,19 @@ use std::future::Future;
 use std::sync::Arc;
 
 use serde_json::Value;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 use crate::cache::{self, Instantanea};
 use crate::dominio::{self, Entrada, Vista};
 use crate::error::{ErrorApp, Resultado};
+use crate::escritorio;
+use crate::inicio;
 use crate::jira::modelo::Tarea;
 use crate::jira::{self, ResultadoHoras};
+use crate::monitor;
 use crate::preferencias::{self, Preferencias};
 use crate::sesion::{self, Estado, InfoSesion, Sesion};
+use crate::vigilancia;
 
 /// Ejecuta una operación con la sesión activa y limpia la sesión si Jira rechaza el token.
 async fn con_sesion<T, F, Fut>(estado: &Estado, f: F) -> Resultado<T>
@@ -31,23 +35,32 @@ where
 }
 
 #[tauri::command]
-pub async fn restaurar_sesion(estado: State<'_, Estado>) -> Resultado<InfoSesion> {
-    Ok(sesion::restaurar(&estado).await)
+pub async fn restaurar_sesion(app: AppHandle, estado: State<'_, Estado>) -> Resultado<InfoSesion> {
+    let info = sesion::restaurar(&estado).await;
+    if info.conectado {
+        vigilancia::pedir_ciclo(&app);
+    }
+    Ok(info)
 }
 
 #[tauri::command]
 pub async fn iniciar_sesion(
+    app: AppHandle,
     estado: State<'_, Estado>,
     sitio: String,
     correo: String,
     token: String,
 ) -> Resultado<InfoSesion> {
-    sesion::iniciar(&estado, &sitio, &correo, &token).await
+    let info = sesion::iniciar(&estado, &sitio, &correo, &token).await?;
+    vigilancia::pedir_ciclo(&app);
+    Ok(info)
 }
 
 #[tauri::command]
-pub async fn cerrar_sesion(estado: State<'_, Estado>) -> Resultado<InfoSesion> {
-    Ok(sesion::cerrar(&estado).await)
+pub async fn cerrar_sesion(app: AppHandle, estado: State<'_, Estado>) -> Resultado<InfoSesion> {
+    let info = sesion::cerrar(&estado).await;
+    escritorio::fijar_tooltip(&app, &monitor::texto_sin_sesion(estado.simulado));
+    Ok(info)
 }
 
 #[tauri::command]
@@ -114,8 +127,13 @@ pub fn leer_preferencias(estado: State<'_, Estado>) -> Preferencias {
 
 /// Normaliza y guarda las preferencias; devuelve las que quedaron guardadas. No requiere sesión.
 #[tauri::command]
-pub fn guardar_preferencias(estado: State<'_, Estado>, preferencias: Preferencias) -> Resultado<Preferencias> {
-    preferencias::guardar(&estado.dir_config, estado.simulado, &preferencias)
+pub fn guardar_preferencias(
+    app: AppHandle,
+    estado: State<'_, Estado>,
+    preferencias: Preferencias,
+) -> Resultado<Preferencias> {
+    let p = preferencias::guardar(&estado.dir_config, estado.simulado, &preferencias)?;
+    Ok(inicio::aplicar(&app, &estado, p))
 }
 
 async fn leer_cache_de(estado: &Estado) -> Resultado<Option<Instantanea>> {

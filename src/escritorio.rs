@@ -85,6 +85,7 @@ fn crear_bandeja(app: &tauri::App) -> tauri::Result<()> {
                 if let Err(e) = app.emit(EVENTO_ACTUALIZAR, ()) {
                     eprintln!("escritorio: no se pudo emitir la actualización: {e}");
                 }
+                crate::vigilancia::pedir_ciclo(app);
             }
             "salir" => app.exit(0),
             _ => {}

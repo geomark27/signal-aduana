@@ -46,6 +46,11 @@ fn con_marca_simulado(mut texto: String, simulado: bool) -> String {
     recortar(texto)
 }
 
+/// Texto del tooltip cuando no hay sesión.
+pub fn texto_sin_sesion(simulado: bool) -> String {
+    con_marca_simulado("Signal Aduana · Sin sesión".into(), simulado)
+}
+
 async fn leer_resumen(
     fuente: &jira::Fuente,
     cuenta: &str,
@@ -69,10 +74,7 @@ pub async fn ciclo(
 
     let mut leido: Option<Resumen> = None;
     let (tooltip, resultado) = match estado.actual().await {
-        Err(_) => (
-            con_marca_simulado("Signal Aduana · Sin sesión".into(), estado.simulado),
-            ResultadoCiclo::SinSesion,
-        ),
+        Err(_) => (texto_sin_sesion(estado.simulado), ResultadoCiclo::SinSesion),
         Ok(s) => match leer_resumen(&s.fuente, &s.usuario.account_id, hoy, &prefs).await {
             Ok(r) => {
                 memoria.ultimo = Some((r.clone(), ahora));
@@ -206,6 +208,16 @@ mod pruebas {
         for t in r.tooltips() {
             assert!(t.chars().count() <= MAX_TEXTO_BANDEJA, "tooltip largo: {t}");
         }
+    }
+
+    #[test]
+    fn texto_sin_sesion_con_y_sin_marca_simulado() {
+        let real = texto_sin_sesion(false);
+        assert!(real.ends_with("Sin sesión"));
+        let sim = texto_sin_sesion(true);
+        assert!(sim.ends_with(" (simulado)"));
+        assert!(real.chars().count() <= MAX_TEXTO_BANDEJA);
+        assert!(sim.chars().count() <= MAX_TEXTO_BANDEJA);
     }
 
     #[tokio::test]

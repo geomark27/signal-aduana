@@ -7,11 +7,13 @@ pub mod config;
 pub mod dominio;
 pub mod escritorio;
 pub mod error;
+pub mod inicio;
 pub mod jira;
 pub mod monitor;
 pub mod preferencias;
 pub mod resumen;
 pub mod sesion;
+pub mod vigilancia;
 
 use tauri::Manager;
 
@@ -32,6 +34,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(escritorio::instancia_unica())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec![escritorio::ARG_OCULTO]),
+        ))
         .setup(move |app| {
             let dir = app.path().app_config_dir()?;
             let dir_datos = app.path().app_local_data_dir()?;
@@ -43,7 +50,12 @@ pub fn run() {
                     ventana.set_title("Signal Aduana — modo simulado")?;
                 }
             }
+            app.manage(vigilancia::Vigilante::nuevo());
             escritorio::configurar(app)?;
+            let estado = app.state::<Estado>();
+            let prefs = preferencias::cargar(&estado.dir_config, estado.simulado);
+            inicio::aplicar(app.handle(), &estado, prefs);
+            vigilancia::iniciar(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
