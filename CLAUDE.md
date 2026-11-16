@@ -72,6 +72,26 @@ main ── develop ── tarea/N.M-tema   (cada tarea en .worktrees/N.M)
 - **Claude no hace commit, push, PR, merge ni crea ramas sin el «sí» explícito del autor** para esa
   operación. Los agentes ejecutores tienen git bloqueado.
 
+## Atajos de make (los corre el autor)
+
+`make` sin argumentos lista todo. Los atajos del flujo de arriba, pensados para worktrees:
+
+```bash
+make tarea n=4.10 tema=algo   # crea .worktrees/4.10 y la rama tarea/4.10-algo desde develop al día
+cd .worktrees/4.10            # se trabaja allí
+make check                    # ui-check + bitácora + clippy + pruebas
+make commit                   # un solo commit «Tarea: 4.10 algo» (enmienda si aún no se subió)
+make ship                     # push + PR + fusión con merge commit (pregunta antes)
+cd ../..                      # carpeta principal
+make finish n=4.10            # develop al día; retira el worktree y la rama local ya fusionados
+```
+
+Además: `make update` (rebase sobre `origin/develop` y verificación de la bitácora), `make prune`
+(retira todo lo ya fusionado), `make status`, `make sync` y `make promote` (PR `develop → main`; nunca
+fusiona). Siguen mandando las reglas de arriba: Claude no ejecuta `commit`, `push`, `pr`, `merge`,
+`ship`, `finish`, `update`, `prune` ni `promote` sin el «sí» del autor, y `check` y `run` (largos) los
+corre el autor.
+
 ## Bitácora (obligatoria)
 
 Una entrada por tarea en `docs/bitacora/fase-N/NNN-<tema>.md` (NNN global; el tema es el de la rama
