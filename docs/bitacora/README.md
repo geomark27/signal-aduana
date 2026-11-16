@@ -31,6 +31,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [009](./fase-4/009-cierre-fase-4.md) | 4.7 Cierre de la fase 4 | `tarea/4.7-cierre-fase-4` | 2026-11-16 | Quita las marcas de conflicto que quedaron en este índice; `PLAN-FASE-4.md` con el reparto real (4.1 a 4.9), el estado y los pendientes; `Makefile` con los atajos del flujo para worktrees (`tarea`, `commit`, `ship`, `finish`, `prune`, `check`…) |
 | [010](./fase-4/010-aviso-inicio.md) | 4.8 Aviso si falla «Iniciar con Windows» | `tarea/4.8-aviso-inicio` | 2026-11-16 | Si se pide activar el inicio con Windows y vuelve apagado, el panel de preferencias lo explica y sigue abierto; si cambia por dentro con la interfaz activa, aviso en `#notice` |
 | [011](./fase-4/011-verificar-bitacora.md) | 4.9 Script que verifica la bitácora | `tarea/4.9-verificar-bitacora` | 2026-11-16 | `scripts/verificar-bitacora.sh`: enlaces del índice, entradas huérfanas, fase y secciones, numeración, marcas de conflicto y URLs o correos; solo lee, sale con 1 si algo falla |
+| [012](./fase-4/012-formato-ui.md) | 4.10 Formato oficial de `ui/app.js` con Prettier | `tarea/4.10-formato-ui` | 2026-11-16 | `.prettierrc.json` (`tabWidth: 4`, reproduce el formato actual sin tocar el archivo), `.prettierignore` (Prettier solo sobre `ui/app.js`) y `make ui-format` / `make fmt-ui`, con la versión fijada; `ui-format` entra en `make check` |
 
 ## Formato de cada entrada
 
