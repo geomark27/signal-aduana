@@ -26,6 +26,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [004](./fase-4/004-flujo-directo.md) | 4.0 Flujo directo `develop → tarea` | `tarea/4.0-flujo-directo` | 2026-11-16 | Sin rama de fase: cada tarea nace de `develop` y vuelve por un solo PR; normas y `delegar` ajustados |
 | [005](./fase-4/005-monitor.md) | 4.3 Monitor: ciclo de lectura, tooltip y avisos | `tarea/4.3-monitor` | 2026-11-16 | `monitor::ciclo` sin Tauri, con `Salida` para el tooltip y las notificaciones; sin sesión, token rechazado y fallo de red probados con el simulado y `wiremock` |
 | [006](./fase-4/006-bandeja.md) | 4.4 Bandeja, cierre a la bandeja, una instancia y arranque oculto | `tarea/4.4-bandeja` | 2026-11-16 | `src/escritorio.rs`: ícono con menú, cerrar la ventana la esconde según la preferencia, un segundo arranque trae la ventana al frente, `--oculto`; si la bandeja falla, la app sigue alcanzable |
+| [007](./fase-4/007-integracion.md) | 4.5 Integración: monitor en marcha, avisos, inicio con Windows y ganchos de sesión | `tarea/4.5-integracion` | 2026-11-16 | `vigilancia.rs` (bucle de 15 min sin ciclos simultáneos) e `inicio.rs` (inicio con Windows según la preferencia; en simulado no toca el sistema); notificaciones reales, tooltip al cambiar de sesión y plugins `notification` y `autostart` |
 
 ## Formato de cada entrada
 
