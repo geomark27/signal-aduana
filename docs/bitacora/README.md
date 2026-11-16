@@ -24,6 +24,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [002](./fase-4/002-interfaz-preferencias.md) | 4.2 Interfaz de preferencias | `tarea/4.2-interfaz-preferencias` | 2026-11-16 | Entrada retroactiva |
 | [003](./fase-4/003-normas.md) | 4.0 Normas de trabajo y bitácora | `tarea/4.0-normas` | 2026-11-16 | `CLAUDE.md`, bitácora, skill y configuración de `delegar` |
 | [004](./fase-4/004-flujo-directo.md) | 4.0 Flujo directo `develop → tarea` | `tarea/4.0-flujo-directo` | 2026-11-16 | Sin rama de fase: cada tarea nace de `develop` y vuelve por un solo PR; normas y `delegar` ajustados |
+| [005](./fase-4/005-monitor.md) | 4.3 Monitor: ciclo de lectura, tooltip y avisos | `tarea/4.3-monitor` | 2026-11-16 | `monitor::ciclo` sin Tauri, con `Salida` para el tooltip y las notificaciones; sin sesión, token rechazado y fallo de red probados con el simulado y `wiremock` |
 
 ## Formato de cada entrada
 
