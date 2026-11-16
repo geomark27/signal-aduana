@@ -13,6 +13,7 @@ use crate::dominio::{self, Entrada, Vista};
 use crate::error::{ErrorApp, Resultado};
 use crate::jira::modelo::Tarea;
 use crate::jira::{self, ResultadoHoras};
+use crate::preferencias::{self, Preferencias};
 use crate::sesion::{self, Estado, InfoSesion, Sesion};
 
 /// Ejecuta una operación con la sesión activa y limpia la sesión si Jira rechaza el token.
@@ -103,6 +104,18 @@ pub async fn guardar_cache(estado: State<'_, Estado>, datos: Value) -> Resultado
 pub fn calcular_vista(entrada: Entrada) -> Resultado<Vista> {
     let hoy_ecuador = crate::jira::simulado::hoy_ecuador().format("%Y-%m-%d").to_string();
     dominio::calcular_vista(entrada, &hoy_ecuador)
+}
+
+/// Preferencias del equipo (valores por defecto si no hay archivo o está dañado). No requiere sesión.
+#[tauri::command]
+pub fn leer_preferencias(estado: State<'_, Estado>) -> Preferencias {
+    preferencias::cargar(&estado.dir_config, estado.simulado)
+}
+
+/// Normaliza y guarda las preferencias; devuelve las que quedaron guardadas. No requiere sesión.
+#[tauri::command]
+pub fn guardar_preferencias(estado: State<'_, Estado>, preferencias: Preferencias) -> Resultado<Preferencias> {
+    preferencias::guardar(&estado.dir_config, estado.simulado, &preferencias)
 }
 
 async fn leer_cache_de(estado: &Estado) -> Resultado<Option<Instantanea>> {

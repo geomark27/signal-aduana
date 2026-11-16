@@ -1,11 +1,14 @@
 pub mod almacen;
 pub mod auth;
+pub mod avisos;
 pub mod cache;
 pub mod comandos;
 pub mod config;
 pub mod dominio;
 pub mod error;
 pub mod jira;
+pub mod preferencias;
+pub mod resumen;
 pub mod sesion;
 
 use tauri::Manager;
@@ -51,6 +54,8 @@ pub fn run() {
             comandos::leer_cache,
             comandos::guardar_cache,
             comandos::calcular_vista,
+            comandos::leer_preferencias,
+            comandos::guardar_preferencias,
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar Signal Aduana");
