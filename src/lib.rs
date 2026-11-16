@@ -7,6 +7,7 @@ pub mod config;
 pub mod dominio;
 pub mod error;
 pub mod jira;
+pub mod monitor;
 pub mod preferencias;
 pub mod resumen;
 pub mod sesion;
