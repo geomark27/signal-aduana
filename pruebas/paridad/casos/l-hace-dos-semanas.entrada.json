@@ -1,0 +1,1138 @@
+{
+  "feriadosExtra": {},
+  "hoy": "2026-11-16",
+  "semana": "2026-11-02",
+  "tablero": "Todos",
+  "tareas": [
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-10-07T09:00:00.000-05:00",
+      "due": "2026-11-22",
+      "est": 57600,
+      "finDev": null,
+      "hasPR": true,
+      "key": "AFO-101",
+      "labels": [
+        "aforo",
+        "tributos"
+      ],
+      "parent": null,
+      "priority": "Alta",
+      "project": "AFO",
+      "projectName": "Aforo Digital",
+      "resolved": null,
+      "scd": "2026-10-08T11:00:00.000-05:00",
+      "sp": 8,
+      "spent": 93600,
+      "sprint": "AFO Sprint 23",
+      "sprints": [
+        {
+          "boardId": 455,
+          "end": "2026-11-20T22:00:00.000Z",
+          "id": 702,
+          "name": "AFO Sprint 23",
+          "state": "active"
+        }
+      ],
+      "start": "2026-10-12",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Ajuste del cálculo de tributos en la liquidación de aforo",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 5,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-12T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-13T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-14T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-15T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-14T09:30:00.000-05:00",
+          "s": 10800
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-10-17T09:00:00.000-05:00",
+      "due": "2026-11-24",
+      "est": 61200,
+      "finDev": "2026-11-15",
+      "hasPR": true,
+      "key": "AFO-102",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "AFO",
+      "projectName": "Aforo Digital",
+      "resolved": null,
+      "scd": "2026-11-15T11:00:00.000-05:00",
+      "sp": 5,
+      "spent": 54000,
+      "sprint": "AFO Sprint 23",
+      "sprints": [
+        {
+          "boardId": 455,
+          "end": "2026-11-06T22:00:00.000Z",
+          "id": 701,
+          "name": "AFO Sprint 22",
+          "state": "closed"
+        },
+        {
+          "boardId": 455,
+          "end": "2026-11-20T22:00:00.000Z",
+          "id": 702,
+          "name": "AFO Sprint 23",
+          "state": "active"
+        }
+      ],
+      "start": "2026-10-26",
+      "status": "En pruebas",
+      "subtask": false,
+      "summary": "Validación de partidas arancelarias en la declaración aduanera",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-26T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-27T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-29T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-11-04T09:00:00.000-05:00",
+      "due": "2026-11-21",
+      "est": 90000,
+      "finDev": null,
+      "hasPR": false,
+      "key": "AFO-103",
+      "labels": [],
+      "parent": "AFO-101",
+      "priority": "Media",
+      "project": "AFO",
+      "projectName": "Aforo Digital",
+      "resolved": null,
+      "scd": "2026-11-05T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 75600,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-06",
+      "status": "En curso",
+      "subtask": true,
+      "summary": "Pruebas unitarias del cálculo de tributos",
+      "type": "Subtarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-11-06T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-09T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-10T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "done",
+      "comp": "Sin componente",
+      "created": "2026-09-22T09:00:00.000-05:00",
+      "due": "2026-11-10",
+      "est": 104400,
+      "finDev": "2026-11-12",
+      "hasPR": true,
+      "key": "DAI-201",
+      "labels": [],
+      "parent": null,
+      "priority": "Alta",
+      "project": "DAI",
+      "projectName": "Declaración Aduanera",
+      "resolved": "2026-11-12T16:00:00.000-05:00",
+      "scd": "2026-11-12T11:00:00.000-05:00",
+      "sp": 13,
+      "spent": 93600,
+      "sprint": "DAI Sprint 15",
+      "sprints": [
+        {
+          "boardId": 92,
+          "end": "2026-11-13T22:00:00.000Z",
+          "id": 801,
+          "name": "DAI Sprint 15",
+          "state": "closed"
+        }
+      ],
+      "start": "2026-09-28",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Integración del manifiesto de carga con el sistema aduanero",
+      "type": "Tarea",
+      "updated": "2026-11-12T16:00:00.000-05:00",
+      "wlTotal": 4,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-09-28T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-29T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-30T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-01T08:30:00.000-05:00",
+          "s": 28800
+        }
+      ]
+    },
+    {
+      "cat": "done",
+      "comp": "Sin componente",
+      "created": "2026-09-29T09:00:00.000-05:00",
+      "due": "2026-11-08",
+      "est": 93600,
+      "finDev": null,
+      "hasPR": true,
+      "key": "DAI-202",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "DAI",
+      "projectName": "Declaración Aduanera",
+      "resolved": "2026-11-07T16:00:00.000-05:00",
+      "scd": "2026-11-07T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 82800,
+      "sprint": "DAI Sprint 15",
+      "sprints": [
+        {
+          "boardId": 92,
+          "end": "2026-11-13T22:00:00.000Z",
+          "id": 801,
+          "name": "DAI Sprint 15",
+          "state": "closed"
+        }
+      ],
+      "start": "2026-10-05",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Reporte de declaraciones pendientes por distrito aduanero",
+      "type": "Tarea",
+      "updated": "2026-11-07T16:00:00.000-05:00",
+      "wlTotal": 4,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-05T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-06T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-08T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-16T08:30:00.000-05:00",
+          "s": 28800
+        }
+      ]
+    },
+    {
+      "cat": "new",
+      "comp": "Sin componente",
+      "created": "2026-11-02T09:00:00.000-05:00",
+      "due": "2026-11-26",
+      "est": 28800,
+      "finDev": null,
+      "hasPR": false,
+      "key": "ADN-301",
+      "labels": [],
+      "parent": null,
+      "priority": "Baja",
+      "project": "ADN",
+      "projectName": "Analítica y Datos",
+      "resolved": null,
+      "scd": "2026-11-03T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 0,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-11",
+      "status": "Por hacer",
+      "subtask": false,
+      "summary": "Migración de la plantilla de notificaciones a clientes",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 0,
+      "worklogs": []
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-10-12T09:00:00.000-05:00",
+      "due": "2026-11-13",
+      "est": 86400,
+      "finDev": null,
+      "hasPR": true,
+      "key": "ADN-302",
+      "labels": [],
+      "parent": null,
+      "priority": "Alta",
+      "project": "ADN",
+      "projectName": "Analítica y Datos",
+      "resolved": null,
+      "scd": "2026-10-13T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 75600,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-19",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Conciliación automática de guías de carga",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-19T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-22T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-30T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-10-27T09:00:00.000-05:00",
+      "due": "2026-11-28",
+      "est": 82800,
+      "finDev": null,
+      "hasPR": true,
+      "key": "APP-401",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resolved": null,
+      "scd": "2026-10-28T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 68400,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-02",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Automatización del envío de documentos a bodega",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-11-04T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-05T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-11T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "done",
+      "comp": "Sin componente",
+      "created": "2026-09-07T09:00:00.000-05:00",
+      "due": "2026-11-12",
+      "est": 111600,
+      "finDev": "2026-11-11",
+      "hasPR": true,
+      "key": "APP-402",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resolved": "2026-11-11T16:00:00.000-05:00",
+      "scd": "2026-11-11T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 100800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-09-14",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Notificación automática de arribo de contenedores",
+      "type": "Tarea",
+      "updated": "2026-11-11T16:00:00.000-05:00",
+      "wlTotal": 5,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-09-14T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-15T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-16T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-17T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-18T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "done",
+      "comp": "Sin componente",
+      "created": "2026-10-15T09:00:00.000-05:00",
+      "due": "2026-11-13",
+      "est": 72000,
+      "finDev": "2026-11-13",
+      "hasPR": true,
+      "key": "APP-403",
+      "labels": [],
+      "parent": null,
+      "priority": "Alta",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resolved": "2026-11-13T16:00:00.000-05:00",
+      "scd": "2026-11-13T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 64800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-19",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Cálculo de recargos por almacenaje en patio",
+      "type": "Tarea",
+      "updated": "2026-11-13T16:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-20T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-23T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-12T08:30:00.000-05:00",
+          "s": 28800
+        }
+      ]
+    },
+    {
+      "cat": "new",
+      "comp": "Sin componente",
+      "created": "2026-11-11T09:00:00.000-05:00",
+      "due": "2026-12-01",
+      "est": 21600,
+      "finDev": null,
+      "hasPR": false,
+      "key": "APP-404",
+      "labels": [],
+      "parent": null,
+      "priority": "Baja",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resolved": null,
+      "scd": "2026-11-12T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 0,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-16",
+      "status": "Por hacer",
+      "subtask": false,
+      "summary": "Conciliación de facturas de transporte terrestre",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 0,
+      "worklogs": []
+    },
+    {
+      "cat": "done",
+      "comp": "Sin componente",
+      "created": "2026-08-23T09:00:00.000-05:00",
+      "due": "2026-11-09",
+      "est": 208800,
+      "finDev": "2026-11-10",
+      "hasPR": false,
+      "key": "GPS-501",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "GPS",
+      "projectName": "Rastreo de Flota",
+      "resolved": "2026-11-10T16:00:00.000-05:00",
+      "scd": "2026-11-10T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 187200,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-08-31",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Alerta de vencimiento de garantías de transporte",
+      "type": "Tarea",
+      "updated": "2026-11-10T16:00:00.000-05:00",
+      "wlTotal": 8,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-31T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-01T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-02T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-03T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-04T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-07T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-08T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-10T08:30:00.000-05:00",
+          "s": 28800
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Aforo",
+      "created": "2026-09-17T09:00:00.000-05:00",
+      "due": "2026-11-25",
+      "est": 126000,
+      "finDev": null,
+      "hasPR": false,
+      "key": "OPE-601",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resolved": null,
+      "scd": "2026-09-18T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 111600,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-09-21",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Revisión del checklist de inspección de contenedores",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 5,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-09-21T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-22T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-23T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-24T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-25T08:30:00.000-05:00",
+          "s": 28800
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "DAI",
+      "created": "2026-10-14T09:00:00.000-05:00",
+      "due": "2026-11-27",
+      "est": 72000,
+      "finDev": null,
+      "hasPR": false,
+      "key": "OPE-602",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resolved": null,
+      "scd": "2026-10-15T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 64800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-17",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Parametrización de reglas para el régimen de consumo",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-21T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-28T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-13T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "done",
+      "comp": "Regímenes Especiales",
+      "created": "2026-08-13T09:00:00.000-05:00",
+      "due": "2026-10-17",
+      "est": 194400,
+      "finDev": "2026-10-16",
+      "hasPR": false,
+      "key": "OPE-603",
+      "labels": [],
+      "parent": null,
+      "priority": "Baja",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resolved": "2026-10-16T16:00:00.000-05:00",
+      "scd": "2026-10-16T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 176400,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-08-17",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Control de saldos de depósito temporal",
+      "type": "Tarea",
+      "updated": "2026-10-16T16:00:00.000-05:00",
+      "wlTotal": 8,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-17T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-18T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-19T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-20T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-24T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-26T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-28T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-11T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-08-03T09:00:00.000-05:00",
+      "due": null,
+      "est": 0,
+      "finDev": null,
+      "hasPR": false,
+      "key": "OPE-701",
+      "labels": [],
+      "parent": null,
+      "priority": "Baja",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resolved": null,
+      "scd": "2026-08-04T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 122400,
+      "sprint": null,
+      "sprints": [],
+      "start": null,
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Reunión semanal de seguimiento de operaciones",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 7,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-11T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-12T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-13T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-21T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-25T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-27T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-09T08:30:00.000-05:00",
+          "s": 18000
+        }
+      ]
+    },
+    {
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "created": "2026-08-03T09:00:00.000-05:00",
+      "due": null,
+      "est": 662400,
+      "finDev": null,
+      "hasPR": false,
+      "key": "OPE-702",
+      "labels": [],
+      "parent": null,
+      "priority": "Media",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resolved": null,
+      "scd": "2026-08-04T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 507600,
+      "sprint": null,
+      "sprints": [],
+      "start": null,
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Soporte a usuarios de la plataforma de operaciones",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 44,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-12T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-13T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-14T08:30:00.000-05:00",
+          "s": 28800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-18T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-19T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-21T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-24T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-25T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-27T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-28T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-31T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-02T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-03T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-08T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-09T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-11T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-14T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-15T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-17T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-18T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-21T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-23T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-24T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-29T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-30T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-02T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-05T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-06T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-08T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-12T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-14T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-15T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-20T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-21T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-23T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-26T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-27T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-29T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-30T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-04T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-05T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-10T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-11T13:30:00.000-05:00",
+          "s": 10800
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-13T13:30:00.000-05:00",
+          "s": 10800
+        }
+      ]
+    },
+    {
+      "cat": "done",
+      "comp": "Sin componente",
+      "created": "2026-09-27T09:00:00.000-05:00",
+      "due": "2026-10-13",
+      "est": 54000,
+      "finDev": "2026-10-12",
+      "hasPR": false,
+      "key": "OPE-703",
+      "labels": [],
+      "parent": null,
+      "priority": "Baja",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resolved": "2026-10-12T16:00:00.000-05:00",
+      "scd": "2026-10-12T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 46800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-02",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Capacitación en el nuevo módulo de regímenes especiales",
+      "type": "Tarea",
+      "updated": "2026-10-12T16:00:00.000-05:00",
+      "wlTotal": 2,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-02T08:30:00.000-05:00",
+          "s": 18000
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-07T08:30:00.000-05:00",
+          "s": 28800
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Signal Aduana",
+  "version": "0.1.0",
+  "identifier": "ec.com.torresytorres.signal",
+  "build": {
+    "frontendDist": "ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Signal Aduana",
+        "width": 1280,
+        "height": 860,
+        "minWidth": 760,
+        "minHeight": 560,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "publisher": "Torres & Torres",
+    "shortDescription": "Horas, tareas y estados de Jira por semana",
+    "category": "Productivity",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" }
+    }
+  }
+}

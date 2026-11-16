@@ -1,0 +1,2006 @@
+{
+  "horas": {
+    "behind": 0,
+    "current": true,
+    "detail": "No hay días laborables en esta semana.",
+    "dias": [
+      {
+        "day": "2026-11-16",
+        "feriado": true,
+        "secs": 0
+      },
+      {
+        "day": "2026-11-17",
+        "feriado": true,
+        "secs": 0
+      },
+      {
+        "day": "2026-11-18",
+        "feriado": true,
+        "secs": 0
+      },
+      {
+        "day": "2026-11-19",
+        "feriado": true,
+        "secs": 0
+      },
+      {
+        "day": "2026-11-20",
+        "feriado": true,
+        "secs": 0
+      }
+    ],
+    "expected": 0,
+    "feriados": [
+      "2026-11-16",
+      "2026-11-17",
+      "2026-11-18",
+      "2026-11-19",
+      "2026-11-20"
+    ],
+    "laborables": 0,
+    "missing": 0,
+    "prevSecs": 144000,
+    "sev": "",
+    "target": 0,
+    "targetH": 0,
+    "title": "Semana de feriados",
+    "today": "2026-11-16",
+    "todayLabor": false,
+    "todaySecs": 0,
+    "total": 0
+  },
+  "hoy": "2026-11-16",
+  "porTablero": [
+    {
+      "abiertas": 4,
+      "board": "Tablero AFO",
+      "estados": {
+        "En curso": 3,
+        "En pruebas": 1
+      },
+      "resolved": 0,
+      "secs": 0,
+      "ultima": "2026-11-16",
+      "worked": 0
+    },
+    {
+      "abiertas": 2,
+      "board": "Sin tablero",
+      "estados": {
+        "En curso": 2
+      },
+      "resolved": 0,
+      "secs": 0,
+      "ultima": "2026-11-16",
+      "worked": 0
+    },
+    {
+      "abiertas": 2,
+      "board": "Tablero ADN",
+      "estados": {
+        "En curso": 1,
+        "Por hacer": 1
+      },
+      "resolved": 0,
+      "secs": 0,
+      "ultima": "2026-11-16",
+      "worked": 0
+    },
+    {
+      "abiertas": 2,
+      "board": "Tablero Kanban",
+      "estados": {
+        "En curso": 1,
+        "Por hacer": 1
+      },
+      "resolved": 0,
+      "secs": 0,
+      "ultima": "2026-11-16",
+      "worked": 0
+    },
+    {
+      "abiertas": 1,
+      "board": "Tablero DAI",
+      "estados": {
+        "En curso": 1
+      },
+      "resolved": 0,
+      "secs": 0,
+      "ultima": "2026-11-16",
+      "worked": 0
+    },
+    {
+      "abiertas": 0,
+      "board": "Tablero RE",
+      "estados": {},
+      "resolved": 0,
+      "secs": 0,
+      "ultima": "2026-10-16",
+      "worked": 0
+    }
+  ],
+  "semana": "2026-11-16",
+  "semanas": [
+    {
+      "perBoard": {
+        "Sin tablero": 32400,
+        "Tablero Kanban": 111600
+      },
+      "secs": 144000,
+      "semanaIso": 36,
+      "target": 40,
+      "wk": "2026-08-31"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 50400,
+        "Tablero Kanban": 75600,
+        "Tablero RE": 18000
+      },
+      "secs": 144000,
+      "semanaIso": 37,
+      "target": 40,
+      "wk": "2026-09-07"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 43200,
+        "Tablero Kanban": 100800
+      },
+      "secs": 144000,
+      "semanaIso": 38,
+      "target": 40,
+      "wk": "2026-09-14"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 32400,
+        "Tablero AFO": 111600
+      },
+      "secs": 144000,
+      "semanaIso": 39,
+      "target": 40,
+      "wk": "2026-09-21"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 50400,
+        "Tablero DAI": 93600
+      },
+      "secs": 144000,
+      "semanaIso": 40,
+      "target": 40,
+      "wk": "2026-09-28"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 61200,
+        "Tablero DAI": 54000
+      },
+      "secs": 115200,
+      "semanaIso": 41,
+      "target": 32,
+      "wk": "2026-10-05"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 32400,
+        "Tablero AFO": 82800,
+        "Tablero DAI": 28800
+      },
+      "secs": 144000,
+      "semanaIso": 42,
+      "target": 40,
+      "wk": "2026-10-12"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 32400,
+        "Tablero ADN": 57600,
+        "Tablero DAI": 18000,
+        "Tablero Kanban": 36000
+      },
+      "secs": 144000,
+      "semanaIso": 43,
+      "target": 40,
+      "wk": "2026-10-19"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 43200,
+        "Tablero ADN": 18000,
+        "Tablero AFO": 54000,
+        "Tablero DAI": 28800
+      },
+      "secs": 144000,
+      "semanaIso": 44,
+      "target": 40,
+      "wk": "2026-10-26"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 21600,
+        "Tablero AFO": 28800,
+        "Tablero Kanban": 36000
+      },
+      "secs": 86400,
+      "semanaIso": 45,
+      "target": 24,
+      "wk": "2026-11-02"
+    },
+    {
+      "perBoard": {
+        "Sin tablero": 32400,
+        "Tablero AFO": 46800,
+        "Tablero DAI": 18000,
+        "Tablero Kanban": 46800
+      },
+      "secs": 144000,
+      "semanaIso": 46,
+      "target": 40,
+      "wk": "2026-11-09"
+    },
+    {
+      "perBoard": {},
+      "secs": 0,
+      "semanaIso": 47,
+      "target": 0,
+      "wk": "2026-11-16"
+    }
+  ],
+  "stats": {
+    "est": 0,
+    "onTime": 0,
+    "perBoard": {},
+    "perDay": {},
+    "resolved": [],
+    "secs": 0,
+    "spent": 0,
+    "withDue": 0,
+    "worked": []
+  },
+  "tablero": "Todos",
+  "tableros": [
+    "Tablero AFO",
+    "Sin tablero",
+    "Tablero ADN",
+    "Tablero Kanban",
+    "Tablero DAI",
+    "Tablero RE"
+  ],
+  "tareas": [
+    {
+      "board": "Tablero AFO",
+      "boardHow": "sprint «AFO Sprint 23»",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-10-07",
+      "created": "2026-10-07T09:00:00.000-05:00",
+      "due": "2026-11-22",
+      "est": 57600,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": true,
+      "hasWl": true,
+      "key": "AFO-101",
+      "labels": [
+        "aforo",
+        "tributos"
+      ],
+      "late": null,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Alta",
+      "project": "AFO",
+      "projectName": "Aforo Digital",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-10-08T11:00:00.000-05:00",
+      "sp": 8,
+      "spent": 93600,
+      "sprint": "AFO Sprint 23",
+      "sprints": [
+        {
+          "boardId": 455,
+          "end": "2026-11-20T22:00:00.000Z",
+          "id": 702,
+          "name": "AFO Sprint 23",
+          "state": "active"
+        }
+      ],
+      "start": "2026-10-12",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Ajuste del cálculo de tributos en la liquidación de aforo",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 5,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-12T08:30:00.000-05:00",
+          "day": "2026-10-12",
+          "monday": "2026-10-12",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-13T08:30:00.000-05:00",
+          "day": "2026-10-13",
+          "monday": "2026-10-12",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-14T08:30:00.000-05:00",
+          "day": "2026-10-14",
+          "monday": "2026-10-12",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-15T08:30:00.000-05:00",
+          "day": "2026-10-15",
+          "monday": "2026-10-12",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-14T09:30:00.000-05:00",
+          "day": "2026-11-14",
+          "monday": "2026-11-09",
+          "s": 10800,
+          "weekend": true,
+          "wk": null
+        }
+      ]
+    },
+    {
+      "board": "Tablero AFO",
+      "boardHow": "sprint «AFO Sprint 23»",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-10-17",
+      "created": "2026-10-17T09:00:00.000-05:00",
+      "due": "2026-11-24",
+      "est": 61200,
+      "finDay": "2026-11-15",
+      "finDev": "2026-11-15",
+      "hasPR": true,
+      "hasWl": true,
+      "key": "AFO-102",
+      "labels": [],
+      "late": -9,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "AFO",
+      "projectName": "Aforo Digital",
+      "resDay": "2026-11-15",
+      "resolved": null,
+      "scd": "2026-11-15T11:00:00.000-05:00",
+      "sp": 5,
+      "spent": 54000,
+      "sprint": "AFO Sprint 23",
+      "sprints": [
+        {
+          "boardId": 455,
+          "end": "2026-11-06T22:00:00.000Z",
+          "id": 701,
+          "name": "AFO Sprint 22",
+          "state": "closed"
+        },
+        {
+          "boardId": 455,
+          "end": "2026-11-20T22:00:00.000Z",
+          "id": 702,
+          "name": "AFO Sprint 23",
+          "state": "active"
+        }
+      ],
+      "start": "2026-10-26",
+      "status": "En pruebas",
+      "subtask": false,
+      "summary": "Validación de partidas arancelarias en la declaración aduanera",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-26T08:30:00.000-05:00",
+          "day": "2026-10-26",
+          "monday": "2026-10-26",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-27T08:30:00.000-05:00",
+          "day": "2026-10-27",
+          "monday": "2026-10-26",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-29T08:30:00.000-05:00",
+          "day": "2026-10-29",
+          "monday": "2026-10-26",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-26"
+        }
+      ]
+    },
+    {
+      "board": "Tablero AFO",
+      "boardHow": "tarea padre AFO-101",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-11-04",
+      "created": "2026-11-04T09:00:00.000-05:00",
+      "due": "2026-11-21",
+      "est": 90000,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": true,
+      "key": "AFO-103",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": "AFO-101",
+      "priority": "Media",
+      "project": "AFO",
+      "projectName": "Aforo Digital",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-11-05T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 75600,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-06",
+      "status": "En curso",
+      "subtask": true,
+      "summary": "Pruebas unitarias del cálculo de tributos",
+      "type": "Subtarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-11-06T08:30:00.000-05:00",
+          "day": "2026-11-06",
+          "monday": "2026-11-02",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-11-02"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-09T08:30:00.000-05:00",
+          "day": "2026-11-09",
+          "monday": "2026-11-09",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-11-09"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-10T08:30:00.000-05:00",
+          "day": "2026-11-10",
+          "monday": "2026-11-09",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "board": "Tablero DAI",
+      "boardHow": "sprint «DAI Sprint 15»",
+      "cat": "done",
+      "comp": "Sin componente",
+      "creDay": "2026-09-22",
+      "created": "2026-09-22T09:00:00.000-05:00",
+      "due": "2026-11-10",
+      "est": 104400,
+      "finDay": "2026-11-12",
+      "finDev": "2026-11-12",
+      "hasPR": true,
+      "hasWl": true,
+      "key": "DAI-201",
+      "labels": [],
+      "late": 2,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Alta",
+      "project": "DAI",
+      "projectName": "Declaración Aduanera",
+      "resDay": "2026-11-12",
+      "resolved": "2026-11-12T16:00:00.000-05:00",
+      "scd": "2026-11-12T11:00:00.000-05:00",
+      "sp": 13,
+      "spent": 93600,
+      "sprint": "DAI Sprint 15",
+      "sprints": [
+        {
+          "boardId": 92,
+          "end": "2026-11-13T22:00:00.000Z",
+          "id": 801,
+          "name": "DAI Sprint 15",
+          "state": "closed"
+        }
+      ],
+      "start": "2026-09-28",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Integración del manifiesto de carga con el sistema aduanero",
+      "type": "Tarea",
+      "updated": "2026-11-12T16:00:00.000-05:00",
+      "wlTotal": 4,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-09-28T08:30:00.000-05:00",
+          "day": "2026-09-28",
+          "monday": "2026-09-28",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-29T08:30:00.000-05:00",
+          "day": "2026-09-29",
+          "monday": "2026-09-28",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-30T08:30:00.000-05:00",
+          "day": "2026-09-30",
+          "monday": "2026-09-28",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-01T08:30:00.000-05:00",
+          "day": "2026-10-01",
+          "monday": "2026-09-28",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-28"
+        }
+      ]
+    },
+    {
+      "board": "Tablero DAI",
+      "boardHow": "sprint «DAI Sprint 15»",
+      "cat": "done",
+      "comp": "Sin componente",
+      "creDay": "2026-09-29",
+      "created": "2026-09-29T09:00:00.000-05:00",
+      "due": "2026-11-08",
+      "est": 93600,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": true,
+      "hasWl": true,
+      "key": "DAI-202",
+      "labels": [],
+      "late": -1,
+      "needDoc": true,
+      "noFin": true,
+      "parent": null,
+      "priority": "Media",
+      "project": "DAI",
+      "projectName": "Declaración Aduanera",
+      "resDay": "2026-11-07",
+      "resolved": "2026-11-07T16:00:00.000-05:00",
+      "scd": "2026-11-07T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 82800,
+      "sprint": "DAI Sprint 15",
+      "sprints": [
+        {
+          "boardId": 92,
+          "end": "2026-11-13T22:00:00.000Z",
+          "id": 801,
+          "name": "DAI Sprint 15",
+          "state": "closed"
+        }
+      ],
+      "start": "2026-10-05",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Reporte de declaraciones pendientes por distrito aduanero",
+      "type": "Tarea",
+      "updated": "2026-11-07T16:00:00.000-05:00",
+      "wlTotal": 4,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-05T08:30:00.000-05:00",
+          "day": "2026-10-05",
+          "monday": "2026-10-05",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-05"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-06T08:30:00.000-05:00",
+          "day": "2026-10-06",
+          "monday": "2026-10-05",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-05"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-08T08:30:00.000-05:00",
+          "day": "2026-10-08",
+          "monday": "2026-10-05",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-05"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-16T08:30:00.000-05:00",
+          "day": "2026-10-16",
+          "monday": "2026-10-12",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-10-12"
+        }
+      ]
+    },
+    {
+      "board": "Tablero ADN",
+      "boardHow": "proyecto ADN",
+      "cat": "new",
+      "comp": "Sin componente",
+      "creDay": "2026-11-02",
+      "created": "2026-11-02T09:00:00.000-05:00",
+      "due": "2026-11-26",
+      "est": 28800,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": false,
+      "key": "ADN-301",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Baja",
+      "project": "ADN",
+      "projectName": "Analítica y Datos",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-11-03T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 0,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-11",
+      "status": "Por hacer",
+      "subtask": false,
+      "summary": "Migración de la plantilla de notificaciones a clientes",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 0,
+      "worklogs": []
+    },
+    {
+      "board": "Tablero ADN",
+      "boardHow": "proyecto ADN",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-10-12",
+      "created": "2026-10-12T09:00:00.000-05:00",
+      "due": "2026-11-13",
+      "est": 86400,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": true,
+      "hasWl": true,
+      "key": "ADN-302",
+      "labels": [],
+      "late": null,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Alta",
+      "project": "ADN",
+      "projectName": "Analítica y Datos",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-10-13T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 75600,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-19",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Conciliación automática de guías de carga",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-19T08:30:00.000-05:00",
+          "day": "2026-10-19",
+          "monday": "2026-10-19",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-22T08:30:00.000-05:00",
+          "day": "2026-10-22",
+          "monday": "2026-10-19",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-30T08:30:00.000-05:00",
+          "day": "2026-10-30",
+          "monday": "2026-10-26",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-26"
+        }
+      ]
+    },
+    {
+      "board": "Tablero Kanban",
+      "boardHow": "filtro del Tablero Kanban",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-10-27",
+      "created": "2026-10-27T09:00:00.000-05:00",
+      "due": "2026-11-28",
+      "est": 82800,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": true,
+      "hasWl": true,
+      "key": "APP-401",
+      "labels": [],
+      "late": null,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-10-28T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 68400,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-02",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Automatización del envío de documentos a bodega",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-11-04T08:30:00.000-05:00",
+          "day": "2026-11-04",
+          "monday": "2026-11-02",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-11-02"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-05T08:30:00.000-05:00",
+          "day": "2026-11-05",
+          "monday": "2026-11-02",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-11-02"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-11T08:30:00.000-05:00",
+          "day": "2026-11-11",
+          "monday": "2026-11-09",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "board": "Tablero Kanban",
+      "boardHow": "filtro del Tablero Kanban",
+      "cat": "done",
+      "comp": "Sin componente",
+      "creDay": "2026-09-07",
+      "created": "2026-09-07T09:00:00.000-05:00",
+      "due": "2026-11-12",
+      "est": 111600,
+      "finDay": "2026-11-11",
+      "finDev": "2026-11-11",
+      "hasPR": true,
+      "hasWl": true,
+      "key": "APP-402",
+      "labels": [],
+      "late": -1,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resDay": "2026-11-11",
+      "resolved": "2026-11-11T16:00:00.000-05:00",
+      "scd": "2026-11-11T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 100800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-09-14",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Notificación automática de arribo de contenedores",
+      "type": "Tarea",
+      "updated": "2026-11-11T16:00:00.000-05:00",
+      "wlTotal": 5,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-09-14T08:30:00.000-05:00",
+          "day": "2026-09-14",
+          "monday": "2026-09-14",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-15T08:30:00.000-05:00",
+          "day": "2026-09-15",
+          "monday": "2026-09-14",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-16T08:30:00.000-05:00",
+          "day": "2026-09-16",
+          "monday": "2026-09-14",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-17T08:30:00.000-05:00",
+          "day": "2026-09-17",
+          "monday": "2026-09-14",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-18T08:30:00.000-05:00",
+          "day": "2026-09-18",
+          "monday": "2026-09-14",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-14"
+        }
+      ]
+    },
+    {
+      "board": "Tablero Kanban",
+      "boardHow": "filtro del Tablero Kanban",
+      "cat": "done",
+      "comp": "Sin componente",
+      "creDay": "2026-10-15",
+      "created": "2026-10-15T09:00:00.000-05:00",
+      "due": "2026-11-13",
+      "est": 72000,
+      "finDay": "2026-11-13",
+      "finDev": "2026-11-13",
+      "hasPR": true,
+      "hasWl": true,
+      "key": "APP-403",
+      "labels": [],
+      "late": 0,
+      "needDoc": true,
+      "noFin": false,
+      "parent": null,
+      "priority": "Alta",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resDay": "2026-11-13",
+      "resolved": "2026-11-13T16:00:00.000-05:00",
+      "scd": "2026-11-13T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 64800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-19",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Cálculo de recargos por almacenaje en patio",
+      "type": "Tarea",
+      "updated": "2026-11-13T16:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-20T08:30:00.000-05:00",
+          "day": "2026-10-20",
+          "monday": "2026-10-19",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-23T08:30:00.000-05:00",
+          "day": "2026-10-23",
+          "monday": "2026-10-19",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-12T08:30:00.000-05:00",
+          "day": "2026-11-12",
+          "monday": "2026-11-09",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "board": "Tablero Kanban",
+      "boardHow": "filtro del Tablero Kanban",
+      "cat": "new",
+      "comp": "Sin componente",
+      "creDay": "2026-11-11",
+      "created": "2026-11-11T09:00:00.000-05:00",
+      "due": "2026-12-01",
+      "est": 21600,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": false,
+      "key": "APP-404",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Baja",
+      "project": "APP",
+      "projectName": "Aplicaciones Internas",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-11-12T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 0,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-11-16",
+      "status": "Por hacer",
+      "subtask": false,
+      "summary": "Conciliación de facturas de transporte terrestre",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 0,
+      "worklogs": []
+    },
+    {
+      "board": "Tablero Kanban",
+      "boardHow": "filtro del Tablero Kanban",
+      "cat": "done",
+      "comp": "Sin componente",
+      "creDay": "2026-08-23",
+      "created": "2026-08-23T09:00:00.000-05:00",
+      "due": "2026-11-09",
+      "est": 208800,
+      "finDay": "2026-11-10",
+      "finDev": "2026-11-10",
+      "hasPR": false,
+      "hasWl": true,
+      "key": "GPS-501",
+      "labels": [],
+      "late": 1,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "GPS",
+      "projectName": "Rastreo de Flota",
+      "resDay": "2026-11-10",
+      "resolved": "2026-11-10T16:00:00.000-05:00",
+      "scd": "2026-11-10T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 187200,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-08-31",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Alerta de vencimiento de garantías de transporte",
+      "type": "Tarea",
+      "updated": "2026-11-10T16:00:00.000-05:00",
+      "wlTotal": 8,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-31T08:30:00.000-05:00",
+          "day": "2026-08-31",
+          "monday": "2026-08-31",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-01T08:30:00.000-05:00",
+          "day": "2026-09-01",
+          "monday": "2026-08-31",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-02T08:30:00.000-05:00",
+          "day": "2026-09-02",
+          "monday": "2026-08-31",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-03T08:30:00.000-05:00",
+          "day": "2026-09-03",
+          "monday": "2026-08-31",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-04T08:30:00.000-05:00",
+          "day": "2026-09-04",
+          "monday": "2026-08-31",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-07T08:30:00.000-05:00",
+          "day": "2026-09-07",
+          "monday": "2026-09-07",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-07"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-08T08:30:00.000-05:00",
+          "day": "2026-09-08",
+          "monday": "2026-09-07",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-07"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-10T08:30:00.000-05:00",
+          "day": "2026-09-10",
+          "monday": "2026-09-07",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "board": "Tablero AFO",
+      "boardHow": "backlog por componente Aforo",
+      "cat": "indeterminate",
+      "comp": "Aforo",
+      "creDay": "2026-09-17",
+      "created": "2026-09-17T09:00:00.000-05:00",
+      "due": "2026-11-25",
+      "est": 126000,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": true,
+      "key": "OPE-601",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-09-18T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 111600,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-09-21",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Revisión del checklist de inspección de contenedores",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 5,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-09-21T08:30:00.000-05:00",
+          "day": "2026-09-21",
+          "monday": "2026-09-21",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-22T08:30:00.000-05:00",
+          "day": "2026-09-22",
+          "monday": "2026-09-21",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-23T08:30:00.000-05:00",
+          "day": "2026-09-23",
+          "monday": "2026-09-21",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-24T08:30:00.000-05:00",
+          "day": "2026-09-24",
+          "monday": "2026-09-21",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-25T08:30:00.000-05:00",
+          "day": "2026-09-25",
+          "monday": "2026-09-21",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-09-21"
+        }
+      ]
+    },
+    {
+      "board": "Tablero DAI",
+      "boardHow": "backlog por componente DAI",
+      "cat": "indeterminate",
+      "comp": "DAI",
+      "creDay": "2026-10-14",
+      "created": "2026-10-14T09:00:00.000-05:00",
+      "due": "2026-11-27",
+      "est": 72000,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": true,
+      "key": "OPE-602",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-10-15T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 64800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-17",
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Parametrización de reglas para el régimen de consumo",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 3,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-21T08:30:00.000-05:00",
+          "day": "2026-10-21",
+          "monday": "2026-10-19",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-28T08:30:00.000-05:00",
+          "day": "2026-10-28",
+          "monday": "2026-10-26",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-13T08:30:00.000-05:00",
+          "day": "2026-11-13",
+          "monday": "2026-11-09",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "board": "Tablero RE",
+      "boardHow": "backlog por componente Regímenes Especiales",
+      "cat": "done",
+      "comp": "Regímenes Especiales",
+      "creDay": "2026-08-13",
+      "created": "2026-08-13T09:00:00.000-05:00",
+      "due": "2026-10-17",
+      "est": 194400,
+      "finDay": "2026-10-16",
+      "finDev": "2026-10-16",
+      "hasPR": false,
+      "hasWl": true,
+      "key": "OPE-603",
+      "labels": [],
+      "late": -1,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Baja",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resDay": "2026-10-16",
+      "resolved": "2026-10-16T16:00:00.000-05:00",
+      "scd": "2026-10-16T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 176400,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-08-17",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Control de saldos de depósito temporal",
+      "type": "Tarea",
+      "updated": "2026-10-16T16:00:00.000-05:00",
+      "wlTotal": 8,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-17T08:30:00.000-05:00",
+          "day": "2026-08-17",
+          "monday": "2026-08-17",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-18T08:30:00.000-05:00",
+          "day": "2026-08-18",
+          "monday": "2026-08-17",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-19T08:30:00.000-05:00",
+          "day": "2026-08-19",
+          "monday": "2026-08-17",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-20T08:30:00.000-05:00",
+          "day": "2026-08-20",
+          "monday": "2026-08-17",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-24T08:30:00.000-05:00",
+          "day": "2026-08-24",
+          "monday": "2026-08-24",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-26T08:30:00.000-05:00",
+          "day": "2026-08-26",
+          "monday": "2026-08-24",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-28T08:30:00.000-05:00",
+          "day": "2026-08-28",
+          "monday": "2026-08-24",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-11T08:30:00.000-05:00",
+          "day": "2026-09-11",
+          "monday": "2026-09-07",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "board": "Sin tablero",
+      "boardHow": "no coincide con ningún filtro conocido",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-08-03",
+      "created": "2026-08-03T09:00:00.000-05:00",
+      "due": null,
+      "est": 0,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": true,
+      "key": "OPE-701",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Baja",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-08-04T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 122400,
+      "sprint": null,
+      "sprints": [],
+      "start": null,
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Reunión semanal de seguimiento de operaciones",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 7,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-11T08:30:00.000-05:00",
+          "day": "2026-08-11",
+          "monday": "2026-08-10",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-10"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-12T13:30:00.000-05:00",
+          "day": "2026-08-12",
+          "monday": "2026-08-10",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-10"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-13T13:30:00.000-05:00",
+          "day": "2026-08-13",
+          "monday": "2026-08-10",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-10"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-21T08:30:00.000-05:00",
+          "day": "2026-08-21",
+          "monday": "2026-08-17",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-25T08:30:00.000-05:00",
+          "day": "2026-08-25",
+          "monday": "2026-08-24",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-27T08:30:00.000-05:00",
+          "day": "2026-08-27",
+          "monday": "2026-08-24",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-09T08:30:00.000-05:00",
+          "day": "2026-09-09",
+          "monday": "2026-09-07",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "board": "Sin tablero",
+      "boardHow": "no coincide con ningún filtro conocido",
+      "cat": "indeterminate",
+      "comp": "Sin componente",
+      "creDay": "2026-08-03",
+      "created": "2026-08-03T09:00:00.000-05:00",
+      "due": null,
+      "est": 662400,
+      "finDay": null,
+      "finDev": null,
+      "hasPR": false,
+      "hasWl": true,
+      "key": "OPE-702",
+      "labels": [],
+      "late": null,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Media",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resDay": null,
+      "resolved": null,
+      "scd": "2026-08-04T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 507600,
+      "sprint": null,
+      "sprints": [],
+      "start": null,
+      "status": "En curso",
+      "subtask": false,
+      "summary": "Soporte a usuarios de la plataforma de operaciones",
+      "type": "Tarea",
+      "updated": "2026-11-16T10:00:00.000-05:00",
+      "wlTotal": 44,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-08-12T08:30:00.000-05:00",
+          "day": "2026-08-12",
+          "monday": "2026-08-10",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-10"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-13T08:30:00.000-05:00",
+          "day": "2026-08-13",
+          "monday": "2026-08-10",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-08-10"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-14T08:30:00.000-05:00",
+          "day": "2026-08-14",
+          "monday": "2026-08-10",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-08-10"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-18T13:30:00.000-05:00",
+          "day": "2026-08-18",
+          "monday": "2026-08-17",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-19T13:30:00.000-05:00",
+          "day": "2026-08-19",
+          "monday": "2026-08-17",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-21T13:30:00.000-05:00",
+          "day": "2026-08-21",
+          "monday": "2026-08-17",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-17"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-24T13:30:00.000-05:00",
+          "day": "2026-08-24",
+          "monday": "2026-08-24",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-25T13:30:00.000-05:00",
+          "day": "2026-08-25",
+          "monday": "2026-08-24",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-27T13:30:00.000-05:00",
+          "day": "2026-08-27",
+          "monday": "2026-08-24",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-28T13:30:00.000-05:00",
+          "day": "2026-08-28",
+          "monday": "2026-08-24",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-24"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-08-31T13:30:00.000-05:00",
+          "day": "2026-08-31",
+          "monday": "2026-08-31",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-02T13:30:00.000-05:00",
+          "day": "2026-09-02",
+          "monday": "2026-08-31",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-03T13:30:00.000-05:00",
+          "day": "2026-09-03",
+          "monday": "2026-08-31",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-08-31"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-08T13:30:00.000-05:00",
+          "day": "2026-09-08",
+          "monday": "2026-09-07",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-07"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-09T13:30:00.000-05:00",
+          "day": "2026-09-09",
+          "monday": "2026-09-07",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-07"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-11T13:30:00.000-05:00",
+          "day": "2026-09-11",
+          "monday": "2026-09-07",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-07"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-14T13:30:00.000-05:00",
+          "day": "2026-09-14",
+          "monday": "2026-09-14",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-15T13:30:00.000-05:00",
+          "day": "2026-09-15",
+          "monday": "2026-09-14",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-17T13:30:00.000-05:00",
+          "day": "2026-09-17",
+          "monday": "2026-09-14",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-18T13:30:00.000-05:00",
+          "day": "2026-09-18",
+          "monday": "2026-09-14",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-14"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-21T13:30:00.000-05:00",
+          "day": "2026-09-21",
+          "monday": "2026-09-21",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-23T13:30:00.000-05:00",
+          "day": "2026-09-23",
+          "monday": "2026-09-21",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-24T13:30:00.000-05:00",
+          "day": "2026-09-24",
+          "monday": "2026-09-21",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-21"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-29T13:30:00.000-05:00",
+          "day": "2026-09-29",
+          "monday": "2026-09-28",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-09-30T13:30:00.000-05:00",
+          "day": "2026-09-30",
+          "monday": "2026-09-28",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-02T13:30:00.000-05:00",
+          "day": "2026-10-02",
+          "monday": "2026-09-28",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-05T13:30:00.000-05:00",
+          "day": "2026-10-05",
+          "monday": "2026-10-05",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-05"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-06T13:30:00.000-05:00",
+          "day": "2026-10-06",
+          "monday": "2026-10-05",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-05"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-08T13:30:00.000-05:00",
+          "day": "2026-10-08",
+          "monday": "2026-10-05",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-05"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-12T13:30:00.000-05:00",
+          "day": "2026-10-12",
+          "monday": "2026-10-12",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-14T13:30:00.000-05:00",
+          "day": "2026-10-14",
+          "monday": "2026-10-12",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-15T13:30:00.000-05:00",
+          "day": "2026-10-15",
+          "monday": "2026-10-12",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-12"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-20T13:30:00.000-05:00",
+          "day": "2026-10-20",
+          "monday": "2026-10-19",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-21T13:30:00.000-05:00",
+          "day": "2026-10-21",
+          "monday": "2026-10-19",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-23T13:30:00.000-05:00",
+          "day": "2026-10-23",
+          "monday": "2026-10-19",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-19"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-26T13:30:00.000-05:00",
+          "day": "2026-10-26",
+          "monday": "2026-10-26",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-27T13:30:00.000-05:00",
+          "day": "2026-10-27",
+          "monday": "2026-10-26",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-29T13:30:00.000-05:00",
+          "day": "2026-10-29",
+          "monday": "2026-10-26",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-30T13:30:00.000-05:00",
+          "day": "2026-10-30",
+          "monday": "2026-10-26",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-10-26"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-04T13:30:00.000-05:00",
+          "day": "2026-11-04",
+          "monday": "2026-11-02",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-11-02"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-05T13:30:00.000-05:00",
+          "day": "2026-11-05",
+          "monday": "2026-11-02",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-11-02"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-10T13:30:00.000-05:00",
+          "day": "2026-11-10",
+          "monday": "2026-11-09",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-11-09"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-11T13:30:00.000-05:00",
+          "day": "2026-11-11",
+          "monday": "2026-11-09",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-11-09"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-11-13T13:30:00.000-05:00",
+          "day": "2026-11-13",
+          "monday": "2026-11-09",
+          "s": 10800,
+          "weekend": false,
+          "wk": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "board": "Sin tablero",
+      "boardHow": "no coincide con ningún filtro conocido",
+      "cat": "done",
+      "comp": "Sin componente",
+      "creDay": "2026-09-27",
+      "created": "2026-09-27T09:00:00.000-05:00",
+      "due": "2026-10-13",
+      "est": 54000,
+      "finDay": "2026-10-12",
+      "finDev": "2026-10-12",
+      "hasPR": false,
+      "hasWl": true,
+      "key": "OPE-703",
+      "labels": [],
+      "late": -1,
+      "needDoc": false,
+      "noFin": false,
+      "parent": null,
+      "priority": "Baja",
+      "project": "OPE",
+      "projectName": "Operaciones",
+      "resDay": "2026-10-12",
+      "resolved": "2026-10-12T16:00:00.000-05:00",
+      "scd": "2026-10-12T11:00:00.000-05:00",
+      "sp": null,
+      "spent": 46800,
+      "sprint": null,
+      "sprints": [],
+      "start": "2026-10-02",
+      "status": "Finalizada",
+      "subtask": false,
+      "summary": "Capacitación en el nuevo módulo de regímenes especiales",
+      "type": "Tarea",
+      "updated": "2026-10-12T16:00:00.000-05:00",
+      "wlTotal": 2,
+      "worklogs": [
+        {
+          "a": "sim-0001",
+          "d": "2026-10-02T08:30:00.000-05:00",
+          "day": "2026-10-02",
+          "monday": "2026-09-28",
+          "s": 18000,
+          "weekend": false,
+          "wk": "2026-09-28"
+        },
+        {
+          "a": "sim-0001",
+          "d": "2026-10-07T08:30:00.000-05:00",
+          "day": "2026-10-07",
+          "monday": "2026-10-05",
+          "s": 28800,
+          "weekend": false,
+          "wk": "2026-10-05"
+        }
+      ]
+    }
+  ]
+}
