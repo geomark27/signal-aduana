@@ -32,6 +32,7 @@ cargo test                      # pruebas
 cargo clippy --all-targets      # sin advertencias
 cargo build
 node --check ui/app.js          # sintaxis de la interfaz
+bash scripts/verificar-bitacora.sh   # bitácora coherente (solo lee; debe salir con 0)
 ```
 
 No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hace en Windows
@@ -100,6 +101,10 @@ cambio. Formato, reglas y la skill: `docs/bitacora/README.md` y `.claude/skills/
 
 - Hechos, no intenciones: lo que no se probó va en **Pendientes**.
 - Las entradas de tareas ya fusionadas no se reescriben; solo admiten notas con fecha.
+- Antes de entregar una rama, y de nuevo tras cada rebase o fusión que toque el índice, corre
+  `bash scripts/verificar-bitacora.sh`: comprueba enlaces del índice, fase y secciones de cada
+  entrada, numeración, marcas de conflicto de git y URLs o correos. Mira el resultado **fusionado**,
+  no solo la rama: así se detectó un índice que llegó a `develop` con marcas de conflicto.
 - Con varios agentes, **una rama = una entrada = un dueño**: el orquestador es el único que escribe
   la entrada. Cada ejecutor termina su reporte con un bloque `DEVLOG CONTRIBUTION` y no toca
   `docs/bitacora/`.

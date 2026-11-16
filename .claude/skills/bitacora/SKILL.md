@@ -58,3 +58,4 @@ El orquestador convierte esos bloques en **una** entrada coherente (no los pega 
 - [ ] Las seis secciones con contenido concreto (Pendientes puede omitirse si no hay).
 - [ ] Fila en el índice con el enlace correcto y la fase coincide con la carpeta.
 - [ ] «Ejecutor» indica quién hizo la tarea y cuántas vueltas hubo.
+- [ ] `bash scripts/verificar-bitacora.sh` sale con 0 (también después de cada rebase o fusión).
