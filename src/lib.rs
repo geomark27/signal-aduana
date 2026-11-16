@@ -5,6 +5,7 @@ pub mod cache;
 pub mod comandos;
 pub mod config;
 pub mod dominio;
+pub mod escritorio;
 pub mod error;
 pub mod jira;
 pub mod monitor;
@@ -29,6 +30,7 @@ fn modo_simulado() -> bool {
 pub fn run() {
     let simulado = modo_simulado();
     tauri::Builder::default()
+        .plugin(escritorio::instancia_unica())
         .plugin(tauri_plugin_opener::init())
         .setup(move |app| {
             let dir = app.path().app_config_dir()?;
@@ -41,6 +43,7 @@ pub fn run() {
                     ventana.set_title("Signal Aduana — modo simulado")?;
                 }
             }
+            escritorio::configurar(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

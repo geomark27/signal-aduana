@@ -25,6 +25,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [003](./fase-4/003-normas.md) | 4.0 Normas de trabajo y bitácora | `tarea/4.0-normas` | 2026-11-16 | `CLAUDE.md`, bitácora, skill y configuración de `delegar` |
 | [004](./fase-4/004-flujo-directo.md) | 4.0 Flujo directo `develop → tarea` | `tarea/4.0-flujo-directo` | 2026-11-16 | Sin rama de fase: cada tarea nace de `develop` y vuelve por un solo PR; normas y `delegar` ajustados |
 | [005](./fase-4/005-monitor.md) | 4.3 Monitor: ciclo de lectura, tooltip y avisos | `tarea/4.3-monitor` | 2026-11-16 | `monitor::ciclo` sin Tauri, con `Salida` para el tooltip y las notificaciones; sin sesión, token rechazado y fallo de red probados con el simulado y `wiremock` |
+| [006](./fase-4/006-bandeja.md) | 4.4 Bandeja, cierre a la bandeja, una instancia y arranque oculto | `tarea/4.4-bandeja` | 2026-11-16 | `src/escritorio.rs`: ícono con menú, cerrar la ventana la esconde según la preferencia, un segundo arranque trae la ventana al frente, `--oculto`; si la bandeja falla, la app sigue alcanzable |
 
 ## Formato de cada entrada
 
