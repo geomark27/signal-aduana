@@ -35,7 +35,7 @@ node --check ui/app.js          # sintaxis de la interfaz
 ```
 
 No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hace en Windows
-(ver `docs/COMPILAR-WINDOWS.md` cuando exista). `SIGNAL_SIMULADO=1` fuerza el modo simulado;
+(ver `docs/COMPILAR-WINDOWS.md`). `SIGNAL_SIMULADO=1` fuerza el modo simulado;
 **nunca** `SIGNAL_SIMULADO=0` desde una sesión de Claude.
 
 ## Reglas que no se negocian
