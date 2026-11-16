@@ -1,8 +1,8 @@
 # Bitácora — Signal Aduana de escritorio
 
-Una entrada por tarea: cada rama `tarea/N.M-<tema>` que llega a su fase (`fase/N-…`) por PR. La
-entrada viaja en el mismo commit que el cambio que describe y vive en la carpeta de su fase,
-`fase-N/`.
+Una entrada por tarea: cada rama `tarea/N.M-<tema>` que llega a `develop` por PR. La entrada viaja
+en el mismo commit que el cambio que describe y vive en la carpeta de su fase, `fase-N/` (la fase
+agrupa tareas; no es una rama).
 
 La historia y el porqué de cada decisión van aquí, no en comentarios del código.
 
@@ -23,6 +23,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [001](./fase-4/001-preferencias-avisos.md) | 4.1 Preferencias, resumen y avisos | `tarea/4.1-preferencias-avisos` | 2026-11-16 | Entrada retroactiva |
 | [002](./fase-4/002-interfaz-preferencias.md) | 4.2 Interfaz de preferencias | `tarea/4.2-interfaz-preferencias` | 2026-11-16 | Entrada retroactiva |
 | [003](./fase-4/003-normas.md) | 4.0 Normas de trabajo y bitácora | `tarea/4.0-normas` | 2026-11-16 | `CLAUDE.md`, bitácora, skill y configuración de `delegar` |
+| [004](./fase-4/004-flujo-directo.md) | 4.0 Flujo directo `develop → tarea` | `tarea/4.0-flujo-directo` | 2026-11-16 | Sin rama de fase: cada tarea nace de `develop` y vuelve por un solo PR; normas y `delegar` ajustados |
 
 ## Formato de cada entrada
 
@@ -34,7 +35,7 @@ sección en el índice. Encabezado y secciones obligatorias:
 # NNN — Título corto
 
 **Fecha:** AAAA-MM-DD
-**Rama:** tarea/N.M-<tema> → fase/N-<tema>
+**Rama:** tarea/N.M-<tema> → develop
 **Fase:** N
 **Ejecutor:** modelo(s) que hicieron la tarea y vueltas de corrección (o «orquestador»)
 

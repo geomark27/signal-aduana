@@ -56,15 +56,19 @@ No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hac
 ## Flujo de ramas
 
 ```
-main ── develop ── fase/N-tema ── tarea/N.M-tema   (cada tarea en .worktrees/N.M)
+main ── develop ── tarea/N.M-tema   (cada tarea en .worktrees/N.M)
 ```
 
-- Cada **fase** tiene su rama padre, nacida de `develop` al día. Cada **tarea** nace de su fase,
-  vive en su propio worktree `.worktrees/N.M` y vuelve a la fase por PR.
-- Al cerrar la fase, `fase/N-tema` va a `develop` por PR con **merge commit** (nunca *squash* ni
-  *rebase and merge*: los hashes cambian y la historia deja de compartirse).
+- Cada **tarea** nace de `develop` al día, vive en su propio worktree `.worktrees/N.M` y vuelve a
+  `develop` por PR con **merge commit** (nunca *squash* ni *rebase and merge*: los hashes cambian y
+  la historia deja de compartirse).
+- Las **fases no son ramas**: solo agrupan tareas en `docs/PLAN-FASE-N.md` y en
+  `docs/bitacora/fase-N/`. El `N` de `N.M` es la fase.
 - Una tarea termina en **un solo commit** (`Tarea: N.M <tema>`) que lleva su entrada de bitácora.
-- Las ramas hijas se mantienen al día con su fase; la fase, con `develop`.
+- Una tarea sin terminar se mantiene al día con `develop` (rebase o merge, con el «sí» del autor).
+- `develop` → `main` por PR con merge commit, al publicar una versión.
+- Tras fusionar una tarea se retiran su worktree y su rama local
+  (`git worktree remove .worktrees/N.M` y `git branch -d tarea/N.M-tema`); la remota la borra el autor.
 - **Claude no hace commit, push, PR, merge ni crea ramas sin el «sí» explícito del autor** para esa
   operación. Los agentes ejecutores tienen git bloqueado.
 
