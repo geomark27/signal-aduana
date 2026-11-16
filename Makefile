@@ -12,6 +12,7 @@ export PATH := $(HOME)/.cargo/bin:$(PATH)
 REMOTE := origin
 BASE   := develop
 MAIN   := main
+PRETTIER_VERSION := 3.10.1
 BRANCH := $(shell git branch --show-current 2>/dev/null)
 MAIN_DIR := $(shell git worktree list --porcelain 2>/dev/null | awk '/^worktree /{sub(/^worktree /,""); print; exit}')
 TAREA  := $(shell echo "$(BRANCH)" | sed -nE 's/^tarea\/([0-9]+\.[0-9]+)-.*/\1/p')
@@ -27,7 +28,7 @@ GUARD_RAMA = case "$(BRANCH)" in main|$(BASE)|"") echo "✗ no se sube ni se abr
 GH_OK = command -v gh >/dev/null && gh auth status >/dev/null 2>&1
 
 .PHONY: help sync tarea status worktrees update commit push pr merge ship finish prune promote \
-        build test lint ui-check run bitacora check
+        build test lint ui-check ui-format fmt-ui run bitacora check
 
 ##@ Git
 
@@ -229,6 +230,15 @@ ui-check: ## Sintaxis de la interfaz (node --check ui/app.js)
 	@command -v node >/dev/null || { echo "✗ falta node: source ~/.nvm/nvm.sh" >&2; exit 1; }
 	node --check ui/app.js
 
+ui-format: ## Comprueba que ui/app.js sigue el formato oficial (prettier --check)
+	@command -v npx >/dev/null || { echo "✗ falta node: source ~/.nvm/nvm.sh" >&2; exit 1; }
+	npx --yes prettier@$(PRETTIER_VERSION) --check ui/app.js \
+	  || { echo "✗ ui/app.js no sigue el formato: corre make fmt-ui" >&2; exit 1; }
+
+fmt-ui: ## Formatea ui/app.js con Prettier (prettier --write)
+	@command -v npx >/dev/null || { echo "✗ falta node: source ~/.nvm/nvm.sh" >&2; exit 1; }
+	npx --yes prettier@$(PRETTIER_VERSION) --write ui/app.js
+
 # El modo simulado va fijo: desde make no se puede forzar el real.
 run: ## Corre la app en modo simulado (SIGNAL_SIMULADO=1); args= pasa argumentos
 	SIGNAL_SIMULADO=1 cargo run -- $(args)
@@ -236,8 +246,9 @@ run: ## Corre la app en modo simulado (SIGNAL_SIMULADO=1); args= pasa argumentos
 bitacora: ## Verifica la bitácora con scripts/verificar-bitacora.sh (si aún no existe, avisa y sigue)
 	@if [ -f scripts/verificar-bitacora.sh ]; then bash scripts/verificar-bitacora.sh; else echo "(aún no existe scripts/verificar-bitacora.sh)"; fi
 
-check: ## Definición de «terminado» de CLAUDE.md: ui-check, bitácora, lint y test, en ese orden
+check: ## Definición de «terminado» de CLAUDE.md: ui-check, ui-format, bitácora, lint y test, en ese orden
 	@$(MAKE) --no-print-directory ui-check
+	@$(MAKE) --no-print-directory ui-format
 	@$(MAKE) --no-print-directory bitacora
 	@$(MAKE) --no-print-directory lint
 	@$(MAKE) --no-print-directory test

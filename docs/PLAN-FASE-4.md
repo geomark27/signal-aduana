@@ -35,8 +35,9 @@ entrada de `docs/bitacora/fase-4/`; el índice `docs/bitacora/README.md` es la f
 | 4.5 | Integración: monitor en marcha, notificaciones, inicio con Windows y ganchos de sesión (tarea 3) | 007 |
 | 4.6 | `docs/COMPILAR-WINDOWS.md` (tarea 3, punto 4) | 008 |
 | 4.7 | Este cierre, el arreglo del índice de la bitácora y el `Makefile` con los atajos del flujo (`make` lista todo) | 009 |
-| 4.8 | Aviso en la interfaz si falla «Iniciar con Windows» (en curso al escribir este cierre) | 010 |
-| 4.9 | `scripts/verificar-bitacora.sh` (en curso al escribir este cierre) | 011 |
+| 4.8 | Aviso en la interfaz si falla «Iniciar con Windows» | 010 |
+| 4.9 | `scripts/verificar-bitacora.sh` | 011 |
+| 4.10 | Formato oficial de `ui/app.js` con Prettier (`make fmt-ui`, `make ui-format`) | 012 |
 
 **Verificación.** Todo se hizo y se probó en WSL, en modo simulado. Última cuenta registrada: 135
 pruebas de la librería y 1 de paridad (reporte de la 4.5); el autor repite `cargo test`,

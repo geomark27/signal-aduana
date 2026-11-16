@@ -58,3 +58,10 @@ node --check ui/app.js
 - Probar en Windows el aviso al guardar con un fallo real del registro.
 - Cubrir el fallo al arrancar (ver Limitaciones).
 - Limpiar `#notice` cuando el aviso deje de aplicar.
+
+---
+
+**Nota (2026-11-16):** el commit que se fusionó trajo `ui/app.js` entero reformateado: pasó de 639 a
+1798 líneas (2211 cambiadas), no las +8 / −1 que cuenta la sección 4. Lo causó un formateador al
+guardar, no el cambio de esta tarea. La lógica descrita aquí es la misma; el formato resultante pasó a
+ser el oficial en la entrada 012.

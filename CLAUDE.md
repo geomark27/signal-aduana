@@ -32,6 +32,7 @@ cargo test                      # pruebas
 cargo clippy --all-targets      # sin advertencias
 cargo build
 node --check ui/app.js          # sintaxis de la interfaz
+make ui-format                  # ui/app.js sigue el formato de Prettier (make fmt-ui lo aplica)
 bash scripts/verificar-bitacora.sh   # bitácora coherente (solo lee; debe salir con 0)
 ```
 
@@ -49,6 +50,10 @@ No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hac
   con el sistema operativo y los avisos llevan el prefijo «[Simulado]». No dejes procesos de la
   app corriendo (usa `timeout`).
 - **Los cálculos viven en `src/dominio/`**; la interfaz no reimplementa reglas.
+- **`ui/app.js` sigue el formato de Prettier** (`.prettierrc.json`; la versión está fijada en el
+  `Makefile`). Se aplica con `make fmt-ui` y `make check` lo comprueba. Prettier actúa **solo** sobre
+  ese archivo (`.prettierignore`): si tu editor formatea al guardar, que use esa configuración. Un
+  reformateo accidental con otra configuración produjo un diff de más de 2000 líneas (entrada 012).
 - Interfaz, mensajes, comentarios y documentación en **español**. Comentarios mínimos: el código se
   explica con nombres; la historia y el porqué van a la bitácora.
 - Los criterios aduaneros, tributarios o legales que aparezcan en textos son referenciales y los
@@ -80,7 +85,7 @@ main ── develop ── tarea/N.M-tema   (cada tarea en .worktrees/N.M)
 ```bash
 make tarea n=4.10 tema=algo   # crea .worktrees/4.10 y la rama tarea/4.10-algo desde develop al día
 cd .worktrees/4.10            # se trabaja allí
-make check                    # ui-check + bitácora + clippy + pruebas
+make check                    # ui-check + ui-format + bitácora + clippy + pruebas
 make commit                   # un solo commit «Tarea: 4.10 algo» (enmienda si aún no se subió)
 make ship                     # push + PR + fusión con merge commit (pregunta antes)
 cd ../..                      # carpeta principal
