@@ -19,12 +19,16 @@ const FERIADOS_BASE = [
     "2026-12-25",
     "2027-01-01",
 ];
-/* Preferencias del equipo (contrato E): viven en Rust (preferencias.toml), no en el navegador. `feriadosExtra` es lo que dibuja la vista. */
+/* Preferencias del equipo (contrato E): viven en Rust (preferences.toml), no en el navegador. `feriadosExtra` es lo que dibuja la vista. */
 const PREFS_DEFECTO = {
-    avisos: { activos: true, horaCierre: "16:30", resumenLunes: true },
-    iniciarConWindows: false,
-    minimizarABandeja: true,
-    feriadosExtra: {},
+    notifications: {
+        enabled: true,
+        endOfDayTime: "16:30",
+        weeklySummary: true,
+    },
+    startWithWindows: false,
+    minimizeToTray: true,
+    extraHolidays: {},
 };
 const AVISO_INICIO =
     "No se pudo activar el inicio con Windows; la opción quedó desactivada.";
@@ -39,11 +43,11 @@ function isFeriado(ymd) {
 }
 function aplicarPrefs(p) {
     prefs = p;
-    feriadosExtra = p.feriadosExtra || {};
+    feriadosExtra = p.extraHolidays || {};
 }
 /* Guarda las preferencias completas (Rust las normaliza y devuelve como quedaron) y las aplica. */
 async function guardarPrefs(p) {
-    aplicarPrefs(await invoke("guardar_preferencias", { preferencias: p }));
+    aplicarPrefs(await invoke("save_preferences", { preferences: p }));
 }
 /* Marca o quita un feriado. No cambia nada en pantalla hasta que Rust confirma; si guardar falla, queda como estaba y se avisa en #notice. */
 async function toggleFeriado(ymd) {
@@ -53,7 +57,7 @@ async function toggleFeriado(ymd) {
     if (nuevo[ymd] === FERIADOS_BASE.includes(ymd)) delete nuevo[ymd];
     prefsBusy = true;
     try {
-        await guardarPrefs({ ...prefs, feriadosExtra: nuevo });
+        await guardarPrefs({ ...prefs, extraHolidays: nuevo });
     } catch (e) {
         prefsNotice = `No se pudo guardar el feriado: ${errText(e)}`;
         showNotice(prefsNotice);
@@ -97,7 +101,7 @@ async function migrarFeriados() {
         return;
     }
     try {
-        await guardarPrefs({ ...prefs, feriadosExtra: viejos });
+        await guardarPrefs({ ...prefs, extraHolidays: viejos });
         quitar();
     } catch (e) {
         feriadosExtra = viejos;
@@ -109,7 +113,7 @@ async function migrarFeriados() {
 }
 async function cargarPrefs() {
     try {
-        aplicarPrefs(await invoke("leer_preferencias"));
+        aplicarPrefs(await invoke("read_preferences"));
     } catch (e) {
         console.warn("No se pudieron leer las preferencias:", errText(e));
         return;
@@ -273,8 +277,8 @@ function setVista(v) {
 const inBoard = (i) => vista.board === "Todos" || i.board === vista.board;
 /* Pide la vista con los datos actuales (sin tocar la pantalla). */
 const pedirVista = () =>
-    invoke("calcular_vista", {
-        entrada: {
+    invoke("compute_view", {
+        input: {
             issues,
             week: weekKey,
             board,
@@ -1244,8 +1248,8 @@ async function restoreCache(snap) {
 }
 async function saveCache(g) {
     try {
-        await invoke("guardar_cache", {
-            datos: { format: CACHE_FORMAT, issues, docs, prMode, syncedAt },
+        await invoke("save_cache", {
+            data: { format: CACHE_FORMAT, issues, docs, prMode, syncedAt },
         });
     } catch (e) {
         if (g === gen)
@@ -1271,7 +1275,7 @@ async function enterApp(info) {
     setGate("Cargando tus tareas…", "Leyendo tus tareas de Jira.");
     const g = gen;
     try {
-        const snap = await invoke("leer_cache");
+        const snap = await invoke("read_cache");
         if (g !== gen) return;
         if (snap) await restoreCache(snap);
         if (g !== gen) return;
@@ -1305,10 +1309,10 @@ async function fetchWorklogs(quiet) {
     let ok = false,
         kept = false;
     try {
-        const keys = await invoke("claves_con_horas", { desde: from });
+        const keys = await invoke("keys_with_hours", { since: from });
         let r = { byKey: {}, failed: [], error: null };
         if (keys.length)
-            r = await invoke("leer_horas", { claves: keys, desde: after });
+            r = await invoke("read_worklogs", { keys, since: after });
         if (g !== gen) return false;
         const byKey = r.byKey || {},
             failed = r.failed || [];
@@ -1359,7 +1363,7 @@ async function fetchDocs(quiet) {
         render();
     }
     try {
-        const prs = new Set(await invoke("claves_con_pr"));
+        const prs = new Set(await invoke("keys_with_pr"));
         if (g !== gen) return false;
         for (const i of issues) i.hasPR = prs.has(i.key);
         prMode = "pr";
@@ -1391,8 +1395,8 @@ async function fetchDocs(quiet) {
         render();
     }
     try {
-        const found = await invoke("buscar_documentos", {
-            claves: cands.map((i) => i.key),
+        const found = await invoke("find_documents", {
+            keys: cands.map((i) => i.key),
         });
         if (g !== gen) return false;
         const checked = new Set(cands.map((i) => i.key));
@@ -1453,7 +1457,7 @@ async function refresh(force) {
             : "Consultando Jira…",
     );
     try {
-        const list = await invoke("cargar_tareas");
+        const list = await invoke("load_issues");
         if (g !== gen) return;
         if (quiet) {
             /* se conservan horas y documentos ya leídos hasta que lleguen los nuevos */
@@ -1652,7 +1656,11 @@ $("connForm").onsubmit = async (ev) => {
     $("connError").hidden = true;
     $("connBtn").disabled = true;
     try {
-        const info = await invoke("iniciar_sesion", { sitio, correo, token });
+        const info = await invoke("sign_in", {
+            site: sitio,
+            email: correo,
+            token,
+        });
         enterApp(info);
     } catch (e) {
         $("connError").textContent = errText(e);
@@ -1664,7 +1672,7 @@ $("logoutBtn").onclick = async () => {
     let info = { ...(lastInfo || {}), connected: false, notice: null },
         err = null;
     try {
-        info = await invoke("cerrar_sesion");
+        info = await invoke("sign_out");
     } catch (e) {
         err = errText(e);
     }
@@ -1687,11 +1695,11 @@ const prefsAvisosDependientes = () => {
     $("prefHora").disabled = $("prefLunes").disabled = !$("prefAvisos").checked;
 };
 function abrirPrefs() {
-    $("prefAvisos").checked = prefs.avisos.activos;
-    $("prefHora").value = prefs.avisos.horaCierre;
-    $("prefLunes").checked = prefs.avisos.resumenLunes;
-    $("prefInicio").checked = prefs.iniciarConWindows;
-    $("prefBandeja").checked = prefs.minimizarABandeja;
+    $("prefAvisos").checked = prefs.notifications.enabled;
+    $("prefHora").value = prefs.notifications.endOfDayTime;
+    $("prefLunes").checked = prefs.notifications.weeklySummary;
+    $("prefInicio").checked = prefs.startWithWindows;
+    $("prefBandeja").checked = prefs.minimizeToTray;
     prefsAvisosDependientes();
     $("prefsSimNote").hidden = !simulado;
     $("prefsError").hidden = true;
@@ -1716,14 +1724,14 @@ $("prefsForm").onsubmit = async (ev) => {
     }
     const nuevas = {
         ...prefs,
-        avisos: {
-            activos,
-            horaCierre: hora || prefs.avisos.horaCierre,
-            resumenLunes: $("prefLunes").checked,
+        notifications: {
+            enabled: activos,
+            endOfDayTime: hora || prefs.notifications.endOfDayTime,
+            weeklySummary: $("prefLunes").checked,
         },
-        iniciarConWindows: $("prefInicio").checked,
-        minimizarABandeja: $("prefBandeja").checked,
-        feriadosExtra,
+        startWithWindows: $("prefInicio").checked,
+        minimizeToTray: $("prefBandeja").checked,
+        extraHolidays: feriadosExtra,
     };
     prefsBusy = true;
     $("prefsSave").disabled = true;
@@ -1731,8 +1739,8 @@ $("prefsForm").onsubmit = async (ev) => {
     try {
         await guardarPrefs(nuevas);
         if (
-            nuevas.iniciarConWindows === true &&
-            prefs.iniciarConWindows === false
+            nuevas.startWithWindows === true &&
+            prefs.startWithWindows === false
         ) {
             $("prefInicio").checked = false;
             errorPrefs(AVISO_INICIO + " Los demás cambios se guardaron.");
@@ -1758,24 +1766,24 @@ function escucharEventos() {
             console.warn(`No se pudo escuchar ${nombre}:`, errText(e));
         }
     };
-    en("signal://actualizar", () => {
+    en("signal://refresh", () => {
         if (sessionActive && !(busy && busyGen === gen)) refresh(true);
     });
-    en("signal://preferencias", async () => {
-        const antes = prefs.iniciarConWindows;
+    en("signal://preferences", async () => {
+        const antes = prefs.startWithWindows;
         try {
-            aplicarPrefs(await invoke("leer_preferencias"));
+            aplicarPrefs(await invoke("read_preferences"));
         } catch (e) {
             console.warn("No se pudieron releer las preferencias:", errText(e));
             return;
         }
-        if (antes === true && prefs.iniciarConWindows === false) {
+        if (antes === true && prefs.startWithWindows === false) {
             prefsNotice = AVISO_INICIO;
             showNotice(AVISO_INICIO);
         }
         if ($("prefsDlg").open)
             $("prefInicio").checked =
-                prefs.iniciarConWindows; /* lo que Rust cambia por su cuenta; no pisa lo que la persona está editando */
+                prefs.startWithWindows; /* lo que Rust cambia por su cuenta; no pisa lo que la persona está editando */
         render(); /* los feriados pueden haber cambiado; sin tareas cargadas no hace nada */
     });
 }
@@ -1787,7 +1795,7 @@ escucharEventos();
 (async () => {
     await cargarPrefs(); /* no requiere sesión y no lanza: las preferencias (feriados) deben estar antes de pedir la primera vista */
     try {
-        const info = await invoke("restaurar_sesion");
+        const info = await invoke("restore_session");
         if (info.connected) enterApp(info);
         else showConnect(info);
     } catch (e) {

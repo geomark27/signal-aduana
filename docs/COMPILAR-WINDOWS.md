@@ -143,8 +143,8 @@ En modo simulado debes ver:
 - El título de la ventana «Signal Aduana — modo simulado».
 - Avisos con el prefijo «[Simulado]».
 - El inicio con Windows **no** se registra; solo queda constancia en el log.
-- Los archivos de datos con `.simulado.` en el nombre (`config.simulated.toml`,
-  `preferencias.simulado.toml`, `cache.simulated.json`, `avisos.simulado.json`).
+- Los archivos de datos con `.simulated.` en el nombre (`config.simulated.toml`,
+  `preferences.simulated.toml`, `cache.simulated.json`, `notifications.simulated.json`).
 - Ninguna petición a Jira.
 
 Para volver al modo real en esa ventana, quita la variable:
@@ -189,7 +189,7 @@ Windows normal.
 - [ ] Con «Minimizar a la bandeja» activo, cerrar la ventana la esconde y la app sigue viva.
 - [ ] Con «Minimizar a la bandeja» desactivado, cerrar la ventana termina el proceso.
 - [ ] Abrir la app una segunda vez trae al frente la ventana existente y no crea otro proceso.
-- [ ] El arranque con `--oculto` (acceso directo con ese argumento) empieza sin ventana visible y deja
+- [ ] El arranque con `--hidden` (acceso directo con ese argumento) empieza sin ventana visible y deja
       el ícono en la bandeja.
 - [ ] Al activar «Iniciar con Windows», cerrar sesión de Windows y volver a entrar, la app arranca
       oculta (solo bandeja).
@@ -197,12 +197,12 @@ Windows normal.
 - [ ] Llega el resumen del lunes cuando la semana anterior quedó incompleta.
 - [ ] Llega el aviso de reconexión cuando el token fue revocado.
 - [ ] Los feriados marcados antes en el navegador aparecen migrados en las preferencias
-      (`feriadosExtra` en `preferencias.toml`).
+      (`extraHolidays` en `preferences.toml`).
 
 Prueba el arranque oculto con este comando; no debe aparecer la ventana:
 
 ```powershell
-Start-Process "<ruta al ejecutable>\signal-aduana.exe" -ArgumentList "--oculto"
+Start-Process "<ruta al ejecutable>\signal-aduana.exe" -ArgumentList "--hidden"
 ```
 
 Comprueba que solo queda un proceso; debe aparecer una sola fila:
@@ -219,11 +219,11 @@ tiempo antes de dar por fallido un aviso.
 | Qué | Ruta |
 |---|---|
 | Configuración (sitio y correo, nunca el token) | `%APPDATA%\ec.com.torresytorres.signal\config.toml` |
-| Preferencias (avisos, inicio con Windows, bandeja, feriados) | `%APPDATA%\ec.com.torresytorres.signal\preferencias.toml` |
+| Preferencias (avisos, inicio con Windows, bandeja, feriados) | `%APPDATA%\ec.com.torresytorres.signal\preferences.toml` |
 | Datos locales: última carga | `%LOCALAPPDATA%\ec.com.torresytorres.signal\cache.json` |
-| Datos locales: avisos ya enviados hoy | `%LOCALAPPDATA%\ec.com.torresytorres.signal\avisos.json` |
+| Datos locales: avisos ya enviados hoy | `%LOCALAPPDATA%\ec.com.torresytorres.signal\notifications.json` |
 | Credencial del token de Jira | Administrador de credenciales de Windows, nombre `signal-aduana:<host>` |
-| Archivos del modo simulado | Los mismos, con `.simulado.` en el nombre |
+| Archivos del modo simulado | Los mismos, con `.simulated.` en el nombre |
 
 Abre la carpeta de configuración y preferencias:
 

@@ -1,27 +1,27 @@
 pub mod auth;
-pub mod avisos;
+pub mod autostart;
 pub mod cache;
-pub mod comandos;
+pub mod commands;
 pub mod config;
+pub mod desktop;
 pub mod domain;
-pub mod escritorio;
 pub mod error;
-pub mod inicio;
 pub mod jira;
 pub mod monitor;
-pub mod preferencias;
-pub mod resumen;
+pub mod notifications;
+pub mod preferences;
 pub mod secret_store;
 pub mod session;
-pub mod vigilancia;
+pub mod summary;
+pub mod watcher;
 
 use tauri::Manager;
 
 use crate::secret_store::{MemorySecretStore, SecretStore, SystemSecretStore};
 use crate::session::AppState;
 
-/// `SIGNAL_SIMULADO=1`/`0` manda; sin definir: simulado en debug y real en release.
-fn modo_simulado() -> bool {
+/// `SIGNAL_SIMULADO=1`/`0` rules; if undefined: simulated in debug and real in release.
+fn simulated_mode() -> bool {
     match std::env::var("SIGNAL_SIMULADO").ok().as_deref().map(str::trim) {
         Some("1") => true,
         Some("0") => false,
@@ -30,49 +30,49 @@ fn modo_simulado() -> bool {
 }
 
 pub fn run() {
-    let simulado = modo_simulado();
+    let simulated = simulated_mode();
     tauri::Builder::default()
-        .plugin(escritorio::instancia_unica())
+        .plugin(desktop::single_instance())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec![escritorio::ARG_OCULTO]),
+            Some(vec![desktop::HIDDEN_ARG]),
         ))
         .setup(move |app| {
-            let dir = app.path().app_config_dir()?;
-            let dir_datos = app.path().app_local_data_dir()?;
-            let almacen: Box<dyn SecretStore> =
-                if simulado { Box::new(MemorySecretStore::default()) } else { Box::new(SystemSecretStore) };
-            app.manage(AppState::new(simulado, dir, dir_datos, almacen));
-            if simulado {
-                if let Some(ventana) = app.get_webview_window("main") {
-                    ventana.set_title("Signal Aduana — modo simulado")?;
+            let config_dir = app.path().app_config_dir()?;
+            let data_dir = app.path().app_local_data_dir()?;
+            let secrets: Box<dyn SecretStore> =
+                if simulated { Box::new(MemorySecretStore::default()) } else { Box::new(SystemSecretStore) };
+            app.manage(AppState::new(simulated, config_dir, data_dir, secrets));
+            if simulated {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.set_title("Signal Aduana — modo simulado")?;
                 }
             }
-            app.manage(vigilancia::Vigilante::nuevo());
-            escritorio::configurar(app)?;
-            let estado = app.state::<AppState>();
-            let prefs = preferencias::cargar(&estado.config_dir, estado.simulated);
-            inicio::aplicar(app.handle(), &estado, prefs);
-            vigilancia::iniciar(app.handle());
+            app.manage(watcher::Watcher::new());
+            desktop::setup(app)?;
+            let state = app.state::<AppState>();
+            let prefs = preferences::load(&state.config_dir, state.simulated);
+            autostart::apply(app.handle(), &state, prefs);
+            watcher::start(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            comandos::restaurar_sesion,
-            comandos::iniciar_sesion,
-            comandos::cerrar_sesion,
-            comandos::cargar_tareas,
-            comandos::claves_con_horas,
-            comandos::claves_con_pr,
-            comandos::leer_horas,
-            comandos::buscar_documentos,
-            comandos::leer_cache,
-            comandos::guardar_cache,
-            comandos::calcular_vista,
-            comandos::leer_preferencias,
-            comandos::guardar_preferencias,
+            commands::restore_session,
+            commands::sign_in,
+            commands::sign_out,
+            commands::load_issues,
+            commands::keys_with_hours,
+            commands::keys_with_pr,
+            commands::read_worklogs,
+            commands::find_documents,
+            commands::read_cache,
+            commands::save_cache,
+            commands::compute_view,
+            commands::read_preferences,
+            commands::save_preferences,
         ])
         .run(tauri::generate_context!())
-        .expect("error al iniciar Signal Aduana");
+        .expect("error starting Signal Aduana");
 }

@@ -15,7 +15,8 @@ léelo antes de empezar una tarea.
 src/domain/         Cálculos (semanas, horas, feriados, vista). La interfaz solo dibuja.
 src/jira/           Cliente de Jira/Confluence: http real, simulado y operaciones de alto nivel
 src/                auth, secret_store (credenciales), config, cache, session, error,
-                    preferencias, resumen, avisos, comandos (comandos de Tauri), lib, main
+                    preferences, notifications, summary, monitor, watcher, desktop,
+                    autostart, commands (comandos de Tauri), lib, main
 ui/                 index.html, app.js, styles.css (CSP: sin scripts ni manejadores en línea)
 examples/           dump_simulated (volcado para la paridad)
 tests/parity/       Casos de paridad del dominio (entradas y salidas esperadas); tests/parity.rs los corre
