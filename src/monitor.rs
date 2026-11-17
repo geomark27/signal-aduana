@@ -1,138 +1,138 @@
-//! Un ciclo del monitor: lee las horas, fija el tooltip de la bandeja y decide los avisos.
-//! Lógica pura (sin Tauri ni reloj propio): la salida real se conecta con `Salida`.
+//! One monitor cycle: reads the hours, sets the tray tooltip and decides the notifications.
+//! Pure logic (no Tauri or clock of its own): the real output is connected through `Output`.
 
 use chrono::{Duration, NaiveDate, NaiveDateTime, Timelike, Utc};
 
-use crate::avisos::{self, EstadoMonitor};
 use crate::error::{AppError, AppResult};
 use crate::jira;
-use crate::preferencias::{self, Preferencias};
-use crate::resumen::{self, Resumen, MAX_TEXTO_BANDEJA};
+use crate::notifications::{self, MonitorState};
+use crate::preferences::{self, Preferences};
 use crate::session::AppState;
+use crate::summary::{self, HoursSummary, MAX_TRAY_TEXT};
 
-/// Destino de lo que produce el ciclo (la bandeja y las notificaciones de Windows).
-pub trait Salida: Send + Sync {
-    fn tooltip(&self, texto: &str);
-    fn notificar(&self, titulo: &str, cuerpo: &str);
+/// Destination of what the cycle produces (the tray and the Windows notifications).
+pub trait Output: Send + Sync {
+    fn tooltip(&self, text: &str);
+    fn notify(&self, title: &str, body: &str);
 }
 
-/// Último dato bueno: el resumen y la hora de Ecuador en que se leyó.
+/// Last good data: the summary and the Ecuador time at which it was read.
 #[derive(Debug, Default)]
-pub struct Memoria {
-    pub ultimo: Option<(Resumen, NaiveDateTime)>,
+pub struct Memory {
+    pub last: Option<(HoursSummary, NaiveDateTime)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ResultadoCiclo {
-    Datos,
-    SinSesion,
-    NoAutorizado,
-    Fallo,
+pub enum CycleResult {
+    Data,
+    NoSession,
+    Unauthorized,
+    Failed,
 }
 
-/// Hora de Ecuador (UTC-5, sin horario de verano).
-pub fn ahora_ecuador() -> NaiveDateTime {
+/// Ecuador time (UTC-5, no daylight saving).
+pub fn now_ecuador() -> NaiveDateTime {
     (Utc::now() - Duration::hours(5)).naive_utc()
 }
 
-fn recortar(texto: String) -> String {
-    texto.chars().take(MAX_TEXTO_BANDEJA).collect()
+fn truncate(text: String) -> String {
+    text.chars().take(MAX_TRAY_TEXT).collect()
 }
 
-fn con_marca_simulado(mut texto: String, simulado: bool) -> String {
-    if simulado {
-        texto.push_str(" (simulado)");
+fn with_simulated_mark(mut text: String, simulated: bool) -> String {
+    if simulated {
+        text.push_str(" (simulado)");
     }
-    recortar(texto)
+    truncate(text)
 }
 
-/// Texto del tooltip cuando no hay sesión.
-pub fn texto_sin_sesion(simulado: bool) -> String {
-    con_marca_simulado("Signal Aduana · Sin sesión".into(), simulado)
+/// Tooltip text when there is no session.
+pub fn no_session_text(simulated: bool) -> String {
+    with_simulated_mark("Signal Aduana · Sin sesión".into(), simulated)
 }
 
-/// Texto del tooltip cuando un ciclo entró en pánico.
-pub fn texto_error_interno(simulado: bool) -> String {
-    con_marca_simulado("Signal Aduana · Error interno, se reintenta".into(), simulado)
+/// Tooltip text when a cycle panicked.
+pub fn internal_error_text(simulated: bool) -> String {
+    with_simulated_mark("Signal Aduana · Error interno, se reintenta".into(), simulated)
 }
 
-async fn leer_resumen(
-    fuente: &jira::Source,
-    cuenta: &str,
-    hoy: NaiveDate,
-    prefs: &Preferencias,
-) -> AppResult<Resumen> {
-    let tareas = jira::load_for_summary(fuente, Some(cuenta), hoy).await?;
-    resumen::resumir(tareas, hoy, &prefs.feriados_extra)
+async fn read_summary(
+    source: &jira::Source,
+    account: &str,
+    today: NaiveDate,
+    prefs: &Preferences,
+) -> AppResult<HoursSummary> {
+    let issues = jira::load_for_summary(source, Some(account), today).await?;
+    summary::summarize(issues, today, &prefs.extra_holidays)
 }
 
-/// Una pasada del monitor. La hora `ahora` (Ecuador) entra por parámetro.
-pub async fn ciclo(
-    estado: &AppState,
-    salida: &dyn Salida,
-    ahora: NaiveDateTime,
-    memoria: &mut Memoria,
-) -> ResultadoCiclo {
-    let hoy = ahora.date();
-    let prefs = preferencias::cargar(&estado.config_dir, estado.simulated);
-    let mut registro = avisos::cargar_registro(&estado.data_dir, estado.simulated);
+/// One monitor pass. The time `now` (Ecuador) comes in as a parameter.
+pub async fn cycle(
+    state: &AppState,
+    output: &dyn Output,
+    now: NaiveDateTime,
+    memory: &mut Memory,
+) -> CycleResult {
+    let today = now.date();
+    let prefs = preferences::load(&state.config_dir, state.simulated);
+    let mut log = notifications::load_log(&state.data_dir, state.simulated);
 
-    let mut leido: Option<Resumen> = None;
-    let (tooltip, resultado) = match estado.current().await {
-        Err(_) => (texto_sin_sesion(estado.simulated), ResultadoCiclo::SinSesion),
-        Ok(s) => match leer_resumen(&s.source, &s.user.account_id, hoy, &prefs).await {
+    let mut read: Option<HoursSummary> = None;
+    let (tooltip, result) = match state.current().await {
+        Err(_) => (no_session_text(state.simulated), CycleResult::NoSession),
+        Ok(s) => match read_summary(&s.source, &s.user.account_id, today, &prefs).await {
             Ok(r) => {
-                memoria.ultimo = Some((r.clone(), ahora));
-                let texto = resumen::texto_bandeja(Some(&r), estado.simulated);
-                leido = Some(r);
-                (texto, ResultadoCiclo::Datos)
+                memory.last = Some((r.clone(), now));
+                let text = summary::tray_text(Some(&r), state.simulated);
+                read = Some(r);
+                (text, CycleResult::Data)
             }
             Err(AppError::Unauthorized) => {
-                estado.clear().await;
+                state.clear().await;
                 (
-                    con_marca_simulado("Signal Aduana · Sin conexión con Jira".into(), estado.simulated),
-                    ResultadoCiclo::NoAutorizado,
+                    with_simulated_mark("Signal Aduana · Sin conexión con Jira".into(), state.simulated),
+                    CycleResult::Unauthorized,
                 )
             }
             Err(e) => {
-                eprintln!("monitor: ciclo fallido: {e}");
-                let texto = match &memoria.ultimo {
-                    Some((r, t)) => recortar(format!(
+                eprintln!("monitor: cycle failed: {e}");
+                let text = match &memory.last {
+                    Some((r, t)) => truncate(format!(
                         "{} · último dato {:02}:{:02}",
-                        resumen::texto_bandeja(Some(r), estado.simulated),
+                        summary::tray_text(Some(r), state.simulated),
                         t.hour(),
                         t.minute()
                     )),
-                    None => resumen::texto_bandeja(None, estado.simulated),
+                    None => summary::tray_text(None, state.simulated),
                 };
-                (texto, ResultadoCiclo::Fallo)
+                (text, CycleResult::Failed)
             }
         },
     };
 
-    salida.tooltip(&tooltip);
+    output.tooltip(&tooltip);
 
-    let estado_monitor = match (&leido, resultado) {
-        (Some(r), _) => EstadoMonitor::Resumen(r),
-        (None, ResultadoCiclo::SinSesion) => EstadoMonitor::SinSesion,
-        (None, ResultadoCiclo::NoAutorizado) => EstadoMonitor::NoAutorizado,
-        (None, _) => EstadoMonitor::Error,
+    let monitor_state = match (&read, result) {
+        (Some(r), _) => MonitorState::Summary(r),
+        (None, CycleResult::NoSession) => MonitorState::NoSession,
+        (None, CycleResult::Unauthorized) => MonitorState::Unauthorized,
+        (None, _) => MonitorState::Error,
     };
-    let lista = avisos::decidir(estado_monitor, ahora, &prefs, &registro, estado.simulated);
-    for a in &lista {
-        salida.notificar(&a.titulo, &a.cuerpo);
+    let due = notifications::decide(monitor_state, now, &prefs, &log, state.simulated);
+    for n in &due {
+        output.notify(&n.title, &n.body);
     }
-    if !lista.is_empty() {
-        avisos::marcar(&mut registro, &lista, hoy);
-        if let Err(e) = avisos::guardar_registro(&estado.data_dir, estado.simulated, &registro) {
-            eprintln!("monitor: no se pudo guardar el registro de avisos: {e}");
+    if !due.is_empty() {
+        notifications::mark_sent(&mut log, &due, today);
+        if let Err(e) = notifications::save_log(&state.data_dir, state.simulated, &log) {
+            eprintln!("monitor: could not save the notification log: {e}");
         }
     }
-    resultado
+    result
 }
 
 #[cfg(test)]
-mod pruebas {
+mod tests {
     use std::sync::{Arc, Mutex};
 
     use chrono::NaiveDate;
@@ -149,251 +149,251 @@ mod pruebas {
     use crate::session::Session;
 
     #[derive(Default)]
-    struct Registrador {
+    struct Recorder {
         tooltips: Mutex<Vec<String>>,
-        notificaciones: Mutex<Vec<(String, String)>>,
+        notifications: Mutex<Vec<(String, String)>>,
     }
 
-    impl Salida for Registrador {
-        fn tooltip(&self, texto: &str) {
-            self.tooltips.lock().unwrap().push(texto.to_string());
+    impl Output for Recorder {
+        fn tooltip(&self, text: &str) {
+            self.tooltips.lock().unwrap().push(text.to_string());
         }
-        fn notificar(&self, titulo: &str, cuerpo: &str) {
-            self.notificaciones.lock().unwrap().push((titulo.to_string(), cuerpo.to_string()));
+        fn notify(&self, title: &str, body: &str) {
+            self.notifications.lock().unwrap().push((title.to_string(), body.to_string()));
         }
     }
 
-    impl Registrador {
+    impl Recorder {
         fn tooltips(&self) -> Vec<String> {
             self.tooltips.lock().unwrap().clone()
         }
-        fn notificaciones(&self) -> Vec<(String, String)> {
-            self.notificaciones.lock().unwrap().clone()
+        fn notifications(&self) -> Vec<(String, String)> {
+            self.notifications.lock().unwrap().clone()
         }
     }
 
-    fn fecha(s: &str) -> NaiveDate {
+    fn date(s: &str) -> NaiveDate {
         NaiveDate::parse_from_str(s, "%Y-%m-%d").unwrap()
     }
 
-    fn ahora(s: &str) -> NaiveDateTime {
+    fn now(s: &str) -> NaiveDateTime {
         NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").unwrap()
     }
 
-    fn estado(dir: &tempfile::TempDir) -> AppState {
+    fn state(dir: &tempfile::TempDir) -> AppState {
         AppState::new(
             true,
             dir.path().join("config"),
-            dir.path().join("datos"),
+            dir.path().join("data"),
             Box::new(MemorySecretStore::default()),
         )
     }
 
-    fn sitio() -> Site {
+    fn site() -> Site {
         Site::parse("prueba.atlassian.net").unwrap()
     }
 
-    async fn poner_sesion(estado: &AppState, fuente: Source, usuario: crate::jira::model::User) {
-        let s = Session { source: fuente, user: usuario, site: sitio(), email: "persona@ejemplo.test".into() };
-        *estado.session.write().await = Some(Arc::new(s));
+    async fn set_session(state: &AppState, source: Source, user: crate::jira::model::User) {
+        let s = Session { source, user, site: site(), email: "persona@ejemplo.test".into() };
+        *state.session.write().await = Some(Arc::new(s));
     }
 
-    async fn sesion_simulada(estado: &AppState, hoy: &str, token_valido: bool) {
-        let valida = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha(hoy)));
-        let usuario = valida.myself().await.unwrap();
-        let fuente = if token_valido {
-            valida
+    async fn simulated_session(state: &AppState, today: &str, valid_token: bool) {
+        let valid = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, date(today)));
+        let user = valid.myself().await.unwrap();
+        let source = if valid_token {
+            valid
         } else {
-            Source::Simulated(SimulatedJira::new("persona@ejemplo.test", false, fecha(hoy)))
+            Source::Simulated(SimulatedJira::new("persona@ejemplo.test", false, date(today)))
         };
-        poner_sesion(estado, fuente, usuario).await;
+        set_session(state, source, user).await;
     }
 
-    fn todos_dentro_del_limite(r: &Registrador) {
+    fn all_within_limit(r: &Recorder) {
         for t in r.tooltips() {
-            assert!(t.chars().count() <= MAX_TEXTO_BANDEJA, "tooltip largo: {t}");
+            assert!(t.chars().count() <= MAX_TRAY_TEXT, "tooltip too long: {t}");
         }
     }
 
     #[test]
-    fn texto_sin_sesion_con_y_sin_marca_simulado() {
-        let real = texto_sin_sesion(false);
+    fn no_session_text_with_and_without_simulated_mark() {
+        let real = no_session_text(false);
         assert!(real.ends_with("Sin sesión"));
-        let sim = texto_sin_sesion(true);
+        let sim = no_session_text(true);
         assert!(sim.ends_with(" (simulado)"));
-        assert!(real.chars().count() <= MAX_TEXTO_BANDEJA);
-        assert!(sim.chars().count() <= MAX_TEXTO_BANDEJA);
+        assert!(real.chars().count() <= MAX_TRAY_TEXT);
+        assert!(sim.chars().count() <= MAX_TRAY_TEXT);
     }
 
     #[test]
-    fn texto_error_interno_con_y_sin_marca_simulado() {
-        let real = texto_error_interno(false);
+    fn internal_error_text_with_and_without_simulated_mark() {
+        let real = internal_error_text(false);
         assert!(!real.ends_with(" (simulado)"));
         assert!(real.contains("Error interno"));
-        let sim = texto_error_interno(true);
+        let sim = internal_error_text(true);
         assert!(sim.ends_with(" (simulado)"));
-        assert!(real.chars().count() <= MAX_TEXTO_BANDEJA);
-        assert!(sim.chars().count() <= MAX_TEXTO_BANDEJA);
+        assert!(real.chars().count() <= MAX_TRAY_TEXT);
+        assert!(sim.chars().count() <= MAX_TRAY_TEXT);
     }
 
     #[tokio::test]
-    async fn sin_sesion_muestra_tooltip_y_no_avisa() {
+    async fn no_session_shows_tooltip_and_does_not_notify() {
         let dir = tempfile::tempdir().unwrap();
-        let e = estado(&dir);
-        let salida = Registrador::default();
-        let mut mem = Memoria::default();
-        let r = ciclo(&e, &salida, ahora("2026-11-13 17:00"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::SinSesion);
-        let t = salida.tooltips();
+        let e = state(&dir);
+        let output = Recorder::default();
+        let mut mem = Memory::default();
+        let r = cycle(&e, &output, now("2026-11-13 17:00"), &mut mem).await;
+        assert_eq!(r, CycleResult::NoSession);
+        let t = output.tooltips();
         assert_eq!(t.len(), 1);
         assert!(t[0].contains("Sin sesión"));
         assert!(t[0].ends_with(" (simulado)"));
-        assert!(salida.notificaciones().is_empty());
-        assert!(mem.ultimo.is_none());
-        todos_dentro_del_limite(&salida);
+        assert!(output.notifications().is_empty());
+        assert!(mem.last.is_none());
+        all_within_limit(&output);
     }
 
     #[tokio::test]
-    async fn con_sesion_simulada_da_datos_y_tooltip() {
+    async fn simulated_session_gives_data_and_tooltip() {
         let dir = tempfile::tempdir().unwrap();
-        let e = estado(&dir);
-        sesion_simulada(&e, "2026-11-13", true).await;
-        let salida = Registrador::default();
-        let mut mem = Memoria::default();
-        let r = ciclo(&e, &salida, ahora("2026-11-13 10:00"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::Datos);
-        let t = salida.tooltips();
+        let e = state(&dir);
+        simulated_session(&e, "2026-11-13", true).await;
+        let output = Recorder::default();
+        let mut mem = Memory::default();
+        let r = cycle(&e, &output, now("2026-11-13 10:00"), &mut mem).await;
+        assert_eq!(r, CycleResult::Data);
+        let t = output.tooltips();
         assert_eq!(t.len(), 1);
         assert!(t[0].starts_with("Signal Aduana · Semana:"));
         assert!(t[0].contains("(simulado)"));
-        let (res, hora) = mem.ultimo.as_ref().unwrap();
-        assert_eq!(res.hoy, "2026-11-13");
-        assert_eq!(*hora, ahora("2026-11-13 10:00"));
-        todos_dentro_del_limite(&salida);
+        let (res, time) = mem.last.as_ref().unwrap();
+        assert_eq!(res.today, "2026-11-13");
+        assert_eq!(*time, now("2026-11-13 10:00"));
+        all_within_limit(&output);
     }
 
-    async fn resumen_esperado(hoy: &str) -> Resumen {
-        let f = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha(hoy)));
-        let yo = f.myself().await.unwrap().account_id;
-        let tareas = jira::load_for_summary(&f, Some(&yo), fecha(hoy)).await.unwrap();
-        resumen::resumir(tareas, fecha(hoy), &Preferencias::default().feriados_extra).unwrap()
+    async fn expected_summary(today: &str) -> HoursSummary {
+        let f = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, date(today)));
+        let me = f.myself().await.unwrap().account_id;
+        let issues = jira::load_for_summary(&f, Some(&me), date(today)).await.unwrap();
+        summary::summarize(issues, date(today), &Preferences::default().extra_holidays).unwrap()
     }
 
     #[tokio::test]
-    async fn cierre_de_jornada_coincide_con_decidir_y_no_se_repite() {
+    async fn end_of_day_matches_decide_and_is_not_repeated() {
         let dir = tempfile::tempdir().unwrap();
-        let e = estado(&dir);
-        sesion_simulada(&e, "2026-11-13", true).await;
-        let salida = Registrador::default();
-        let mut mem = Memoria::default();
-        let t = ahora("2026-11-13 17:00");
+        let e = state(&dir);
+        simulated_session(&e, "2026-11-13", true).await;
+        let output = Recorder::default();
+        let mut mem = Memory::default();
+        let t = now("2026-11-13 17:00");
 
-        let r = ciclo(&e, &salida, t, &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::Datos);
+        let r = cycle(&e, &output, t, &mut mem).await;
+        assert_eq!(r, CycleResult::Data);
 
-        let res = resumen_esperado("2026-11-13").await;
-        let esperados = avisos::decidir(
-            EstadoMonitor::Resumen(&res),
+        let res = expected_summary("2026-11-13").await;
+        let expected = notifications::decide(
+            MonitorState::Summary(&res),
             t,
-            &Preferencias::default(),
-            &avisos::Registro::default(),
+            &Preferences::default(),
+            &notifications::NotificationLog::default(),
             true,
         );
-        let enviados = salida.notificaciones();
-        assert_eq!(enviados.len(), esperados.len());
-        for (env, esp) in enviados.iter().zip(&esperados) {
-            assert_eq!(env.0, esp.titulo);
-            assert_eq!(env.1, esp.cuerpo);
+        let sent = output.notifications();
+        assert_eq!(sent.len(), expected.len());
+        for (sent_one, expected_one) in sent.iter().zip(&expected) {
+            assert_eq!(sent_one.0, expected_one.title);
+            assert_eq!(sent_one.1, expected_one.body);
         }
-        assert!(res.hoy_secs < 8 * 3600);
-        assert_eq!(enviados.len(), 1);
-        assert!(enviados[0].0.starts_with("[Simulado] "));
+        assert!(res.today_secs < 8 * 3600);
+        assert_eq!(sent.len(), 1);
+        assert!(sent[0].0.starts_with("[Simulado] "));
 
-        // El registro quedó en disco: el segundo ciclo del mismo día no repite.
-        let r = ciclo(&e, &salida, ahora("2026-11-13 17:15"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::Datos);
-        assert_eq!(salida.notificaciones().len(), enviados.len());
-        assert_eq!(salida.tooltips().len(), 2);
-        todos_dentro_del_limite(&salida);
+        // The log stayed on disk: the second cycle of the same day does not repeat.
+        let r = cycle(&e, &output, now("2026-11-13 17:15"), &mut mem).await;
+        assert_eq!(r, CycleResult::Data);
+        assert_eq!(output.notifications().len(), sent.len());
+        assert_eq!(output.tooltips().len(), 2);
+        all_within_limit(&output);
     }
 
     #[tokio::test]
-    async fn avisos_desactivados_no_notifican() {
+    async fn disabled_notifications_do_not_notify() {
         let dir = tempfile::tempdir().unwrap();
-        let e = estado(&dir);
-        let mut p = Preferencias::default();
-        p.avisos.activos = false;
-        preferencias::guardar(&e.config_dir, true, &p).unwrap();
-        sesion_simulada(&e, "2026-11-13", true).await;
-        let salida = Registrador::default();
-        let mut mem = Memoria::default();
-        let r = ciclo(&e, &salida, ahora("2026-11-13 17:00"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::Datos);
-        assert!(salida.notificaciones().is_empty());
-        assert_eq!(salida.tooltips().len(), 1);
-        todos_dentro_del_limite(&salida);
+        let e = state(&dir);
+        let mut p = Preferences::default();
+        p.notifications.enabled = false;
+        preferences::save(&e.config_dir, true, &p).unwrap();
+        simulated_session(&e, "2026-11-13", true).await;
+        let output = Recorder::default();
+        let mut mem = Memory::default();
+        let r = cycle(&e, &output, now("2026-11-13 17:00"), &mut mem).await;
+        assert_eq!(r, CycleResult::Data);
+        assert!(output.notifications().is_empty());
+        assert_eq!(output.tooltips().len(), 1);
+        all_within_limit(&output);
     }
 
     #[tokio::test]
-    async fn token_rechazado_limpia_la_sesion_y_avisa_una_vez() {
+    async fn rejected_token_clears_the_session_and_notifies_once() {
         let dir = tempfile::tempdir().unwrap();
-        let e = estado(&dir);
-        sesion_simulada(&e, "2026-11-13", false).await;
-        let salida = Registrador::default();
-        let mut mem = Memoria::default();
+        let e = state(&dir);
+        simulated_session(&e, "2026-11-13", false).await;
+        let output = Recorder::default();
+        let mut mem = Memory::default();
 
-        let r = ciclo(&e, &salida, ahora("2026-11-13 10:00"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::NoAutorizado);
+        let r = cycle(&e, &output, now("2026-11-13 10:00"), &mut mem).await;
+        assert_eq!(r, CycleResult::Unauthorized);
         assert!(matches!(e.current().await, Err(AppError::NoSession)));
-        let t = salida.tooltips();
+        let t = output.tooltips();
         assert_eq!(t.len(), 1);
         assert!(t[0].contains("Sin conexión con Jira"));
-        let n = salida.notificaciones();
+        let n = output.notifications();
         assert_eq!(n.len(), 1);
         assert!(n[0].0.starts_with("[Simulado] "));
         assert!(n[0].0.contains("Vuelve a conectar"));
 
-        // Otra sesión rechazada el mismo día: el aviso no se repite.
-        sesion_simulada(&e, "2026-11-13", false).await;
-        let r = ciclo(&e, &salida, ahora("2026-11-13 10:15"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::NoAutorizado);
-        assert_eq!(salida.notificaciones().len(), 1);
-        assert_eq!(salida.tooltips().len(), 2);
-        todos_dentro_del_limite(&salida);
+        // Another rejected session the same day: the notification is not repeated.
+        simulated_session(&e, "2026-11-13", false).await;
+        let r = cycle(&e, &output, now("2026-11-13 10:15"), &mut mem).await;
+        assert_eq!(r, CycleResult::Unauthorized);
+        assert_eq!(output.notifications().len(), 1);
+        assert_eq!(output.tooltips().len(), 2);
+        all_within_limit(&output);
     }
 
     #[tokio::test]
-    async fn fallo_de_red_conserva_la_sesion_y_muestra_el_ultimo_dato() {
+    async fn network_failure_keeps_the_session_and_shows_the_last_data() {
         let dir = tempfile::tempdir().unwrap();
-        let e = estado(&dir);
-        sesion_simulada(&e, "2026-11-13", true).await;
-        let salida = Registrador::default();
-        let mut mem = Memoria::default();
-        assert_eq!(ciclo(&e, &salida, ahora("2026-11-13 10:00"), &mut mem).await, ResultadoCiclo::Datos);
+        let e = state(&dir);
+        simulated_session(&e, "2026-11-13", true).await;
+        let output = Recorder::default();
+        let mut mem = Memory::default();
+        assert_eq!(cycle(&e, &output, now("2026-11-13 10:00"), &mut mem).await, CycleResult::Data);
 
-        let servidor = MockServer::start().await;
-        Mock::given(wiremock::matchers::any()).respond_with(ResponseTemplate::new(500)).mount(&servidor).await;
-        let cred = Credentials::classic_token(sitio(), "persona@ejemplo.test", SecretString::from("tok")).unwrap();
-        let base = Url::parse(&format!("{}/", servidor.uri())).unwrap();
-        let usuario = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha("2026-11-13")))
+        let server = MockServer::start().await;
+        Mock::given(wiremock::matchers::any()).respond_with(ResponseTemplate::new(500)).mount(&server).await;
+        let cred = Credentials::classic_token(site(), "persona@ejemplo.test", SecretString::from("tok")).unwrap();
+        let base = Url::parse(&format!("{}/", server.uri())).unwrap();
+        let user = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, date("2026-11-13")))
             .myself()
             .await
             .unwrap();
-        poner_sesion(&e, Source::Http(JiraHttp::with_base(cred, base)), usuario).await;
+        set_session(&e, Source::Http(JiraHttp::with_base(cred, base)), user).await;
 
-        let r = ciclo(&e, &salida, ahora("2026-11-13 10:15"), &mut mem).await;
-        assert_eq!(r, ResultadoCiclo::Fallo);
+        let r = cycle(&e, &output, now("2026-11-13 10:15"), &mut mem).await;
+        assert_eq!(r, CycleResult::Failed);
         assert!(e.current().await.is_ok());
-        let t = salida.tooltips();
+        let t = output.tooltips();
         assert_eq!(t.len(), 2);
         assert!(t[1].contains("último dato 10:00"), "tooltip: {}", t[1]);
 
-        // Sin dato previo, el tooltip es el de «sin datos».
-        let mut vacia = Memoria::default();
-        let r = ciclo(&e, &salida, ahora("2026-11-13 10:30"), &mut vacia).await;
-        assert_eq!(r, ResultadoCiclo::Fallo);
-        assert!(salida.tooltips()[2].contains("Sin datos"));
-        assert!(salida.notificaciones().is_empty());
-        todos_dentro_del_limite(&salida);
+        // Without a previous reading, the tooltip is the "no data" one.
+        let mut empty = Memory::default();
+        let r = cycle(&e, &output, now("2026-11-13 10:30"), &mut empty).await;
+        assert_eq!(r, CycleResult::Failed);
+        assert!(output.tooltips()[2].contains("Sin datos"));
+        assert!(output.notifications().is_empty());
+        all_within_limit(&output);
     }
 }
