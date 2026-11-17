@@ -58,7 +58,8 @@ La numeración continúa la del roadmap (5.1 a 5.6); los números no implican or
 | 5.13 | Código en inglés: escritorio y comandos (preferencias, avisos, resumen, monitor, vigilancia, escritorio, inicio, comandos, archivos en disco) | Sonnet 5.5 medio | `tarea/5.13-escritorio-en-ingles` | T |
 | 5.14 | Código en inglés: interfaz (`ui/app.js`, `id` y clases) | Sonnet 5.5 medio | `tarea/5.14-interfaz-en-ingles` | T |
 | 5.7 | Guía de Windows con los datos confirmados y segunda pasada | Orquestador | `tarea/5.7-guia-confirmada` | 2 |
-| 5.15+ | Una tarea por cada hallazgo de Windows | Según el caso | por hallazgo | 2 |
+| 5.15 | Instalador como Nudge: solo NSIS por usuario, en español, y desinstalación que conserva lo útil | Sonnet 5.5 medio | `tarea/5.15-instalador-nsis` | 2 |
+| 5.16+ | Una tarea por cada hallazgo de Windows | Según el caso | por hallazgo | 2 |
 | 5.8 | Cierre de la fase | Orquestador | `tarea/5.8-cierre-fase-5` | 3 |
 
 Las 5.1 a 5.3 no producen código ni rama: el autor reporta los resultados y estos quedan en la
@@ -67,7 +68,7 @@ entrada de la 5.7. Las olas 1 y A corren a la vez; no comparten nada.
 Las tareas de la ola T (traducción del código al inglés, decisión del autor del 2026-11-17) van
 **una detrás de otra**, nunca en paralelo: cada renombre alcanza a los archivos que usan lo
 renombrado. Cada una es una rama con su PR y sale con las pruebas en verde por sí sola.
-Originalmente los hallazgos de Windows iban a numerarse desde la 5.9; ahora empiezan en la 5.15.
+Originalmente los hallazgos de Windows iban a numerarse desde la 5.9; luego en la 5.15 y, con la tarea del instalador, empiezan en la 5.16.
 
 ## Orden
 
@@ -78,7 +79,7 @@ Ola 1   5.4 ‖ 5.5 ‖ 5.6 (WSL, tres worktrees en paralelo)        ─┤
                                                                   ▼
 Ola T   5.9 → 5.10 → 5.11 → 5.12 → 5.13 → 5.14 (código en inglés, en serie; hecha el 2026-11-17)
                                                                   ▼
-Ola 2   hallazgos 5.15+ y 5.7 (guía + segunda pasada en Windows)
+Ola 2   5.15 instalador, hallazgos 5.16+ y 5.7 (guía + segunda pasada en Windows)
 Ola 3   5.8 cierre
 ```
 
@@ -160,7 +161,7 @@ Cómo repetirlo: <pasos>
 Instalador: MSI | NSIS | cargo run
 ```
 
-Cada hallazgo se convierte en una tarea 5.15+ con su prueba cuando se pueda automatizar.
+Cada hallazgo se convierte en una tarea 5.16+ con su prueba cuando se pueda automatizar.
 
 ## Ola 1 — Tres tareas en WSL
 
@@ -330,20 +331,60 @@ sin advertencias, y `ui/` intacto.
   - (c) Con la 5.4 fusionada: marcar como feriado el lunes de la semana en curso, con la semana
     anterior incompleta. Si hoy es lunes, el resumen semanal no sale. Si hoy es martes, desde las
     09:00, sí sale.
+  - (d) Con la ola T fusionada (código en inglés), todos los controles de la interfaz responden:
+    preferencias, conexión, feriados del calendario, filtros por tablero, vistas y paginación de la
+    tabla. Los `id` cambiaron de nombre en la 5.14.
+  - (e) Conectar con el token «rechazar»: el mensaje de error sale sin el código al final
+    (decisión del autor, 5.12).
+- **«Iniciar con Windows» en modo simulado.** En modo simulado no se registra en el sistema, a
+  propósito (regla de `CLAUDE.md`). El punto de la lista de comprobación y el «a verificar» del
+  nombre de la entrada de inicio se marcan como «no aplica en simulado» y pasan a la fase 6.
+- La guía también recoge lo que se aprendió al compilar: para copiar el proyecto se usa
+  `robocopy … /MIR`, que borra en el destino los archivos renombrados por la ola T y deja intacta la
+  carpeta `target` excluida.
+- Se actualiza `docs/ROADMAP.md` con la ola T (5.9 a 5.14) dentro de la fase 5.
 - La entrada de bitácora recoge los resultados de 5.1 a 5.3 (hechos, no intenciones).
 
-**Hallazgos 5.15+:** una tarea por hallazgo, con su plan breve (objetivo, archivos, criterio) escrito
+**5.15 Instalador como Nudge** (decisiones del autor 2 y 5).
+- `tauri.conf.json`:
+  - `bundle.targets` pasa a `["nsis"]`;
+  - `bundle.windows.nsis` lleva `installMode: "currentUser"`, el idioma español y
+    `installerHooks: "windows/hooks.nsh"`.
+- `windows/hooks.nsh` define `NSIS_HOOK_POSTUNINSTALL`. Solo cuando **no** es una actualización
+  (`$UpdateMode <> 1`), borra:
+  - `notifications*.json` en `%LOCALAPPDATA%\<identificador>`;
+  - la carpeta `EBWebView` (perfil de WebView2);
+  - el valor de `StartupApproved\Run`.
+- La entrada `Run` ya la borra la plantilla de Tauri.
+- No se tocan la configuración, las preferencias, la caché ni la credencial.
+- La casilla «borrar datos» que trae Tauri se mantiene: si la persona la marca, Tauri borra todo
+  menos la credencial.
+- `docs/COMPILAR-WINDOWS.md`:
+  - solo el `.exe`;
+  - dónde se instala;
+  - qué queda al desinstalar y cómo borrarlo a mano.
+- Solo se comprueba de verdad en Windows. Lo hace el autor.
+
+**Hallazgos 5.16+:** una tarea por hallazgo, con su plan breve (objetivo, archivos, criterio) escrito
 por el orquestador cuando llegue el reporte, y aprobado por el autor antes de lanzarla. Los hallazgos
 de la interfaz (`ui/`) y los de Rust no comparten tarea.
 
 ## Ola 3 — Cierre
 
-**5.8 Cierre de la fase 5** (orquestador): sección «Estado al cierre» en este documento, índice de la
-bitácora, estado en `docs/ROADMAP.md`, y verificación con `bash scripts/verificar-bitacora.sh`.
+**5.8 Cierre de la fase 5** (orquestador):
+- la sección «Estado al cierre» en este documento;
+- el índice de la bitácora;
+- el estado en `docs/ROADMAP.md`;
+- la verificación con `bash scripts/verificar-bitacora.sh`.
+
+Incluye también la entrada de bitácora de la **5.4**, que se fusionó sin ella (PR #16): se escribe
+como entrada retroactiva, con la fecha de la fusión y lo que consta en el commit y en el plan, como
+se hizo con las entradas 001 y 002.
 
 ## Hecha la fase cuando
 
-1. Los 14 puntos de la lista de comprobación pasan en Windows, o cada uno que falla tiene su tarea 5.15+.
+1. Los 14 puntos de la lista de comprobación y los cinco de la segunda pasada pasan en Windows, o cada
+   uno que falla tiene su tarea 5.16+. Los que no aplican en simulado quedan anotados para la fase 6.
 2. Los seis «a verificar» de la guía están confirmados o justificados.
 3. Instalar y desinstalar no deja credenciales, entradas de inicio ni carpetas inesperadas, o lo que
    deja está documentado en la guía.
@@ -355,7 +396,8 @@ bitácora, estado en `docs/ROADMAP.md`, y verificación con `bash scripts/verifi
 | # | Pregunta | Decisión |
 |---|---|---|
 | 1 | Si el lunes es feriado y la semana anterior quedó incompleta, ¿se envía el resumen del lunes? | **Decidido (2026-11-17): el resumen sale el primer día laborable de la semana**, desde las 09:00. Se descartaron dos opciones: dejarlo como estaba (avisa en el día libre y se pierde si ese lunes la PC está apagada) y omitirlo en los lunes feriados (esa semana no hay resumen). Lo implementa la 5.4 |
-| 2 | ¿Qué instalador se entrega? | Pendiente: se decide con los resultados de 5.1 (MSI, NSIS o ambos) |
+| 2 | ¿Qué instalador se entrega? | **Decidido (2026-11-17): solo el `.exe` de NSIS, como en Nudge** (otra app de escritorio del autor): instalación por usuario y sin permisos de administrador. Se quita el MSI. Lo implementa la 5.15 |
+| 5 | ¿Qué conserva la desinstalación? | **Decidido (2026-11-17):** se conservan la configuración (sitio y correo), las preferencias, el token de Jira y la caché de tareas, para reinstalar sin perder nada. Se borran siempre el registro de avisos, el perfil de WebView2 y la entrada de «Iniciar con Windows». Lo implementa la 5.15 |
 | 3 | ¿Nombres de ramas y numeración? | Los de la tabla de arriba (aprobado) |
 | 4 | ¿Qué ejecutores? | **Decidido (2026-11-17): mixto.** Sonnet 5.5 medio para la 5.4 y la 5.5; opencode `*-free` para la 5.6 |
 

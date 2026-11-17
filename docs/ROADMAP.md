@@ -11,7 +11,7 @@ primera ola.
 |---|---|---|
 | 1 | Proyecto Tauri, login con API token, cliente de Jira y Confluence, fuente simulada | Hecha |
 | 2 | Caché local, actualización automática, fuentes dentro de la app | Hecha |
-| 3 | Cálculos en Rust (`src/dominio/`) con paridad contra el JS (31 casos) | Hecha |
+| 3 | Cálculos en Rust (hoy `src/domain/`) con paridad contra el JS (31 casos) | Hecha |
 | 4 | Bandeja, avisos, una instancia, preferencias, guía de Windows (tareas 4.1 a 4.10) | Hecha en `develop` |
 | 5 | Validar en Windows y cerrar deuda técnica (`docs/PLAN-FASE-5.md`) | En curso |
 
@@ -45,7 +45,7 @@ Dos vías en paralelo, porque no comparten archivos:
 | Tarea | Qué se hace |
 |---|---|
 | 5.1 | Compilar e instalar siguiendo `docs/COMPILAR-WINDOWS.md` (MSI y `-setup.exe`) y anotar lo que falle |
-| 5.2 | Pasar la lista de comprobación: ícono, menú y tooltip de la bandeja; cerrar a la bandeja con y sin la preferencia; segunda instancia; arranque con `--oculto`; inicio con Windows real; los tres avisos; migración de feriados desde el navegador; aspecto del panel de preferencias |
+| 5.2 | Pasar la lista de comprobación: ícono, menú y tooltip de la bandeja; cerrar a la bandeja con y sin la preferencia; segunda instancia; arranque con `--hidden`; inicio con Windows real (no aplica en simulado: pasa a la fase 6); los tres avisos; migración de feriados desde el navegador; aspecto del panel de preferencias |
 | 5.3 | Instalar y desinstalar limpiamente (¿quedan credenciales, carpetas o entradas de inicio?) |
 
 **Vía B — En WSL (ejecutores, con revisión del orquestador)**
@@ -56,11 +56,20 @@ Dos vías en paralelo, porque no comparten archivos:
 | 5.5 | Que un pánico en el ciclo del monitor no lo detenga para siempre (se reanuda y se registra) |
 | 5.6 | Que los cambios de preferencias (hora de cierre, feriados) lleguen al monitor al instante y no hasta 15 minutos después |
 
+**Ola T — Código en inglés (decisión del autor del 2026-11-17, hecha)**
+
+| Tarea | Qué se hizo |
+|---|---|
+| 5.9 | Glosario español → inglés (`docs/GLOSARIO.md`) y regla de idioma en `CLAUDE.md` |
+| 5.10 a 5.14 | Dominio y paridad, Jira, base de la app, escritorio y comandos, e interfaz pasados a inglés. Lo que ve la persona usuaria y la documentación siguen en español |
+
+Las tareas 5.4 a 5.6 y 5.9 a 5.14 están fusionadas en `develop`.
+
 **Cierre:** la guía `COMPILAR-WINDOWS.md` se actualiza con las rutas y nombres reales que se
 confirmaron (se quitan los «a verificar»), y cada hallazgo de Windows se corrige en una tarea con su
 prueba.
 
-**Decide el autor:** qué instalador se entrega (MSI, NSIS o ambos).
+**Decidido por el autor (2026-11-17):** se entrega solo el `.exe` de NSIS, por usuario, como en Nudge; la desinstalación conserva configuración, preferencias, token y caché (tarea 5.15).
 
 ---
 
@@ -97,8 +106,8 @@ reportar problemas.
 | Tarea | Qué se hace |
 |---|---|
 | 7.1 | Firma de código del instalador, para evitar el aviso de SmartScreen. Necesita un certificado: se gestiona con Tecnología |
-| 7.2 | Canal de distribución: carpeta compartida, política de grupo o Intune |
-| 7.3 | Actualizaciones: actualizador de Tauri (requiere un par de claves propio, distinto del certificado) o proceso manual documentado |
+| 7.2 | Canal de distribución: carpeta compartida, política de grupo o Intune. Referencia: Nudge publica el `.exe` en releases de GitHub con nombre fijo y un `install.ps1` de una línea; aquí depende de Tecnología y de la visibilidad del repositorio |
+| 7.3 | Actualizaciones: actualizador de Tauri (requiere un par de claves propio, distinto del certificado) o proceso manual documentado. Referencia: Nudge usa el actualizador de Tauri con `latest.json` |
 | 7.4 | Registro de errores para diagnóstico, sin tokens ni datos de tareas |
 | 7.5 | Caché: decidir entre dejarla en texto plano (hoy guarda títulos y horas de tareas en el perfil del usuario) o cifrarla; cerrar la carrera conocida al cerrar sesión mientras se guarda |
 | 7.6 | Manual de usuario corto: instalación, conexión, qué significan las señales y los avisos |
