@@ -66,7 +66,7 @@ pub const FIELDS: &[&str] = &[
 /// A valid Jira key: `APP-123`. Keeps arbitrary text from reaching a URL or a JQL.
 pub fn validate_key(key: &str) -> AppResult<&str> {
     static RE: OnceLock<Regex> = OnceLock::new();
-    let re = RE.get_or_init(|| Regex::new(r"^[A-Z][A-Z0-9_]{0,19}-[0-9]{1,9}$").expect("regex válida"));
+    let re = RE.get_or_init(|| Regex::new(r"^[A-Z][A-Z0-9_]{0,19}-[0-9]{1,9}$").expect("valid regex"));
     if re.is_match(key) {
         Ok(key)
     } else {
@@ -271,7 +271,7 @@ pub async fn load_for_summary(
 /// that do not show up, in the issue's remote links. Returns `key → url`.
 pub async fn find_documents(f: &Source, keys: &[String]) -> AppResult<HashMap<String, String>> {
     static RE: OnceLock<Regex> = OnceLock::new();
-    let re = RE.get_or_init(|| Regex::new(r"(?i)Despliegue\s*-?\s*([A-Z][A-Z0-9]+-\d+)").expect("regex válida"));
+    let re = RE.get_or_init(|| Regex::new(r"(?i)Despliegue\s*-?\s*([A-Z][A-Z0-9]+-\d+)").expect("valid regex"));
 
     for c in keys {
         validate_key(c)?;
@@ -349,7 +349,7 @@ mod tests {
         let issues = load_issues(&f, Some("sim-0001")).await.unwrap();
         let keys: HashSet<&str> = issues.iter().map(|t| t.key.as_str()).collect();
         assert_eq!(keys.len(), issues.len(), "hay claves repetidas");
-        assert!(issues.len() > 10, "debe ocupar más de una página de 10");
+        assert!(issues.len() > 10, "must span more than one page of 10");
         // The simulated source serves pages of 10: confirms that pagination really happened.
         let first = f.search(ISSUES_JQL, FIELDS, None, 100).await.unwrap();
         assert_eq!(first.issues.len(), 10);
@@ -363,7 +363,7 @@ mod tests {
         let f = sim(true);
         let keys = vec!["APP-401".to_string(), "AFO-101".to_string()];
         let raw = f.worklogs("APP-401", 0).await.unwrap();
-        assert!(raw.iter().any(|w| w["author"]["accountId"] == "sim-0002"), "el simulado debe traer horas ajenas");
+        assert!(raw.iter().any(|w| w["author"]["accountId"] == "sim-0002"), "the simulated source must bring foreign worklogs");
         let r = read_worklogs(&f, &keys, 0, Some("sim-0001")).await.unwrap();
         assert!(r.failed.is_empty() && r.error.is_none());
         let app = &r.by_key["APP-401"];
@@ -411,7 +411,7 @@ mod tests {
         let f = sim(true);
         let with_pr = keys_with_pr(&f).await.unwrap();
         assert!(with_pr.contains(&"APP-403".to_string()));
-        assert!(!with_pr.contains(&"OPE-701".to_string()), "la reunión no tiene PR");
+        assert!(!with_pr.contains(&"OPE-701".to_string()), "the meeting has no PR");
     }
 
     #[tokio::test]
@@ -424,7 +424,7 @@ mod tests {
         let recent = keys_with_hours(&f, "2026-11-10").await.unwrap();
         assert!(all.contains(&"OPE-701".to_string()));
         assert!(!recent.is_empty() && recent.len() < all.len());
-        assert!(!all.contains(&"ADN-301".to_string()), "ADN-301 no tiene horas");
+        assert!(!all.contains(&"ADN-301".to_string()), "ADN-301 has no hours");
     }
 
     fn test_date() -> NaiveDate {
@@ -447,11 +447,11 @@ mod tests {
         for t in &issues {
             assert!(t.get("key").and_then(Value::as_str).is_some());
             assert!(!t.contains_key("hasPR"));
-            let wl = t.get("worklogs").and_then(Value::as_array).expect("worklogs es un arreglo");
+            let wl = t.get("worklogs").and_then(Value::as_array).expect("worklogs is an array");
             for w in wl {
                 had_worklogs = true;
-                assert_ne!(w["a"].as_str(), Some("sim-0002"), "registro ajeno");
-                assert!(w["d"].as_str().unwrap() >= since.as_str(), "registro anterior al lunes de hoy - 98 días");
+                assert_ne!(w["a"].as_str(), Some("sim-0002"), "foreign worklog");
+                assert!(w["d"].as_str().unwrap() >= since.as_str(), "worklog earlier than the Monday of today - 98 days");
             }
         }
         assert!(had_worklogs);
@@ -469,7 +469,7 @@ mod tests {
         let f = sim_friday(true);
         let originals = load_issues(&f, Some("sim-0001")).await.unwrap();
         let without_spent: Vec<&str> = originals.iter().filter(|t| t.spent == 0).map(|t| t.key.as_str()).collect();
-        assert!(!without_spent.is_empty(), "el simulado debe traer alguna tarea sin tiempo gastado");
+        assert!(!without_spent.is_empty(), "the simulated source must bring some issue without time spent");
         let issues = load_for_summary(&f, Some("sim-0001"), test_date()).await.unwrap();
         for t in issues.iter().filter(|t| without_spent.contains(&t["key"].as_str().unwrap())) {
             let sum: i64 = t["worklogs"].as_array().unwrap().iter().filter_map(|w| w["s"].as_i64()).sum();

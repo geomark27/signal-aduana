@@ -423,7 +423,7 @@ impl SimWorklog {
     }
 
     fn started_ms(&self) -> i64 {
-        let local = self.day.and_hms_opt(self.hour, 30, 0).expect("hora válida");
+        let local = self.day.and_hms_opt(self.hour, 30, 0).expect("valid time");
         local.and_utc().timestamp_millis() + 5 * 3_600_000
     }
 
@@ -482,7 +482,7 @@ fn generate_worklogs(defs: &[IssueDef], monday: NaiveDate, today: NaiveDate) -> 
                 let least_loaded = |exclude: Option<usize>| {
                     active.iter().copied().filter(|i| Some(*i) != exclude).min_by_key(|i| (per_issue[*i].len(), *i))
                 };
-                let a = least_loaded(None).expect("hay tareas activas");
+                let a = least_loaded(None).expect("there are active issues");
                 if n == 1 || order % 3 == 0 {
                     per_issue[a].push(new_worklog(ME, day, 8, total));
                 } else {
@@ -498,7 +498,7 @@ fn generate_worklogs(defs: &[IssueDef], monday: NaiveDate, today: NaiveDate) -> 
         day += Days::days(1);
     }
 
-    let index_of = |key: &str| defs.iter().position(|d| d.key == key).expect("tarea definida");
+    let index_of = |key: &str| defs.iter().position(|d| d.key == key).expect("issue defined");
     // Saturday hours (falls in the previous week): outside the working week.
     per_issue[index_of("AFO-101")].push(new_worklog(ME, monday - Days::days(2), 9, 3 * 3600));
     // Hours of another person on a shared issue: the UI must ignore them.
@@ -752,7 +752,7 @@ impl SimulatedJira {
     pub async fn confluence(&self, cql: &str) -> AppResult<Vec<WikiPage>> {
         self.serve().await?;
         static RE: OnceLock<Regex> = OnceLock::new();
-        let re = RE.get_or_init(|| Regex::new(r"[A-Z][A-Z0-9_]*-[0-9]+").expect("regex válida"));
+        let re = RE.get_or_init(|| Regex::new(r"[A-Z][A-Z0-9_]*-[0-9]+").expect("valid regex"));
         let requested: HashSet<&str> = re.find_iter(cql).map(|m| m.as_str()).collect();
         Ok(self
             .issues
@@ -824,7 +824,7 @@ mod tests {
         let mut days_with_hours: HashSet<NaiveDate> = HashSet::new();
         for t in &s.issues {
             for r in t.worklogs.iter().filter(|r| r.author == ME) {
-                assert!(!is_holiday(r.day), "{} registra horas en feriado {}", t.key, r.day);
+                assert!(!is_holiday(r.day), "{} logs hours on holiday {}", t.key, r.day);
                 if matches!(r.day.weekday(), Weekday::Sat | Weekday::Sun) {
                     saturdays += 1;
                     assert_eq!(t.key, "AFO-101");
@@ -886,7 +886,7 @@ mod tests {
         assert!(by("DAI-202").fin_dev.is_none() && by("DAI-202").resolved.is_some());
         assert!(by("DAI-201").fin_dev.is_some());
         let a = by("AFO-101");
-        assert!(a.spent as f64 > a.est as f64 * 1.2, "debe superar la estimación");
+        assert!(a.spent as f64 > a.est as f64 * 1.2, "must exceed the estimate");
         // Finished after the due date.
         assert!(by("DAI-201").fin_dev.as_deref().unwrap() > by("DAI-201").due.as_deref().unwrap());
         // Open and overdue.

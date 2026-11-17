@@ -57,9 +57,9 @@ No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hac
   reformateo accidental con otra configuración produjo un diff de más de 2000 líneas (entrada 012).
 - **Idioma.**
   - **Código en inglés**: identificadores, módulos, archivos, comentarios, nombres serializados
-    (campos JSON y TOML), comandos de Tauri, códigos de error y archivos en disco. La traducción se
-    hace en las tareas 5.10 a 5.14 y sigue `docs/GLOSARIO.md`; hasta entonces conviven ambos
-    idiomas.
+    (campos JSON y TOML), comandos de Tauri, códigos de error y archivos en disco. También van en
+    inglés los textos para quien programa: aserciones, `expect`, logs y mensajes de consola. Se
+    tradujo en las tareas 5.10 a 5.14; los nombres nuevos siguen `docs/GLOSARIO.md`.
   - **En español queda lo que ve el usuario de la app** (interfaz, mensajes de error, avisos,
     tooltips, valores mostrados como «Todos») y la documentación del repo (`CLAUDE.md`, `docs/`,
     bitácora).

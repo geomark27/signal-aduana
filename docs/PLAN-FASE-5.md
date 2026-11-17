@@ -76,7 +76,7 @@ Ola 0   5.0 documentos de la fase ───────────────�
 Ola A   5.1 → 5.2 → 5.3 (autor, Windows, sobre develop actual)  ─┤
 Ola 1   5.4 ‖ 5.5 ‖ 5.6 (WSL, tres worktrees en paralelo)        ─┤
                                                                   ▼
-Ola T   5.9 → 5.10 → 5.11 → 5.12 → 5.13 → 5.14 (código en inglés, en serie)
+Ola T   5.9 → 5.10 → 5.11 → 5.12 → 5.13 → 5.14 (código en inglés, en serie; hecha el 2026-11-17)
                                                                   ▼
 Ola 2   hallazgos 5.15+ y 5.7 (guía + segunda pasada en Windows)
 Ola 3   5.8 cierre

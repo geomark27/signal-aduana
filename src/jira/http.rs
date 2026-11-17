@@ -276,7 +276,7 @@ mod tests {
                 assert_eq!(status, 400);
                 assert_eq!(detail, "JQL inválido");
             }
-            other => panic!("esperaba error de Jira, llegó {other:?}"),
+            other => panic!("expected a Jira error, got {other:?}"),
         }
     }
 

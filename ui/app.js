@@ -1,11 +1,11 @@
 let SITE = "";
 const JQL =
-    "assignee = currentUser() OR worklogAuthor = currentUser() ORDER BY updated DESC"; // solo informativo (pie de página)
+    "assignee = currentUser() OR worklogAuthor = currentUser() ORDER BY updated DESC"; // informational only (footer)
 const WEEK_TARGET = 40,
     DAY_TARGET = 8,
-    TZ_OFFSET_H = -5; // Ecuador, sin horario de verano
-/* Feriados nacionales de Ecuador (días hábiles de descanso obligatorio). Cada persona puede marcar o desmarcar días con clic en «Horas por día». */
-const FERIADOS_BASE = [
+    TZ_OFFSET_H = -5; // Ecuador, no daylight saving time
+/* National holidays of Ecuador (mandatory rest on working days). Each person can mark or unmark days by clicking in «Horas por día». */
+const BASE_HOLIDAYS = [
     "2026-01-01",
     "2026-02-16",
     "2026-02-17",
@@ -19,8 +19,8 @@ const FERIADOS_BASE = [
     "2026-12-25",
     "2027-01-01",
 ];
-/* Preferencias del equipo (contrato E): viven en Rust (preferences.toml), no en el navegador. `feriadosExtra` es lo que dibuja la vista. */
-const PREFS_DEFECTO = {
+/* Team preferences (contract E): they live in Rust (preferences.toml), not in the browser. `extraHolidays` is what the view draws. */
+const DEFAULT_PREFS = {
     notifications: {
         enabled: true,
         endOfDayTime: "16:30",
@@ -30,34 +30,34 @@ const PREFS_DEFECTO = {
     minimizeToTray: true,
     extraHolidays: {},
 };
-const AVISO_INICIO =
+const AUTOSTART_NOTICE =
     "No se pudo activar el inicio con Windows; la opción quedó desactivada.";
-let prefs = PREFS_DEFECTO,
-    feriadosExtra = {},
+let prefs = DEFAULT_PREFS,
+    extraHolidays = {},
     prefsBusy = false,
     prefsNotice = "";
-function isFeriado(ymd) {
-    return ymd in feriadosExtra
-        ? feriadosExtra[ymd]
-        : FERIADOS_BASE.includes(ymd);
+function isHoliday(ymd) {
+    return ymd in extraHolidays
+        ? extraHolidays[ymd]
+        : BASE_HOLIDAYS.includes(ymd);
 }
-function aplicarPrefs(p) {
+function applyPrefs(p) {
     prefs = p;
-    feriadosExtra = p.extraHolidays || {};
+    extraHolidays = p.extraHolidays || {};
 }
-/* Guarda las preferencias completas (Rust las normaliza y devuelve como quedaron) y las aplica. */
-async function guardarPrefs(p) {
-    aplicarPrefs(await invoke("save_preferences", { preferences: p }));
+/* Saves the full preferences (Rust normalizes them and returns them as stored) and applies them. */
+async function savePrefs(p) {
+    applyPrefs(await invoke("save_preferences", { preferences: p }));
 }
-/* Marca o quita un feriado. No cambia nada en pantalla hasta que Rust confirma; si guardar falla, queda como estaba y se avisa en #notice. */
-async function toggleFeriado(ymd) {
+/* Marks or unmarks a holiday. Nothing changes on screen until Rust confirms; if saving fails, it stays as it was and #notice shows the error. */
+async function toggleHoliday(ymd) {
     if (prefsBusy) return false;
-    const nuevo = { ...feriadosExtra };
-    nuevo[ymd] = !isFeriado(ymd);
-    if (nuevo[ymd] === FERIADOS_BASE.includes(ymd)) delete nuevo[ymd];
+    const next = { ...extraHolidays };
+    next[ymd] = !isHoliday(ymd);
+    if (next[ymd] === BASE_HOLIDAYS.includes(ymd)) delete next[ymd];
     prefsBusy = true;
     try {
-        await guardarPrefs({ ...prefs, extraHolidays: nuevo });
+        await savePrefs({ ...prefs, extraHolidays: next });
     } catch (e) {
         prefsNotice = `No se pudo guardar el feriado: ${errText(e)}`;
         showNotice(prefsNotice);
@@ -71,54 +71,54 @@ async function toggleFeriado(ymd) {
     }
     return true;
 }
-/* Migración única: los feriados que antes se guardaban en localStorage pasan a las preferencias (solo si estas vienen sin feriados). */
-async function migrarFeriados() {
-    const CLAVE = "spe.feriados",
-        quitar = () => {
+/* One-time migration: holidays that used to be kept in localStorage move to the preferences (only if those come without holidays). */
+async function migrateHolidays() {
+    const KEY = "spe.feriados",
+        remove = () => {
             try {
-                localStorage.removeItem(CLAVE);
+                localStorage.removeItem(KEY);
             } catch (e) {}
         };
     let raw = null;
     try {
-        raw = localStorage.getItem(CLAVE);
+        raw = localStorage.getItem(KEY);
     } catch (e) {}
     if (raw === null) return;
-    if (Object.keys(feriadosExtra).length) {
-        quitar();
+    if (Object.keys(extraHolidays).length) {
+        remove();
         return;
     }
-    const viejos = {};
+    const legacy = {};
     try {
         const o = JSON.parse(raw);
         if (o && typeof o === "object" && !Array.isArray(o))
             for (const [k, v] of Object.entries(o))
                 if (/^\d{4}-\d{2}-\d{2}$/.test(k) && typeof v === "boolean")
-                    viejos[k] = v;
+                    legacy[k] = v;
     } catch (e) {}
-    if (!Object.keys(viejos).length) {
-        quitar();
+    if (!Object.keys(legacy).length) {
+        remove();
         return;
     }
     try {
-        await guardarPrefs({ ...prefs, extraHolidays: viejos });
-        quitar();
+        await savePrefs({ ...prefs, extraHolidays: legacy });
+        remove();
     } catch (e) {
-        feriadosExtra = viejos;
+        extraHolidays = legacy;
         console.warn(
-            "No se pudieron migrar los feriados guardados en el navegador; se reintentará al abrir:",
+            "Could not migrate the holidays saved in the browser; will retry on next start:",
             errText(e),
         );
-    } /* la clave se conserva para el próximo arranque */
+    } /* the key is kept for the next startup */
 }
-async function cargarPrefs() {
+async function loadPrefs() {
     try {
-        aplicarPrefs(await invoke("read_preferences"));
+        applyPrefs(await invoke("read_preferences"));
     } catch (e) {
-        console.warn("No se pudieron leer las preferencias:", errText(e));
+        console.warn("Could not read preferences:", errText(e));
         return;
     }
-    await migrarFeriados();
+    await migrateHolidays();
 }
 let ME = null;
 const BOARD_COLORS = {
@@ -147,11 +147,11 @@ function bColor(b) {
 let issues = [],
     syncedAt = null,
     source = "none";
-const DOC_WINDOW_DAYS = 84; // 12 semanas hacia atrás
+const DOC_WINDOW_DAYS = 84; // 12 weeks back
 let docs = {},
     docState = "idle",
     docError = "",
-    prMode = "keywords"; // prMode: "pr" cuando se leyó el panel de desarrollo // docs[key] = url
+    prMode = "keywords"; // prMode: "pr" when the development panel was read // docs[key] = url
 const SIG_PAGE = 4;
 let sigPage = 0,
     sigCount = 0;
@@ -185,7 +185,7 @@ try {
     if (s) board = s;
 } catch (e) {}
 
-/* ---------- fechas (hora de Ecuador) ---------- */
+/* ---------- dates (Ecuador time) ---------- */
 const DAY = 864e5;
 function localDate(iso) {
     const t = new Date(iso).getTime() + TZ_OFFSET_H * 3600e3;
@@ -216,7 +216,7 @@ function isoWeek(ymd) {
             Math.round(((th - j1) / DAY - 3 + ((j1.getUTCDay() + 6) % 7)) / 7),
     };
 }
-const MES = [
+const MONTHS = [
     "ene",
     "feb",
     "mar",
@@ -230,16 +230,16 @@ const MES = [
     "nov",
     "dic",
 ];
-const DIA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 function fmtD(ymd) {
     if (!ymd) return "—";
     const [y, m, d] = ymd.split("-");
-    return `${+d} ${MES[+m - 1]}`;
+    return `${+d} ${MONTHS[+m - 1]}`;
 }
 function todayLocal() {
     return localDate(new Date().toISOString());
 }
-const h = (s) => Math.round(s / 360) / 10; // segundos -> horas con 1 decimal
+const h = (s) => Math.round(s / 360) / 10; // seconds -> hours with 1 decimal
 const fh = (s) => {
     const v = h(s);
     return (v % 1 ? v.toFixed(1) : v) + " h";
@@ -253,45 +253,45 @@ const esc = (s) =>
         (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
     );
 
-/* ---------- vista (calculada en Rust) ----------
-   `vista` es la última respuesta de `calcular_vista`; `VC` guarda sus derivados de uso rápido (mapas por clave).
-   `issues` sigue siendo la lista cruda; todo lo que se dibuja sale de `vista`. */
-let vista = null,
+/* ---------- view (computed in Rust) ----------
+   `viewData` is the latest `compute_view` response; `VC` keeps its quick-access derivatives (maps by key).
+   `issues` is still the raw list; everything drawn comes from `viewData`. */
+let viewData = null,
     VC = null,
     renderSeq = 0,
-    vistaError = "";
-const hoyAct = () => (vista ? vista.today : todayLocal());
-function setVista(v) {
-    const tareas = v.issues,
-        byKey = new Map(tareas.map((i) => [i.key, i]));
+    viewError = "";
+const currentToday = () => (viewData ? viewData.today : todayLocal());
+function setView(v) {
+    const list = v.issues,
+        byKey = new Map(list.map((i) => [i.key, i]));
     const resolved = v.stats.resolved.map((k) => byKey.get(k)).filter(Boolean);
     VC = {
-        tareas,
+        issues: list,
         byKey,
         worked: new Set(v.stats.worked),
         resolved,
         resolvedSet: new Set(v.stats.resolved),
     };
-    vista = v;
+    viewData = v;
 }
-const inBoard = (i) => vista.board === "Todos" || i.board === vista.board;
-/* Pide la vista con los datos actuales (sin tocar la pantalla). */
-const pedirVista = () =>
+const inBoard = (i) => viewData.board === "Todos" || i.board === viewData.board;
+/* Requests the view with the current data (without touching the screen). */
+const requestView = () =>
     invoke("compute_view", {
         input: {
             issues,
             week: weekKey,
             board,
-            extraHolidays: feriadosExtra,
+            extraHolidays,
         },
     });
 
 function renderChips() {
-    const list = ["Todos", ...vista.boards];
+    const list = ["Todos", ...viewData.boards];
     $("boardChips").innerHTML = list
         .map(
             (b) =>
-                `<button type="button" class="chip" aria-pressed="${b === vista.board}" data-b="${esc(b)}">${b === "Todos" ? "" : `<i style="background:${bColor(b)}"></i>`}${esc(b)}</button>`,
+                `<button type="button" class="chip" aria-pressed="${b === viewData.board}" data-b="${esc(b)}">${b === "Todos" ? "" : `<i style="background:${bColor(b)}"></i>`}${esc(b)}</button>`,
         )
         .join("");
 }
@@ -311,11 +311,11 @@ function docStatus(i) {
     if (docs[i.key]) return "ok";
     return docState === "done" && i.docChecked ? "missing" : "unknown";
 }
-/* Tareas que requieren documento en la semana: concluidas en la semana con PR; en la semana actual, también las abiertas en pruebas o con Fin desarrollo */
+/* Issues that need a document in the week: resolved in the week with a PR; in the current week, also open ones in testing or with Fin desarrollo */
 function docWeek(wk) {
     const end = addDays(wk, 4),
-        current = wk === mondayOf(vista.today);
-    return VC.tareas.filter(
+        current = wk === mondayOf(viewData.today);
+    return VC.issues.filter(
         (i) =>
             inBoard(i) &&
             i.needDoc &&
@@ -326,7 +326,7 @@ function docWeek(wk) {
     );
 }
 function docKpi() {
-    const need = docWeek(vista.week);
+    const need = docWeek(viewData.week);
     const ok = need.filter((i) => docs[i.key]).length;
     const miss = need.filter((i) => docStatus(i) === "missing").length;
     const v =
@@ -350,19 +350,19 @@ function docKpi() {
     return `<button type="button" class="kpi" data-view="nodoc" aria-pressed="${view === "nodoc"}" title="Tareas con PR de la semana que tienen documento de despliegue"><span class="label">Doc. de despliegue</span><span class="v">${v}</span><span class="d">${d}</span><span class="go">Ver lista →</span></button>`;
 }
 function holidayNote() {
-    const H = vista.hours,
+    const H = viewData.hours,
         hs = H.holidays;
     return hs.length
-        ? `${hs.length} ${hs.length === 1 ? "feriado" : "feriados"} (${hs.map((d) => DIA[(new Date(d + "T00:00:00Z").getUTCDay() + 6) % 7] + " " + fmtD(d)).join(", ")}): meta ${H.targetH} h.`
+        ? `${hs.length} ${hs.length === 1 ? "feriado" : "feriados"} (${hs.map((d) => WEEKDAYS[(new Date(d + "T00:00:00Z").getUTCDay() + 6) % 7] + " " + fmtD(d)).join(", ")}): meta ${H.targetH} h.`
         : "";
 }
 function dayName(ymd) {
-    return `${DIA[(new Date(ymd + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(ymd)}`;
+    return `${WEEKDAYS[(new Date(ymd + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(ymd)}`;
 }
 function renderHoursAlert() {
-    const H = vista.hours,
+    const H = viewData.hours,
         st = { ...H },
-        today = vista.today,
+        today = viewData.today,
         prevSecs = H.prevSecs;
     if (st.sev === "warn" && !st.behind) st.sev = "info";
     let chip = {
@@ -419,7 +419,7 @@ function renderHoursAlert() {
                 .join(" ");
             return `<div class="day ${cls}"><span>${dayName(day)}${day === today ? " · hoy" : ""}</span><b>${off && !secs ? "Feriado" : fh(secs)}</b>
       <div class="mb"><i style="width:${off ? 0 : Math.min(100, (secs / (DAY_TARGET * 3600)) * 100)}%"></i></div>
-      <button type="button" class="tg" data-fer="${day}">${off ? "Quitar feriado" : "Marcar feriado"}</button></div>`;
+      <button type="button" class="tg" data-holiday="${day}">${off ? "Quitar feriado" : "Marcar feriado"}</button></div>`;
         })
         .join("");
     $("hoursAlert").className = "hero " + st.sev;
@@ -428,16 +428,16 @@ function renderHoursAlert() {
       <div class="fig">${h(st.total)}<small>de ${st.targetH} h</small></div>
       <div class="track2" role="img" aria-label="${h(st.total)} de ${st.targetH} horas"><i style="width:${pct}%"></i>${mark !== null && mark > 0 && mark < 100 ? `<u style="left:${mark}%" title="Esperado hasta ayer: ${fh(st.expected)}"></u>` : ""}</div>
       <span class="ttl">${st.title}</span>
-      <span class="det">${st.detail} Semana anterior: ${fh(prevSecs)}.${vista.board !== "Todos" ? " Suma de todos los tableros." : ""}</span></div>
+      <span class="det">${st.detail} Semana anterior: ${fh(prevSecs)}.${viewData.board !== "Todos" ? " Suma de todos los tableros." : ""}</span></div>
     ${side}
     <div class="days" aria-label="Horas por día">${days}</div>`;
 }
 function renderKpis() {
-    const s = vista.stats,
+    const s = viewData.stats,
         varPct = s.est ? ((s.spent - s.est) / s.est) * 100 : null;
-    const open = VC.tareas.filter((i) => inBoard(i) && i.cat !== "done");
-    const overdue = VC.tareas.filter(
-        (i) => inBoard(i) && !i.resDay && i.due && i.due < vista.today,
+    const open = VC.issues.filter((i) => inBoard(i) && i.cat !== "done");
+    const overdue = VC.issues.filter(
+        (i) => inBoard(i) && !i.resDay && i.due && i.due < viewData.today,
     );
     $("kpis").innerHTML = `
   <button type="button" class="kpi" data-view="worked" aria-pressed="${view === "worked"}"><span class="label">Tareas trabajadas</span><span class="v">${VC.worked.size}</span><span class="d">con horas en la semana</span><span class="go">Ver lista →</span></button>
@@ -495,18 +495,18 @@ function stackBars(el, cols, maxV, refV, opts) {
 }
 
 function renderCharts() {
-    const sem = vista.week,
-        H = vista.hours,
+    const week = viewData.week,
+        H = viewData.hours,
         cols = [];
     let max = 0;
-    for (const w of vista.weeks) {
+    for (const w of viewData.weeks) {
         max = Math.max(max, w.secs / 3600);
         cols.push({
             label: "S" + w.isoWeek,
             sub: fmtD(w.wk),
             parts: w.perBoard,
             key: w.wk,
-            selected: w.wk === sem,
+            selected: w.wk === week,
             ref: w.target,
         });
     }
@@ -515,7 +515,7 @@ function renderCharts() {
         aria: "Horas registradas por semana",
         h: 240,
     });
-    const s = vista.stats;
+    const s = viewData.stats;
     const dcols = [];
     let dmax = 0;
     for (let d = 0; d < 5; d++) {
@@ -525,11 +525,11 @@ function renderCharts() {
         dmax = Math.max(dmax, tot);
         const off = H.days[d].holiday;
         dcols.push({
-            label: DIA[d],
+            label: WEEKDAYS[d],
             sub: fmtD(day).split(" ")[0],
             parts,
             key: day,
-            selected: day === vista.today,
+            selected: day === viewData.today,
             off,
             ref: off ? 0 : DAY_TARGET,
         });
@@ -539,7 +539,7 @@ function renderCharts() {
         h: 250,
         w: 380,
     });
-    const bs = vista.board === "Todos" ? vista.boards : [vista.board];
+    const bs = viewData.board === "Todos" ? viewData.boards : [viewData.board];
     $("legend1").innerHTML =
         bs
             .map(
@@ -557,16 +557,16 @@ function statusPill(i) {
 }
 
 function renderBoards() {
-    const rows = vista.byBoard.filter(
-        (r) => vista.board === "Todos" || r.board === vista.board,
+    const rows = viewData.byBoard.filter(
+        (r) => viewData.board === "Todos" || r.board === viewData.board,
     );
     const active = rows.filter((r) => r.secs),
         idle = rows.filter((r) => !r.secs);
     const max = Math.max(1, ...active.map((r) => r.secs));
-    /* mayor cantidad primero; a igual cantidad, el estado que aparece antes en las tareas (como antes) */
+    /* highest count first; on ties, the status that appears first in the issues (as before) */
     const stTxt = (r) => {
         const ord = [];
-        for (const i of VC.tareas)
+        for (const i of VC.issues)
             if (
                 i.board === r.board &&
                 i.cat !== "done" &&
@@ -605,12 +605,12 @@ function renderBoards() {
 }
 
 function renderSignals() {
-    const s = vista.stats,
-        H = vista.hours,
-        issues = VC.tareas,
-        weekKey = vista.week;
+    const s = viewData.stats,
+        H = viewData.hours,
+        issues = VC.issues,
+        weekKey = viewData.week;
     const out = [];
-    const today = vista.today;
+    const today = viewData.today;
     const tgtW = H.targetH,
         pctW = tgtW ? s.secs / (tgtW * 3600) : 1;
     for (let d = 0; d < 5; d++) {
@@ -623,7 +623,7 @@ function renderSignals() {
         if (tot < DAY_TARGET * 3600)
             out.push({
                 sev: tot === 0 ? "crit" : "warn",
-                t: `${DIA[d]} ${fmtD(day)}: ${fh(tot)} registradas`,
+                t: `${WEEKDAYS[d]} ${fmtD(day)}: ${fh(tot)} registradas`,
                 sub: `Faltan ${fh(DAY_TARGET * 3600 - tot)} para la jornada de ${DAY_TARGET} h`,
             });
     }
@@ -792,7 +792,7 @@ function renderSignals() {
         rank = { crit: 0, warn: 1, info: 2, ok: 3 };
     out.sort(
         (a, b) => rank[a.sev] - rank[b.sev],
-    ); /* orden estable: primero las alertas altas */
+    ); /* stable order: high alerts first */
     const pages = Math.max(1, Math.ceil(out.length / SIG_PAGE));
     if (out.length !== sigCount) {
         sigCount = out.length;
@@ -839,12 +839,12 @@ function docCell(i) {
     return `<span class="mini">${docState === "loading" ? "…" : "—"}</span>`;
 }
 function renderTable() {
-    const issues = VC.tareas,
-        weekKey = vista.week,
-        board = vista.board,
-        hoy = vista.today,
+    const issues = VC.issues,
+        weekKey = viewData.week,
+        board = viewData.board,
+        today = viewData.today,
         end = addDays(weekKey, 4);
-    const isCurrentWeek = weekKey === mondayOf(hoy);
+    const isCurrentWeek = weekKey === mondayOf(today);
     const VIEWS = {
         week: {
             title: "Tareas de la semana",
@@ -927,7 +927,7 @@ function renderTable() {
     });
     $("tHint").textContent =
         V.hint(rows.length) + (board !== "Todos" ? ` · tablero ${board}` : "");
-    /* Máximo 20 filas por página; se vuelve a la primera al cambiar vista, tablero, semana u orden */
+    /* At most 20 rows per page; back to the first one when the view, board, week or sort changes */
     const sigT = [view, board, weekKey, sortKey, sortDir].join("|");
     if (sigT !== tSig) {
         tSig = sigT;
@@ -948,7 +948,7 @@ function renderTable() {
         pageRows
             .map(
                 (i) => `<tr>
-    <td class="num">${i.act ? `${DIA[(new Date(i.act + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(i.act)}${i.act.slice(0, 4) !== weekKey.slice(0, 4) ? ` <small class="mini">${i.act.slice(0, 4)}</small>` : ""}` : "—"}</td>
+    <td class="num">${i.act ? `${WEEKDAYS[(new Date(i.act + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(i.act)}${i.act.slice(0, 4) !== weekKey.slice(0, 4) ? ` <small class="mini">${i.act.slice(0, 4)}</small>` : ""}` : "—"}</td>
     <td><a class="key" href="${SITE}${i.key}" target="_blank" rel="noopener">${i.key}</a></td>
     <td><div class="sum">${esc(i.summary)}</div>${i.sprint ? `<small class="label" style="letter-spacing:.04em">${esc(i.sprint)}</small>` : ""}</td>
     <td><span class="tag" title="Asignado por ${esc(i.boardHow)}"><i style="background:${bColor(i.board)}"></i>${esc(i.board)}</span><br><small class="mini">${esc(i.comp)}</small></td>
@@ -956,7 +956,7 @@ function renderTable() {
     <td class="r num">${i.wk ? fh(i.wk) : "—"}</td>
     <td class="r num ${i.est && i.spent > i.est * 1.2 ? "over" : ""}">${fh(i.spent)} / ${i.est ? fh(i.est) : "—"}</td>
     <td class="num">${fmtD(i.start)}</td>
-    <td class="num ${!i.resDay && i.due && i.due < hoy ? "over" : ""}">${fmtD(i.due)}</td>
+    <td class="num ${!i.resDay && i.due && i.due < today ? "over" : ""}">${fmtD(i.due)}</td>
     <td class="num">${i.resDay ? fmtD(i.resDay) + (i.late > 0 ? `<span class="lateb">+${i.late} d</span>` : i.late !== null ? `<span class="okb">a tiempo</span>` : "") + (i.noFin ? `<br><small class="mini">sin Fin desarrollo</small>` : "") : "—"}</td>
     <td>${docCell(i)}</td></tr>`,
             )
@@ -965,21 +965,21 @@ function renderTable() {
 }
 
 function renderTrace() {
-    const issues = VC.tareas,
+    const issues = VC.issues,
         wl = issues.reduce((a, i) => a + i.worklogs.length, 0);
     const when = new Date(syncedAt);
     $("trace").innerHTML =
         `<div><b>Fuente:</b> ${issues.length} tareas y ${wl} registros de horas de Jira (proyectos ${[...new Set(issues.map((i) => i.projectName))].map(esc).join(", ")}). Tablero = tablero de Jira de donde viene la tarea: el del sprint si tiene sprint; Tablero ADN para el proyecto ADN; Tablero Kanban si cumple su filtro (proyectos GPS, APP, TLP, CTT, RPA y tipo Tarea o Levantamiento); si no, el backlog del tablero de su componente. El componente se muestra aparte. Semana laboral = lunes a viernes, hora de Ecuador; la meta es ${WEEK_TARGET} h menos ${DAY_TARGET} h por cada feriado nacional (puedes marcar o quitar feriados en la franja de días del resumen; se guarda en este equipo). Solo se cuentan tus propios registros de horas. Las horas y cierres de sábado o domingo no suman a la semana y se avisan aparte. Horas = tus propios registros de las últimas 14 semanas, leídos tarea por tarea desde Jira y asignados al día en que se inició el registro. Fechas: Inicio = cuándo debe iniciar, Vence = fecha de entrega, Fin desarrollo = cuándo se concluyó (si falta en una tarea finalizada, se usa su último cambio de estado). Documento de despliegue = página de Confluence titulada «Documento de Despliegue - CLAVE - …», buscada en Confluence y, si aún no aparece en el buscador, en los enlaces de la tarea en Jira; se revisan las tareas concluidas en las últimas 12 semanas y las que están en pruebas. Solo se exige a tareas con pull requests vinculados en Jira (panel de desarrollo); las tareas sin PR, como soporte o reuniones, no aplican. Si no se puede leer el panel de desarrollo, se excluyen por palabra: reuniones, capacitaciones, soporte, análisis y revisiones de tarea.</div>
   <div><b>Consulta:</b> <code>${esc(JQL)}</code></div>
-  <div>${source === "cache" ? "Datos guardados en este equipo, pendientes de actualizar" : simulado ? "Datos ficticios del modo simulado" : "Datos en vivo de Jira"} del ${when.toLocaleString("es-EC", { dateStyle: "medium", timeStyle: "short" })}. Los últimos datos cargados se guardan en este equipo para abrir más rápido y se borran al cerrar sesión; la app los actualiza sola cada 15 minutos mientras está abierta. Si la dejas en la bandeja de Windows, te avisa al cierre de la jornada si faltan horas y los lunes si la semana pasada quedó incompleta; puedes ajustarlo en «Preferencias».</div>`;
+  <div>${source === "cache" ? "Datos guardados en este equipo, pendientes de actualizar" : simulated ? "Datos ficticios del modo simulado" : "Datos en vivo de Jira"} del ${when.toLocaleString("es-EC", { dateStyle: "medium", timeStyle: "short" })}. Los últimos datos cargados se guardan en este equipo para abrir más rápido y se borran al cerrar sesión; la app los actualiza sola cada 15 minutos mientras está abierta. Si la dejas en la bandeja de Windows, te avisa al cierre de la jornada si faltan horas y los lunes si la semana pasada quedó incompleta; puedes ajustarlo en «Preferencias».</div>`;
 }
 
 function paint() {
-    const iw = isoWeek(vista.week);
+    const iw = isoWeek(viewData.week);
     $("wTitle").textContent = `Semana ${iw.w} · ${iw.y}`;
     $("wRange").textContent =
-        `${fmtD(vista.week)} – ${fmtD(addDays(vista.week, 4))}`;
-    $("nextW").disabled = vista.week >= mondayOf(vista.today);
+        `${fmtD(viewData.week)} – ${fmtD(addDays(viewData.week, 4))}`;
+    $("nextW").disabled = viewData.week >= mondayOf(viewData.today);
     $("gate").hidden = true;
     $("main").hidden = false;
     renderChips();
@@ -991,52 +991,52 @@ function paint() {
     renderTable();
     renderTrace();
 }
-/* Pide la vista a Rust y dibuja. Asíncrono: cada llamada lleva un número y solo la última pinta; mientras llega la respuesta se queda lo que ya
-   está en pantalla. Devuelve la vista pedida (aunque otra más nueva la haya reemplazado) o null si falló; en ese caso conserva lo anterior. */
+/* Requests the view from Rust and draws. Asynchronous: each call carries a number and only the last one paints; while the response is in flight what is
+   already on screen stays. Returns the requested view (even if a newer one replaced it) or null if it failed; in that case the previous one is kept. */
 async function render() {
     if (!issues.length) return null;
     const seq = ++renderSeq,
         g = gen;
     let v;
     try {
-        v = await pedirVista();
+        v = await requestView();
     } catch (e) {
         if (g !== gen || handleAuth(e)) return null;
-        vistaError = `No se pudo calcular la vista del tablero: ${errText(e)}`;
-        if (seq === renderSeq) showNotice(vistaError);
+        viewError = `No se pudo calcular la vista del tablero: ${errText(e)}`;
+        if (seq === renderSeq) showNotice(viewError);
         return null;
     }
     if (g !== gen || !issues.length) return null;
     if (seq !== renderSeq) return v;
     board =
-        v.board; /* si el tablero guardado ya no existe, Rust devuelve «Todos» (como hacía renderChips) */
-    if (vistaError) {
-        if ($("notice").textContent === vistaError) showNotice("");
-        vistaError = "";
+        v.board; /* if the saved board no longer exists, Rust returns «Todos» (as renderChips used to) */
+    if (viewError) {
+        if ($("notice").textContent === viewError) showNotice("");
+        viewError = "";
     }
-    setVista(v);
+    setView(v);
     paint();
     return v;
 }
-/* Repinta con la última vista, sin pedir otra (paginadores, orden, vistas de la tabla, paneles). */
+/* Repaints with the latest view, without requesting another (pagers, sorting, table views, panels). */
 function repaint() {
-    if (vista) paint();
+    if (viewData) paint();
 }
 
-/* ---------- eventos ---------- */
+/* ---------- events ---------- */
 $("prevW").onclick = () => {
     weekKey = addDays(weekKey, -7);
     sigPage = 0;
     render();
 };
 $("nextW").onclick = () => {
-    if (weekKey >= mondayOf(hoyAct())) return;
+    if (weekKey >= mondayOf(currentToday())) return;
     weekKey = addDays(weekKey, 7);
     sigPage = 0;
     render();
-}; /* con clics rápidos el botón aún no se deshabilitó */
+}; /* with fast clicks the button was not yet disabled */
 $("todayW").onclick = () => {
-    weekKey = mondayOf(hoyAct());
+    weekKey = mondayOf(currentToday());
     render();
 };
 $("boardChips").onclick = (e) => {
@@ -1056,8 +1056,8 @@ $("weeklyChart").onclick = (e) => {
     }
 };
 $("hoursAlert").onclick = async (e) => {
-    const r = e.target.closest("[data-fer]");
-    if (r && (await toggleFeriado(r.dataset.fer))) render();
+    const r = e.target.closest("[data-holiday]");
+    if (r && (await toggleHoliday(r.dataset.holiday))) render();
 };
 document.querySelector("thead").onclick = (e) => {
     const th = e.target.closest("[data-sort]");
@@ -1073,7 +1073,7 @@ document.querySelector("thead").onclick = (e) => {
     repaint();
 };
 
-/* ---------- datos: comandos de Tauri (Rust) ---------- */
+/* ---------- data: Tauri commands (Rust) ---------- */
 const invoke = (cmd, args) => window.__TAURI__.core.invoke(cmd, args);
 function setSync(state, text) {
     $("syncDot").className = "dot " + state;
@@ -1094,12 +1094,12 @@ let wlState = "idle",
     wlError = "";
 let busy = false,
     busyGen = -1;
-let gen = 0; // cambia al cerrar sesión o perder la conexión: descarta respuestas pendientes
-let simulado = false,
+let gen = 0; // changes on sign-out or connection loss: discards pending responses
+let simulated = false,
     lastInfo = null;
-/* Caché local y actualización automática */
-const CACHE_FORMAT = 2; // si cambia la forma de lo guardado, se sube y la caché vieja se ignora
-const REFRESH_MS = 15 * 60e3; // actualización automática cada 15 minutos
+/* Local cache and automatic refresh */
+const CACHE_FORMAT = 2; // if the shape of what is saved changes, bump it and the old cache is ignored
+const REFRESH_MS = 15 * 60e3; // automatic refresh every 15 minutes
 let sessionActive = false,
     autoTimer = null,
     lastOkAt = 0,
@@ -1142,7 +1142,7 @@ document.addEventListener("visibilitychange", () => {
         autoRefresh();
 });
 
-/* ---------- pantallas: conexión / carga / tablero ---------- */
+/* ---------- screens: connect / loading / board ---------- */
 function setGate(title, text) {
     $("gateTitle").textContent = title;
     $("gateText").textContent = text;
@@ -1151,9 +1151,9 @@ function setGate(title, text) {
 function showConnect(info, err) {
     gen++;
     renderSeq++;
-    vista = null;
+    viewData = null;
     VC = null;
-    vistaError = "";
+    viewError = "";
     issues = [];
     docs = {};
     docState = "idle";
@@ -1169,7 +1169,7 @@ function showConnect(info, err) {
     stopAuto();
     if (info) {
         lastInfo = info;
-        simulado = !!info.simulated;
+        simulated = !!info.simulated;
     }
     $("main").hidden = true;
     $("gate").hidden = true;
@@ -1179,11 +1179,11 @@ function showConnect(info, err) {
     showNotice("");
     $("who").textContent =
         "Tus horas, tareas y estados de Jira por semana y por tablero";
-    $("simTag").hidden = !simulado;
-    $("simNote").hidden = !simulado;
-    const aviso = info?.notice || "";
-    $("connAviso").hidden = !aviso;
-    $("connAviso").textContent = aviso;
+    $("simTag").hidden = !simulated;
+    $("simNote").hidden = !simulated;
+    const notice = info?.notice || "";
+    $("connNotice").hidden = !notice;
+    $("connNotice").textContent = notice;
     $("connError").hidden = !err;
     $("connError").textContent = err || "";
     $("siteInput").value =
@@ -1195,7 +1195,7 @@ function showConnect(info, err) {
     $("connBtn").disabled = false;
     setSync("", "Sin conexión con Jira");
 }
-/* Repinta el tablero con lo guardado. Devuelve false (sin tocar nada) si la caché no sirve. */
+/* Repaints the board with what was saved. Returns false (touching nothing) if the cache is unusable. */
 async function restoreCache(snap) {
     const d = snap && snap.data;
     if (
@@ -1223,15 +1223,15 @@ async function restoreCache(snap) {
         wlError = "";
         docError = "";
         const v =
-            await render(); /* la vista se calcula en Rust con las tareas guardadas; render() muestra el tablero */
+            await render(); /* the view is computed in Rust with the saved issues; render() shows the board */
         if (g !== gen) return false;
-        if (!v) throw new Error(vistaError || "no se pudo calcular la vista");
+        if (!v) throw new Error(viewError || "no se pudo calcular la vista");
         setSync("", `Datos guardados · ${fmtWhen(syncedAt)}`);
         return true;
     } catch (err) {
         if (g !== gen) return false;
-        console.warn("La caché local no se pudo usar:", err);
-        vista = null;
+        console.warn("Local cache could not be used:", err);
+        viewData = null;
         VC = null;
         renderSeq++;
         issues = [];
@@ -1252,13 +1252,12 @@ async function saveCache(g) {
             data: { format: CACHE_FORMAT, issues, docs, prMode, syncedAt },
         });
     } catch (e) {
-        if (g === gen)
-            console.warn("No se pudo guardar la caché local:", errText(e));
+        if (g === gen) console.warn("Could not save local cache:", errText(e));
     }
 }
 async function enterApp(info) {
     lastInfo = info;
-    simulado = !!info.simulated;
+    simulated = !!info.simulated;
     ME = info.user?.accountId || null;
     SITE = String(info.site || "").replace(/\/+$/, "") + "/browse/";
     $("connect").hidden = true;
@@ -1281,11 +1280,11 @@ async function enterApp(info) {
         if (g !== gen) return;
     } catch (e) {
         if (g !== gen || handleAuth(e)) return;
-        console.warn("No se pudo leer la caché local:", errText(e));
+        console.warn("Could not read local cache:", errText(e));
     }
     refresh(false);
 }
-/* Si una llamada de datos devuelve unauthorized / no_session, se vuelve a la pantalla de conexión. */
+/* If a data call returns unauthorized / no_session, it goes back to the connect screen. */
 function handleAuth(e) {
     if (!isAuthErr(e)) return false;
     showConnect({
@@ -1296,7 +1295,7 @@ function handleAuth(e) {
     return true;
 }
 
-/* ---------- sincronización con Jira ---------- */
+/* ---------- synchronization with Jira ---------- */
 async function fetchWorklogs(quiet) {
     const g = gen;
     if (!quiet) {
@@ -1355,7 +1354,7 @@ async function fetchWorklogs(quiet) {
     if (g !== gen) return false;
     return ok;
 }
-/* quiet: ya hay datos en pantalla; no se pasa a «cargando» y, si falla, se conservan los anteriores. Devuelve true si la consulta terminó bien. */
+/* quiet: data is already on screen; it does not switch to «loading» and, if it fails, the previous data is kept. Returns true if the query finished well. */
 async function fetchDocs(quiet) {
     const g = gen;
     if (!quiet) {
@@ -1370,17 +1369,17 @@ async function fetchDocs(quiet) {
     } catch (e) {
         if (g !== gen || handleAuth(e)) return false;
         if (quiet && prMode === "pr" && docState === "done")
-            return false; /* se conserva lo que ya se sabía del panel de desarrollo */
+            return false; /* what was already known about the development panel is kept */
         prMode =
-            "keywords"; /* sin panel de desarrollo: se usa la regla por palabras */
+            "keywords"; /* no development panel: the keyword rule is used */
     }
-    /* `needDoc` lo calcula Rust a partir de `hasPR`: se pide la vista con las tareas y horas actuales antes de elegir candidatas */
+    /* `needDoc` is computed by Rust from `hasPR`: the view is requested with the current issues and hours before choosing candidates */
     const v = await render();
     if (g !== gen) return false;
     if (!v) {
         if (quiet && docState === "done") return false;
         docState = "error";
-        docError = vistaError || "No se pudo calcular la vista de tareas.";
+        docError = viewError || "No se pudo calcular la vista de tareas.";
         return false;
     }
     const cands = docCandidates(v);
@@ -1416,12 +1415,12 @@ async function fetchDocs(quiet) {
     render();
     return true;
 }
-/* Horas y documentos tras cargar las tareas. Si todo termina bien y completo, guarda la caché. */
+/* Hours and documents after loading the issues. If everything finishes well and complete, saves the cache. */
 async function loadDetails(g, quiet) {
     try {
         await new Promise((r) =>
             setTimeout(r, 0),
-        ); /* deja pintar las tareas primero */
+        ); /* lets the issues paint first */
         if (g !== gen) return;
         const okW = await fetchWorklogs(quiet);
         if (g !== gen) return;
@@ -1443,7 +1442,7 @@ async function refresh(force) {
         quiet =
             issues.length > 0 &&
             source !==
-                "none"; /* con datos en pantalla no se vacía ni se parpadea */
+                "none"; /* with data on screen it is neither emptied nor flickered */
     busy = true;
     busyGen = g;
     lastTryAt = Date.now();
@@ -1460,7 +1459,7 @@ async function refresh(force) {
         const list = await invoke("load_issues");
         if (g !== gen) return;
         if (quiet) {
-            /* se conservan horas y documentos ya leídos hasta que lleguen los nuevos */
+            /* hours and documents already read are kept until the new ones arrive */
             const old = Object.fromEntries(issues.map((i) => [i.key, i]));
             for (const i of list) {
                 const o = old[i.key];
@@ -1481,7 +1480,7 @@ async function refresh(force) {
         syncedAt = new Date().toISOString();
         source = "live";
         if (!issues.length) {
-            vista = null;
+            viewData = null;
             VC = null;
             renderSeq++;
             docs = {};
@@ -1512,11 +1511,11 @@ async function refresh(force) {
         );
         const v = await render();
         if (g !== gen)
-            return; /* render() muestra el tablero al llegar la vista */
-        if (!v && !vista) {
+            return; /* render() shows the board when the view arrives */
+        if (!v && !viewData) {
             setGate(
                 "No pudimos calcular el tablero",
-                (vistaError || "Error al calcular la vista") +
+                (viewError || "Error al calcular la vista") +
                     ". Pulsa Actualizar para reintentar.",
             );
             $("main").hidden = true;
@@ -1526,7 +1525,7 @@ async function refresh(force) {
     } catch (e) {
         if (g !== gen || handleAuth(e)) return;
         if (issues.length > 0 && source !== "none") {
-            /* hay datos en pantalla: se conservan */
+            /* there is data on screen: it is kept */
             $("gate").hidden = true;
             $("main").hidden = false;
             if (e?.code === "network" || e?.code === "rate_limit") {
@@ -1582,7 +1581,7 @@ $("tReset").onclick = () => {
     repaint();
 };
 $("tPager").onclick = (e) => {
-    if (!vista) return;
+    if (!viewData) return;
     const d = e.target.closest("[data-tpage]"),
         s = e.target.closest("[data-tstep]");
     if (d) tPage = +d.dataset.tpage;
@@ -1614,7 +1613,7 @@ $("boards").onclick = (e) => {
     goTable();
 };
 $("sigPager").onclick = (e) => {
-    if (!vista) return;
+    if (!viewData) return;
     const d = e.target.closest("[data-sigpage]"),
         s = e.target.closest("[data-sigstep]");
     if (d) sigPage = +d.dataset.sigpage;
@@ -1646,21 +1645,17 @@ $("signals").onclick = (e) => {
     goTable();
 };
 
-/* ---------- conexión, cierre de sesión y enlaces externos ---------- */
+/* ---------- connection, sign-out and external links ---------- */
 $("connForm").onsubmit = async (ev) => {
     ev.preventDefault();
-    const sitio = $("siteInput").value.trim(),
-        correo = $("emailInput").value.trim(),
+    const site = $("siteInput").value.trim(),
+        email = $("emailInput").value.trim(),
         token = $("tokenInput").value;
     $("tokenInput").value = "";
     $("connError").hidden = true;
     $("connBtn").disabled = true;
     try {
-        const info = await invoke("sign_in", {
-            site: sitio,
-            email: correo,
-            token,
-        });
+        const info = await invoke("sign_in", { site, email, token });
         enterApp(info);
     } catch (e) {
         $("connError").textContent = errText(e);
@@ -1678,7 +1673,7 @@ $("logoutBtn").onclick = async () => {
     }
     showConnect(info, err);
 };
-/* En la app, target="_blank" no abre el navegador: los enlaces https se abren con el sistema. */
+/* In the app, target="_blank" does not open the browser: https links are opened with the system. */
 document.addEventListener("click", (e) => {
     const a = e.target.closest && e.target.closest('a[href^="https://"]');
     if (!a) return;
@@ -1690,110 +1685,113 @@ document.addEventListener("click", (e) => {
     } catch (err) {}
 });
 
-/* ---------- preferencias: panel ---------- */
-const prefsAvisosDependientes = () => {
-    $("prefHora").disabled = $("prefLunes").disabled = !$("prefAvisos").checked;
+/* ---------- preferences: panel ---------- */
+const notificationPrefInputs = () => {
+    $("prefEndOfDay").disabled = $("prefWeekly").disabled =
+        !$("prefNotifications").checked;
 };
-function abrirPrefs() {
-    $("prefAvisos").checked = prefs.notifications.enabled;
-    $("prefHora").value = prefs.notifications.endOfDayTime;
-    $("prefLunes").checked = prefs.notifications.weeklySummary;
-    $("prefInicio").checked = prefs.startWithWindows;
-    $("prefBandeja").checked = prefs.minimizeToTray;
-    prefsAvisosDependientes();
-    $("prefsSimNote").hidden = !simulado;
+function openPrefs() {
+    $("prefNotifications").checked = prefs.notifications.enabled;
+    $("prefEndOfDay").value = prefs.notifications.endOfDayTime;
+    $("prefWeekly").checked = prefs.notifications.weeklySummary;
+    $("prefAutostart").checked = prefs.startWithWindows;
+    $("prefTray").checked = prefs.minimizeToTray;
+    notificationPrefInputs();
+    $("prefsSimNote").hidden = !simulated;
     $("prefsError").hidden = true;
     $("prefsSave").disabled = false;
     if (!$("prefsDlg").open) $("prefsDlg").showModal();
 }
-function errorPrefs(msg) {
+function showPrefsError(msg) {
     $("prefsError").textContent = msg;
     $("prefsError").hidden = false;
 }
-$("prefsBtn").onclick = abrirPrefs;
+$("prefsBtn").onclick = openPrefs;
 $("prefsCancel").onclick = () => $("prefsDlg").close();
-$("prefAvisos").onchange = prefsAvisosDependientes;
+$("prefNotifications").onchange = notificationPrefInputs;
 $("prefsForm").onsubmit = async (ev) => {
     ev.preventDefault();
     if (prefsBusy) return;
-    const activos = $("prefAvisos").checked,
-        hora = $("prefHora").value;
-    if (activos && !hora) {
-        errorPrefs("Indica la hora de cierre de la jornada (HH:MM).");
+    const enabled = $("prefNotifications").checked,
+        endOfDay = $("prefEndOfDay").value;
+    if (enabled && !endOfDay) {
+        showPrefsError("Indica la hora de cierre de la jornada (HH:MM).");
         return;
     }
-    const nuevas = {
+    const next = {
         ...prefs,
         notifications: {
-            enabled: activos,
-            endOfDayTime: hora || prefs.notifications.endOfDayTime,
-            weeklySummary: $("prefLunes").checked,
+            enabled: enabled,
+            endOfDayTime: endOfDay || prefs.notifications.endOfDayTime,
+            weeklySummary: $("prefWeekly").checked,
         },
-        startWithWindows: $("prefInicio").checked,
-        minimizeToTray: $("prefBandeja").checked,
-        extraHolidays: feriadosExtra,
+        startWithWindows: $("prefAutostart").checked,
+        minimizeToTray: $("prefTray").checked,
+        extraHolidays,
     };
     prefsBusy = true;
     $("prefsSave").disabled = true;
     $("prefsError").hidden = true;
     try {
-        await guardarPrefs(nuevas);
+        await savePrefs(next);
         if (
-            nuevas.startWithWindows === true &&
+            next.startWithWindows === true &&
             prefs.startWithWindows === false
         ) {
-            $("prefInicio").checked = false;
-            errorPrefs(AVISO_INICIO + " Los demás cambios se guardaron.");
+            $("prefAutostart").checked = false;
+            showPrefsError(
+                AUTOSTART_NOTICE + " Los demás cambios se guardaron.",
+            );
         } else $("prefsDlg").close();
     } catch (e) {
-        errorPrefs(errText(e));
+        showPrefsError(errText(e));
     } finally {
         prefsBusy = false;
         $("prefsSave").disabled = false;
     }
 };
 
-/* ---------- eventos de Rust (bandeja y monitor) ---------- */
-function escucharEventos() {
+/* ---------- Rust events (tray and monitor) ---------- */
+function listenEvents() {
     const listen = window.__TAURI__?.event?.listen;
     if (!listen) return;
-    const en = (nombre, fn) => {
+    const on = (name, fn) => {
         try {
-            Promise.resolve(listen(nombre, fn)).catch((e) =>
-                console.warn(`No se pudo escuchar ${nombre}:`, errText(e)),
+            Promise.resolve(listen(name, fn)).catch((e) =>
+                console.warn(`Could not listen to ${name}:`, errText(e)),
             );
         } catch (e) {
-            console.warn(`No se pudo escuchar ${nombre}:`, errText(e));
+            console.warn(`Could not listen to ${name}:`, errText(e));
         }
     };
-    en("signal://refresh", () => {
+    on("signal://refresh", () => {
         if (sessionActive && !(busy && busyGen === gen)) refresh(true);
     });
-    en("signal://preferences", async () => {
-        const antes = prefs.startWithWindows;
+    on("signal://preferences", async () => {
+        const previous = prefs.startWithWindows;
         try {
-            aplicarPrefs(await invoke("read_preferences"));
+            applyPrefs(await invoke("read_preferences"));
         } catch (e) {
-            console.warn("No se pudieron releer las preferencias:", errText(e));
+            console.warn("Could not reload preferences:", errText(e));
             return;
         }
-        if (antes === true && prefs.startWithWindows === false) {
-            prefsNotice = AVISO_INICIO;
-            showNotice(AVISO_INICIO);
+        if (previous === true && prefs.startWithWindows === false) {
+            prefsNotice = AUTOSTART_NOTICE;
+            showNotice(AUTOSTART_NOTICE);
         }
         if ($("prefsDlg").open)
-            $("prefInicio").checked =
-                prefs.startWithWindows; /* lo que Rust cambia por su cuenta; no pisa lo que la persona está editando */
-        render(); /* los feriados pueden haber cambiado; sin tareas cargadas no hace nada */
+            $("prefAutostart").checked =
+                prefs.startWithWindows; /* what Rust changes on its own; does not overwrite what the person is editing */
+        render(); /* holidays may have changed; with no issues loaded it does nothing */
     });
 }
 
-/* ---------- arranque ---------- */
+/* ---------- startup ---------- */
 weekKey = mondayOf(todayLocal());
 setSync("", "Sin datos todavía");
-escucharEventos();
+listenEvents();
 (async () => {
-    await cargarPrefs(); /* no requiere sesión y no lanza: las preferencias (feriados) deben estar antes de pedir la primera vista */
+    await loadPrefs(); /* needs no session and does not throw: the preferences (holidays) must be loaded before requesting the first view */
     try {
         const info = await invoke("restore_session");
         if (info.connected) enterApp(info);
