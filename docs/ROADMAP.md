@@ -1,9 +1,9 @@
 # Roadmap — Signal Aduana de escritorio
 
-**Estado:** aprobado por el autor el 2026-11-17. La fase 5 está en curso y tiene su plan en
-`docs/PLAN-FASE-5.md`. Las fases 6 en adelante todavía no tienen `PLAN-FASE-N.md`: cada plan se
-escribe al empezar su fase, con tareas, archivos y ramas, y el autor lo aprueba antes de lanzar la
-primera ola.
+**Estado:** aprobado por el autor el 2026-11-17. La fase 5 se cerró ese mismo día (ver «Estado al
+cierre» en `docs/PLAN-FASE-5.md`). La fase 6 todavía no tiene `PLAN-FASE-6.md`: cada plan se escribe
+al empezar su fase, con tareas, archivos y ramas, y el autor lo aprueba antes de lanzar la primera
+ola.
 
 ## Dónde estamos
 
@@ -13,11 +13,12 @@ primera ola.
 | 2 | Caché local, actualización automática, fuentes dentro de la app | Hecha |
 | 3 | Cálculos en Rust (hoy `src/domain/`) con paridad contra el JS (31 casos) | Hecha |
 | 4 | Bandeja, avisos, una instancia, preferencias, guía de Windows (tareas 4.1 a 4.10) | Hecha en `develop` |
-| 5 | Validar en Windows y cerrar deuda técnica (`docs/PLAN-FASE-5.md`) | En curso |
+| 5 | Validar en Windows, cerrar deuda técnica, código en inglés e instalador NSIS (`docs/PLAN-FASE-5.md`) | Hecha el 2026-11-17, con pendientes de Windows que pasan a la fase 6 |
 
-Todo se hizo y se probó en WSL con datos simulados. **Nada se ha probado en Windows ni contra el
-Jira real.** De ahí sale el orden de las fases que siguen: primero lo que falta comprobar, después
-lo que hace falta para entregarlo.
+La app compila, se instala y funciona en Windows en modo simulado, según el autor; falta el registro
+punto por punto y confirmar el instalador nuevo. **Nada se ha probado contra el Jira real.** De ahí
+sale el orden de las fases que siguen: primero lo que falta comprobar, después lo que hace falta
+para entregarlo.
 
 ## Resumen
 
@@ -79,6 +80,12 @@ prueba.
 real solo se probó contra un servidor local simulado.
 
 **Antes de empezar:** Tecnología confirma que los API tokens personales están permitidos.
+
+**Heredado de la fase 5** («Estado al cierre» de `docs/PLAN-FASE-5.md`):
+- registrar en Windows la lista de comprobación y la segunda pasada;
+- confirmar los «a verificar» de la guía;
+- probar el instalador NSIS de la 5.15 (instalar y desinstalar);
+- en modo real, «Iniciar con Windows» y el nombre de su entrada en el registro.
 
 **Cómo se trabaja:** Claude y los ejecutores nunca se conectan al Jira real. El autor prueba con su
 cuenta y reporta los errores **sin el token**. Cada hallazgo se convierte en un caso de prueba con
