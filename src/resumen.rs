@@ -5,7 +5,7 @@ use chrono::{Datelike, Duration, NaiveDate};
 use serde::Serialize;
 use serde_json::{Map, Value};
 
-use crate::dominio::calendario::{fh, FeriadosExtra};
+use crate::dominio::calendario::{dias_laborables, fh, FeriadosExtra};
 use crate::dominio::vista::TODOS;
 use crate::dominio::{calcular_vista, Entrada, Vista};
 use crate::error::Resultado;
@@ -25,6 +25,8 @@ pub struct Resumen {
     /// Semana anterior completa.
     pub anterior_secs: i64,
     pub anterior_meta_h: i64,
+    /// Primer día laborable de la semana actual (`AAAA-MM-DD`); `None` si toda la semana es feriado.
+    pub primer_laborable: Option<String>,
 }
 
 fn vista_de(tareas: &[Map<String, Value>], semana: NaiveDate, hoy: NaiveDate, feriados: &FeriadosExtra) -> Resultado<Vista> {
@@ -44,6 +46,7 @@ pub fn resumir(tareas: Vec<Map<String, Value>>, hoy: NaiveDate, feriados: &Feria
     let lunes = hoy - Duration::days(i64::from(hoy.weekday().num_days_from_monday()));
     let actual = vista_de(&tareas, lunes, hoy, feriados)?;
     let anterior = vista_de(&tareas, lunes - Duration::days(7), hoy, feriados)?;
+    let primer_laborable = dias_laborables(&lunes.format("%Y-%m-%d").to_string(), feriados)?.into_iter().next();
     Ok(Resumen {
         hoy: actual.hoy.clone(),
         semana_secs: actual.horas.estado.total,
@@ -52,6 +55,7 @@ pub fn resumir(tareas: Vec<Map<String, Value>>, hoy: NaiveDate, feriados: &Feria
         hoy_laborable: actual.horas.estado.today_labor,
         anterior_secs: anterior.horas.estado.total,
         anterior_meta_h: anterior.horas.estado.target_h,
+        primer_laborable,
     })
 }
 
@@ -163,7 +167,38 @@ mod pruebas {
             hoy_laborable: true,
             anterior_secs: 0,
             anterior_meta_h: 40,
+            primer_laborable: Some("2026-11-09".into()),
         }
+    }
+
+    #[test]
+    fn resumir_marca_feriado_base_y_extra() {
+        let vacio = FeriadosExtra::new();
+        let r = resumir(Vec::new(), fecha("2026-11-03"), &vacio).unwrap();
+        assert!(!r.hoy_laborable);
+        assert_eq!(r.semana_meta_h, 24);
+        let mut quita = FeriadosExtra::new();
+        quita.insert("2026-11-03".into(), false);
+        let r = resumir(Vec::new(), fecha("2026-11-03"), &quita).unwrap();
+        assert!(r.hoy_laborable);
+        assert_eq!(r.semana_meta_h, 32);
+        let r = resumir(Vec::new(), fecha("2026-11-14"), &vacio).unwrap();
+        assert!(!r.hoy_laborable);
+    }
+
+    #[test]
+    fn resumir_calcula_primer_laborable() {
+        let primero = |hoy: &str, extra: &FeriadosExtra| resumir(Vec::new(), fecha(hoy), extra).unwrap().primer_laborable;
+        let vacio = FeriadosExtra::new();
+        assert_eq!(primero("2026-11-18", &vacio).as_deref(), Some("2026-11-16"));
+        let mut lunes_feriado = FeriadosExtra::new();
+        lunes_feriado.insert("2026-11-16".into(), true);
+        assert_eq!(primero("2026-11-18", &lunes_feriado).as_deref(), Some("2026-11-17"));
+        // El 2 y el 3 de noviembre son feriados base.
+        assert_eq!(primero("2026-11-04", &vacio).as_deref(), Some("2026-11-04"));
+        let toda: FeriadosExtra =
+            ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20"].iter().map(|d| (d.to_string(), true)).collect();
+        assert_eq!(primero("2026-11-18", &toda), None);
     }
 
     #[test]

@@ -4,7 +4,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, Weekday};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
 
 use crate::dominio::calendario::{fh, META_DIA_H};
@@ -95,7 +95,7 @@ pub fn decidir(
                 });
             }
             let meta_ant = r.anterior_meta_h * 3600;
-            if ahora.date().weekday() == Weekday::Mon
+            if r.primer_laborable.as_deref() == Some(hoy.as_str())
                 && ahora.time() >= NaiveTime::from_hms_opt(9, 0, 0).expect("hora válida")
                 && prefs.avisos.resumen_lunes
                 && r.anterior_meta_h > 0
@@ -156,6 +156,12 @@ mod pruebas {
         NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").unwrap()
     }
 
+    fn lunes_de(hoy: &str) -> String {
+        let d = NaiveDate::parse_from_str(hoy, "%Y-%m-%d").unwrap();
+        let lunes = d - chrono::Duration::days(i64::from(chrono::Datelike::weekday(&d).num_days_from_monday()));
+        texto_fecha(lunes)
+    }
+
     fn res(hoy: &str) -> Resumen {
         Resumen {
             hoy: hoy.into(),
@@ -165,6 +171,7 @@ mod pruebas {
             hoy_laborable: true,
             anterior_secs: 32 * 3600,
             anterior_meta_h: 40,
+            primer_laborable: Some(lunes_de(hoy)),
         }
     }
 
@@ -305,6 +312,62 @@ mod pruebas {
     fn resumen_de_otro_dia_no_decide() {
         let r = res("2026-11-12");
         assert!(con(&r, "2026-11-13 17:00").is_empty());
+    }
+
+    fn con_primero(hoy: &str, primero: Option<&str>) -> Resumen {
+        let mut r = res(hoy);
+        r.primer_laborable = primero.map(String::from);
+        r
+    }
+
+    #[test]
+    fn cierre_con_hora_invalida_no_avisa_ni_entra_en_panico() {
+        let mut p = Preferencias::default();
+        p.avisos.hora_cierre = "99:99".into();
+        let reg = Registro::default();
+        let viernes = res("2026-11-13");
+        assert!(decidir(EstadoMonitor::Resumen(&viernes), ahora("2026-11-13 17:00"), &p, &reg, false).is_empty());
+        let lunes = con_primero("2026-11-16", Some("2026-11-16"));
+        let v = decidir(EstadoMonitor::Resumen(&lunes), ahora("2026-11-16 10:00"), &p, &reg, false);
+        assert_eq!(tipos(&v), [TipoAviso::ResumenLunes]);
+    }
+
+    #[test]
+    fn resumen_enviado_la_semana_pasada_vuelve_a_avisar() {
+        let r = con_primero("2026-11-16", Some("2026-11-16"));
+        let mut reg = Registro { lunes: Some("2026-11-09".into()), ..Registro::default() };
+        let p = Preferencias::default();
+        let t = ahora("2026-11-16 10:00");
+        let v = decidir(EstadoMonitor::Resumen(&r), t, &p, &reg, false);
+        assert_eq!(tipos(&v), [TipoAviso::ResumenLunes]);
+        marcar(&mut reg, &v, t.date());
+        assert_eq!(reg.lunes.as_deref(), Some("2026-11-16"));
+    }
+
+    #[test]
+    fn lunes_feriado_no_envia_resumen() {
+        let mut r = con_primero("2026-11-16", Some("2026-11-17"));
+        r.hoy_laborable = false;
+        assert!(con(&r, "2026-11-16 10:00").is_empty());
+    }
+
+    #[test]
+    fn resumen_sale_el_martes_si_el_lunes_fue_feriado() {
+        let r = con_primero("2026-11-17", Some("2026-11-17"));
+        assert_eq!(tipos(&con(&r, "2026-11-17 10:00")), [TipoAviso::ResumenLunes]);
+        assert!(con(&r, "2026-11-17 08:59").is_empty());
+    }
+
+    #[test]
+    fn martes_normal_no_envia_resumen() {
+        let r = con_primero("2026-11-17", Some("2026-11-16"));
+        assert!(!tipos(&con(&r, "2026-11-17 10:00")).contains(&TipoAviso::ResumenLunes));
+    }
+
+    #[test]
+    fn semana_toda_feriado_no_envia_resumen() {
+        let r = con_primero("2026-11-16", None);
+        assert!(!tipos(&con(&r, "2026-11-16 10:00")).contains(&TipoAviso::ResumenLunes));
     }
 
     #[test]
