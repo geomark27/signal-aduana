@@ -51,6 +51,11 @@ pub fn texto_sin_sesion(simulado: bool) -> String {
     con_marca_simulado("Signal Aduana · Sin sesión".into(), simulado)
 }
 
+/// Texto del tooltip cuando un ciclo entró en pánico.
+pub fn texto_error_interno(simulado: bool) -> String {
+    con_marca_simulado("Signal Aduana · Error interno, se reintenta".into(), simulado)
+}
+
 async fn leer_resumen(
     fuente: &jira::Fuente,
     cuenta: &str,
@@ -215,6 +220,17 @@ mod pruebas {
         let real = texto_sin_sesion(false);
         assert!(real.ends_with("Sin sesión"));
         let sim = texto_sin_sesion(true);
+        assert!(sim.ends_with(" (simulado)"));
+        assert!(real.chars().count() <= MAX_TEXTO_BANDEJA);
+        assert!(sim.chars().count() <= MAX_TEXTO_BANDEJA);
+    }
+
+    #[test]
+    fn texto_error_interno_con_y_sin_marca_simulado() {
+        let real = texto_error_interno(false);
+        assert!(!real.ends_with(" (simulado)"));
+        assert!(real.contains("Error interno"));
+        let sim = texto_error_interno(true);
         assert!(sim.ends_with(" (simulado)"));
         assert!(real.chars().count() <= MAX_TEXTO_BANDEJA);
         assert!(sim.chars().count() <= MAX_TEXTO_BANDEJA);

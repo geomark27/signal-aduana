@@ -38,6 +38,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | # | Tarea | Rama | Fecha | Resumen |
 |---|---|---|---|---|
 | [013](./fase-5/013-plan-fase-5.md) | 5.0 Plan de la fase 5 y roadmap | `tarea/5.0-plan-fase-5` | 2026-11-17 | `ROADMAP.md` y `PLAN-FASE-5.md` registrados y aprobados; resumen semanal en el primer día laborable (decisión del autor); ejecutores mixtos (Sonnet para la 5.4 y la 5.5, opencode free para la 5.6); `delegar.json` apunta al plan de la fase 5 |
+| [014](./fase-5/014-monitor-resiliente.md) | 5.5 El monitor sobrevive a un pánico del ciclo | `tarea/5.5-monitor-resiliente` | 2026-11-17 | `vigilancia::bucle`, que se prueba sin Tauri; cada ciclo corre bajo `catch_unwind`: un pánico se registra (mensaje recortado a 200), el tooltip pasa a «Error interno, se reintenta» y el bucle sigue; `monitor::texto_error_interno` |
 
 ## Formato de cada entrada
 
