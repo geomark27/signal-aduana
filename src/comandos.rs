@@ -132,8 +132,13 @@ pub fn guardar_preferencias(
     estado: State<'_, Estado>,
     preferencias: Preferencias,
 ) -> Resultado<Preferencias> {
+    let anteriores = preferencias::cargar(&estado.dir_config, estado.simulado);
     let p = preferencias::guardar(&estado.dir_config, estado.simulado, &preferencias)?;
-    Ok(inicio::aplicar(&app, &estado, p))
+    let guardadas = inicio::aplicar(&app, &estado, p);
+    if anteriores.afecta_al_monitor(&guardadas) {
+        vigilancia::pedir_ciclo(&app);
+    }
+    Ok(guardadas)
 }
 
 async fn leer_cache_de(estado: &Estado) -> Resultado<Option<Instantanea>> {

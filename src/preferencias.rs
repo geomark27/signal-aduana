@@ -82,6 +82,11 @@ impl Preferencias {
             .collect();
         Ok(self)
     }
+
+    /// ¿Cambia algo que usa el monitor (avisos o feriados)?
+    pub fn afecta_al_monitor(&self, otra: &Preferencias) -> bool {
+        self.avisos != otra.avisos || self.feriados_extra != otra.feriados_extra
+    }
 }
 
 /// Sin archivo o dañado → valores por defecto. Si solo la hora guardada es inválida, se repone esa.
@@ -213,5 +218,68 @@ mod pruebas {
         let p: Preferencias = serde_json::from_value(j).unwrap();
         assert!(!p.avisos.resumen_lunes);
         assert!(p.feriados_extra["2026-12-24"]);
+    }
+
+    #[test]
+    fn afecta_al_monitor_iguales_es_false() {
+        let base = Preferencias::default();
+        assert!(!base.afecta_al_monitor(&base.clone()));
+    }
+
+    #[test]
+    fn afecta_al_monitor_hora_cierre() {
+        let base = Preferencias::default();
+        let mut otra = base.clone();
+        otra.avisos.hora_cierre = "17:00".into();
+        assert!(base.afecta_al_monitor(&otra));
+    }
+
+    #[test]
+    fn afecta_al_monitor_resumen_lunes() {
+        let base = Preferencias::default();
+        let mut otra = base.clone();
+        otra.avisos.resumen_lunes = false;
+        assert!(base.afecta_al_monitor(&otra));
+    }
+
+    #[test]
+    fn afecta_al_monitor_activos() {
+        let base = Preferencias::default();
+        let mut otra = base.clone();
+        otra.avisos.activos = false;
+        assert!(base.afecta_al_monitor(&otra));
+    }
+
+    #[test]
+    fn afecta_al_monitor_agregar_feriado() {
+        let base = Preferencias::default();
+        let mut otra = base.clone();
+        otra.feriados_extra.insert("2026-12-24".into(), true);
+        assert!(base.afecta_al_monitor(&otra));
+    }
+
+    #[test]
+    fn afecta_al_monitor_quitar_feriado() {
+        let mut base = Preferencias::default();
+        base.feriados_extra.insert("2026-12-24".into(), true);
+        let mut otra = base.clone();
+        otra.feriados_extra.clear();
+        assert!(base.afecta_al_monitor(&otra));
+    }
+
+    #[test]
+    fn afecta_al_monitor_solo_iniciar_con_windows() {
+        let base = Preferencias::default();
+        let mut otra = base.clone();
+        otra.iniciar_con_windows = true;
+        assert!(!base.afecta_al_monitor(&otra));
+    }
+
+    #[test]
+    fn afecta_al_monitor_solo_minimizar_a_bandeja() {
+        let base = Preferencias::default();
+        let mut otra = base.clone();
+        otra.minimizar_a_bandeja = false;
+        assert!(!base.afecta_al_monitor(&otra));
     }
 }
