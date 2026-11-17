@@ -1,7 +1,7 @@
 # Signal Aduana de escritorio — Plan de la fase 5
 
-**Estado:** aprobado por el autor el 2026-11-17, con dos decisiones (tabla «Decisiones del autor»):
-ejecutores mixtos y resumen semanal en el primer día laborable. En curso: tarea 5.0.
+**Estado:** **cerrada el 2026-11-17** (tarea 5.8). Aprobada por el autor ese mismo día. Lo que quedó
+pendiente pasa a la fase 6: ver «Estado al cierre», al final.
 
 **Punto de partida:** `develop` en `cfb4e5f` (fase 4 completa: tareas 4.1 a 4.10). 135 pruebas de la
 librería y 1 de paridad en verde en WSL, en modo simulado. **Nada se ha probado en Windows.**
@@ -412,4 +412,57 @@ se hizo con las entradas 001 y 002.
 
 ## Estado al cierre
 
-(Se completa en la tarea 5.8.)
+**Cerrada el 2026-11-17**, con `develop` en `252e7fe`. 160 pruebas en verde en WSL (159 de la
+librería y 1 de paridad) y `cargo clippy --all-targets` sin advertencias.
+
+### Tareas
+
+| Tarea | Qué | Ejecutor | PR | Entrada |
+|---|---|---|---|---|
+| 5.0 | Plan de la fase y roadmap | Orquestador | #15 | 013 |
+| 5.4 | Resumen semanal en el primer día laborable y pruebas | Sonnet 5.5 | #16 | 024 (retroactiva) |
+| 5.5 | El monitor sobrevive a un pánico | Sonnet 5.5 | #17 | 014 |
+| 5.6 | Las preferencias llegan al monitor al instante | opencode `deepseek-v4.1-flash-free` | #18 | 015 |
+| 5.9 | Glosario y regla de idioma | Orquestador | #19 | 016 |
+| 5.10 | Dominio y paridad en inglés | Sonnet 5.5 | #20 | 017 |
+| 5.11 | Jira en inglés | Sonnet 5.5 | #21 | 018 |
+| 5.12 | Base de la app en inglés | Sonnet 5.5 | #22 | 019 |
+| 5.13 | Escritorio y comandos en inglés | Sonnet 5.5 | #23 | 020 |
+| 5.14 | Interfaz en inglés y cierre de la traducción | Sonnet 5.5 | #24 | 021 |
+| 5.7 | Guía de Windows al día y segunda pasada | Orquestador | #25 | 022 |
+| 5.15 | Instalador como Nudge (solo NSIS por usuario) | Sonnet 5.5 | #26 | 023 |
+| 5.8 | Cierre de la fase | Orquestador | — | 025 |
+
+Todas las tareas de los ejecutores salieron en una sola vuelta. El orquestador corrigió tres nombres
+que había fijado mal en el glosario (`days_word`, `Estimate::Unset`, `viewData`) y tradujo los
+mensajes de consola de la interfaz.
+
+### Windows (5.1 a 5.3)
+
+El autor compiló en Windows, instaló la app y reportó que quedó funcional. Por decisión suya, la fase
+se cierra sin el registro punto por punto. Las sorpresas que aparezcan se atenderán como tareas
+nuevas.
+
+### Criterios de «hecha la fase cuando»
+
+| # | Criterio | Estado |
+|---|---|---|
+| 1 | La lista de comprobación y la segunda pasada pasan en Windows | **Parcial**: el autor reporta que la app funciona; falta el registro punto por punto |
+| 2 | Los seis «a verificar» de la guía, confirmados | **No**: siguen marcados en la guía |
+| 3 | Instalar y desinstalar no deja restos inesperados | **Parcial**: está definido qué se conserva y qué se borra (decisión 5, tarea 5.15); falta comprobarlo en Windows |
+| 4 | 5.4, 5.5 y 5.6 fusionadas, con pruebas y clippy en verde | **Sí** |
+| 5 | Cada tarea con su entrada de bitácora y el script de verificación en 0 | **Sí**: la 5.4 con entrada retroactiva |
+
+### Pendientes que pasan a la fase 6
+
+- **En Windows:**
+  - registrar la lista de 14 puntos y la segunda pasada;
+  - confirmar los seis «a verificar» de `docs/COMPILAR-WINDOWS.md`;
+  - comprobar el instalador de la 5.15: en español, sin pedir administrador, la ruta de instalación
+    y qué conserva y borra el desinstalador.
+- **Solo en modo real:** «Iniciar con Windows» y el nombre de su entrada en el registro.
+- **Código menor:**
+  - la prueba de `spent` de la 5.4, que no comprueba nada (entrada 024);
+  - los comentarios de `src/domain/*.rs` que atribuyen funciones a `ui/app.js` (entrada 021).
+- **Fase 7:** distribución y actualizador al estilo de Nudge (releases, `install.ps1`,
+  `latest.json`), según lo que decida Tecnología.
