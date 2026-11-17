@@ -33,6 +33,12 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [011](./fase-4/011-verificar-bitacora.md) | 4.9 Script que verifica la bitácora | `tarea/4.9-verificar-bitacora` | 2026-11-16 | `scripts/verificar-bitacora.sh`: enlaces del índice, entradas huérfanas, fase y secciones, numeración, marcas de conflicto y URLs o correos; solo lee, sale con 1 si algo falla |
 | [012](./fase-4/012-formato-ui.md) | 4.10 Formato oficial de `ui/app.js` con Prettier | `tarea/4.10-formato-ui` | 2026-11-16 | `.prettierrc.json` (`tabWidth: 4`, reproduce el formato actual sin tocar el archivo), `.prettierignore` (Prettier solo sobre `ui/app.js`) y `make ui-format` / `make fmt-ui`, con la versión fijada; `ui-format` entra en `make check` |
 
+### Fase 5 — Validar en Windows y cerrar deuda técnica
+
+| # | Tarea | Rama | Fecha | Resumen |
+|---|---|---|---|---|
+| [013](./fase-5/013-plan-fase-5.md) | 5.0 Plan de la fase 5 y roadmap | `tarea/5.0-plan-fase-5` | 2026-11-17 | `ROADMAP.md` y `PLAN-FASE-5.md` registrados y aprobados; resumen semanal en el primer día laborable (decisión del autor); ejecutores mixtos (Sonnet para la 5.4 y la 5.5, opencode free para la 5.6); `delegar.json` apunta al plan de la fase 5 |
+
 ## Formato de cada entrada
 
 Archivo `fase-N/NNN-<tema>.md`: `N` es la fase, `NNN` el número correlativo global de tres dígitos
