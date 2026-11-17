@@ -17,8 +17,8 @@ use serde_json::{json, Value};
 use url::Url;
 
 use super::{validate_key, RemoteLink, SearchPage, WikiPage};
-use crate::auth::{Autenticador, Credenciales};
-use crate::error::{ErrorApp, Resultado};
+use crate::auth::{Authenticator, Credentials};
+use crate::error::{AppError, AppResult};
 use crate::jira::model::User;
 
 const TIMEOUT: Duration = Duration::from_secs(30);
@@ -26,20 +26,20 @@ const MAX_429_WAIT_SECS: u64 = 10;
 
 pub struct JiraHttp {
     http: Client,
-    credentials: Credenciales,
+    credentials: Credentials,
     base: Url,
 }
 
 impl JiraHttp {
-    pub fn new(credentials: Credenciales) -> Resultado<Self> {
-        let base = credentials.url_base().clone();
+    pub fn new(credentials: Credentials) -> AppResult<Self> {
+        let base = credentials.base_url().clone();
         let http = Self::client().https_only(true).build()?;
         Ok(JiraHttp { http, credentials, base })
     }
 
     /// Tests only: points to a local simulated server (http://127.0.0.1:port).
     #[cfg(test)]
-    pub fn with_base(credentials: Credenciales, base: Url) -> Self {
+    pub fn with_base(credentials: Credentials, base: Url) -> Self {
         JiraHttp { http: Self::client().build().unwrap(), credentials, base }
     }
 
@@ -49,13 +49,13 @@ impl JiraHttp {
             .user_agent(concat!("signal-aduana/", env!("CARGO_PKG_VERSION")))
     }
 
-    fn url(&self, path: &str) -> Resultado<Url> {
-        self.base.join(path).map_err(|e| ErrorApp::Formato(e.to_string()))
+    fn url(&self, path: &str) -> AppResult<Url> {
+        self.base.join(path).map_err(|e| AppError::Format(e.to_string()))
     }
 
     /// Signs, sends and checks the response. On a 429 it waits as long as Jira says and retries once.
-    async fn send(&self, req: RequestBuilder) -> Resultado<Response> {
-        let req = self.credentials.firmar(req.header(ACCEPT, "application/json"));
+    async fn send(&self, req: RequestBuilder) -> AppResult<Response> {
+        let req = self.credentials.sign(req.header(ACCEPT, "application/json"));
         let copy = req.try_clone();
         let resp = req.send().await?;
         if resp.status() == StatusCode::TOO_MANY_REQUESTS {
@@ -74,20 +74,20 @@ impl JiraHttp {
         check_response(resp).await
     }
 
-    async fn json<T: DeserializeOwned>(&self, req: RequestBuilder) -> Resultado<T> {
+    async fn json<T: DeserializeOwned>(&self, req: RequestBuilder) -> AppResult<T> {
         self.send(req)
             .await?
             .json::<T>()
             .await
-            .map_err(|e| ErrorApp::Formato(e.without_url().to_string()))
+            .map_err(|e| AppError::Format(e.without_url().to_string()))
     }
 
-    pub async fn myself(&self) -> Resultado<User> {
+    pub async fn myself(&self) -> AppResult<User> {
         let v: Value = self.json(self.http.get(self.url("rest/api/3/myself")?)).await?;
-        User::from_jira(&v).ok_or_else(|| ErrorApp::Formato("falta accountId en /myself".into()))
+        User::from_jira(&v).ok_or_else(|| AppError::Format("falta accountId en /myself".into()))
     }
 
-    pub async fn search(&self, jql: &str, fields: &[&str], next: Option<&str>, size: u32) -> Resultado<SearchPage> {
+    pub async fn search(&self, jql: &str, fields: &[&str], next: Option<&str>, size: u32) -> AppResult<SearchPage> {
         let mut body = json!({ "jql": jql, "fields": fields, "maxResults": size });
         if let Some(t) = next {
             body["nextPageToken"] = json!(t);
@@ -104,7 +104,7 @@ impl JiraHttp {
     }
 
     /// All the issue's worklogs started after `since_ms` (from any author).
-    pub async fn worklogs(&self, key: &str, since_ms: i64) -> Resultado<Vec<Value>> {
+    pub async fn worklogs(&self, key: &str, since_ms: i64) -> AppResult<Vec<Value>> {
         let key = validate_key(key)?;
         let url = self.url(&format!("rest/api/3/issue/{key}/worklog"))?;
         let mut all = Vec::new();
@@ -126,7 +126,7 @@ impl JiraHttp {
         Ok(all)
     }
 
-    pub async fn confluence(&self, cql: &str) -> Resultado<Vec<WikiPage>> {
+    pub async fn confluence(&self, cql: &str) -> AppResult<Vec<WikiPage>> {
         let req = self
             .http
             .get(self.url("wiki/rest/api/search")?)
@@ -166,7 +166,7 @@ impl JiraHttp {
         Ok(pages)
     }
 
-    pub async fn links(&self, key: &str) -> Resultado<Vec<RemoteLink>> {
+    pub async fn links(&self, key: &str) -> AppResult<Vec<RemoteLink>> {
         let key = validate_key(key)?;
         let v: Value = self
             .json(self.http.get(self.url(&format!("rest/api/3/issue/{key}/remotelink"))?))
@@ -185,18 +185,18 @@ impl JiraHttp {
 }
 
 /// Converts HTTP status codes into application errors.
-async fn check_response(resp: Response) -> Resultado<Response> {
+async fn check_response(resp: Response) -> AppResult<Response> {
     let status = resp.status();
     if status.is_success() {
         return Ok(resp);
     }
     Err(match status {
-        StatusCode::UNAUTHORIZED => ErrorApp::NoAutorizado,
-        StatusCode::FORBIDDEN => ErrorApp::SinPermiso,
-        StatusCode::TOO_MANY_REQUESTS => ErrorApp::Limite,
+        StatusCode::UNAUTHORIZED => AppError::Unauthorized,
+        StatusCode::FORBIDDEN => AppError::Forbidden,
+        StatusCode::TOO_MANY_REQUESTS => AppError::RateLimited,
         _ => {
             let body = resp.text().await.unwrap_or_default();
-            ErrorApp::Jira { estado: status.as_u16(), detalle: summarize_error(&body) }
+            AppError::Jira { status: status.as_u16(), detail: summarize_error(&body) }
         }
     })
 }
@@ -222,14 +222,14 @@ fn summarize_error(body: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::auth::Sitio;
+    use crate::auth::Site;
     use secrecy::SecretString;
     use wiremock::matchers::{body_partial_json, header, method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     async fn client(server: &MockServer) -> JiraHttp {
-        let credentials = Credenciales::token_clasico(
-            Sitio::parse("prueba.atlassian.net").unwrap(),
+        let credentials = Credentials::classic_token(
+            Site::parse("prueba.atlassian.net").unwrap(),
             "a@b.com",
             SecretString::from("tok"),
         )
@@ -260,8 +260,8 @@ mod tests {
         Mock::given(path("/rest/api/3/myself")).respond_with(ResponseTemplate::new(401)).mount(&s).await;
         Mock::given(path("/rest/api/3/issue/APP-1/remotelink")).respond_with(ResponseTemplate::new(403)).mount(&s).await;
         let c = client(&s).await;
-        assert!(matches!(c.myself().await, Err(ErrorApp::NoAutorizado)));
-        assert!(matches!(c.links("APP-1").await, Err(ErrorApp::SinPermiso)));
+        assert!(matches!(c.myself().await, Err(AppError::Unauthorized)));
+        assert!(matches!(c.links("APP-1").await, Err(AppError::Forbidden)));
     }
 
     #[tokio::test]
@@ -272,7 +272,7 @@ mod tests {
             .mount(&s)
             .await;
         match client(&s).await.search("x", &["summary"], None, 100).await {
-            Err(ErrorApp::Jira { estado: status, detalle: detail }) => {
+            Err(AppError::Jira { status, detail }) => {
                 assert_eq!(status, 400);
                 assert_eq!(detail, "JQL inválido");
             }
@@ -336,7 +336,7 @@ mod tests {
     async fn invalid_key_never_reaches_the_network() {
         let s = MockServer::start().await;
         let c = client(&s).await;
-        assert!(matches!(c.worklogs("../../myself", 0).await, Err(ErrorApp::ClaveInvalida(_))));
+        assert!(matches!(c.worklogs("../../myself", 0).await, Err(AppError::InvalidKey(_))));
         assert!(s.received_requests().await.unwrap().is_empty());
     }
 }

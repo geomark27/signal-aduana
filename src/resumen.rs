@@ -8,7 +8,7 @@ use serde_json::{Map, Value};
 use crate::domain::calendar::{fh, workdays, ExtraHolidays};
 use crate::domain::view::ALL_BOARDS;
 use crate::domain::{compute_view, View, ViewInput};
-use crate::error::Resultado;
+use crate::error::AppResult;
 
 /// Largo máximo del texto del tooltip (Windows corta alrededor de 127 caracteres).
 pub const MAX_TEXTO_BANDEJA: usize = 120;
@@ -29,7 +29,7 @@ pub struct Resumen {
     pub primer_laborable: Option<String>,
 }
 
-fn vista_de(tareas: &[Map<String, Value>], semana: NaiveDate, hoy: NaiveDate, feriados: &ExtraHolidays) -> Resultado<View> {
+fn vista_de(tareas: &[Map<String, Value>], semana: NaiveDate, hoy: NaiveDate, feriados: &ExtraHolidays) -> AppResult<View> {
     compute_view(
         ViewInput {
             issues: tareas.to_vec(),
@@ -42,7 +42,7 @@ fn vista_de(tareas: &[Map<String, Value>], semana: NaiveDate, hoy: NaiveDate, fe
     )
 }
 
-pub fn resumir(tareas: Vec<Map<String, Value>>, hoy: NaiveDate, feriados: &ExtraHolidays) -> Resultado<Resumen> {
+pub fn resumir(tareas: Vec<Map<String, Value>>, hoy: NaiveDate, feriados: &ExtraHolidays) -> AppResult<Resumen> {
     let lunes = hoy - Duration::days(i64::from(hoy.weekday().num_days_from_monday()));
     let actual = vista_de(&tareas, lunes, hoy, feriados)?;
     let anterior = vista_de(&tareas, lunes - Duration::days(7), hoy, feriados)?;

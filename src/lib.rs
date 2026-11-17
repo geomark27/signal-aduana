@@ -1,4 +1,3 @@
-pub mod almacen;
 pub mod auth;
 pub mod avisos;
 pub mod cache;
@@ -12,13 +11,14 @@ pub mod jira;
 pub mod monitor;
 pub mod preferencias;
 pub mod resumen;
-pub mod sesion;
+pub mod secret_store;
+pub mod session;
 pub mod vigilancia;
 
 use tauri::Manager;
 
-use crate::almacen::{AlmacenMemoria, AlmacenSecretos, AlmacenSistema};
-use crate::sesion::Estado;
+use crate::secret_store::{MemorySecretStore, SecretStore, SystemSecretStore};
+use crate::session::AppState;
 
 /// `SIGNAL_SIMULADO=1`/`0` manda; sin definir: simulado en debug y real en release.
 fn modo_simulado() -> bool {
@@ -42,9 +42,9 @@ pub fn run() {
         .setup(move |app| {
             let dir = app.path().app_config_dir()?;
             let dir_datos = app.path().app_local_data_dir()?;
-            let almacen: Box<dyn AlmacenSecretos> =
-                if simulado { Box::new(AlmacenMemoria::default()) } else { Box::new(AlmacenSistema) };
-            app.manage(Estado::nuevo(simulado, dir, dir_datos, almacen));
+            let almacen: Box<dyn SecretStore> =
+                if simulado { Box::new(MemorySecretStore::default()) } else { Box::new(SystemSecretStore) };
+            app.manage(AppState::new(simulado, dir, dir_datos, almacen));
             if simulado {
                 if let Some(ventana) = app.get_webview_window("main") {
                     ventana.set_title("Signal Aduana — modo simulado")?;
@@ -52,8 +52,8 @@ pub fn run() {
             }
             app.manage(vigilancia::Vigilante::nuevo());
             escritorio::configurar(app)?;
-            let estado = app.state::<Estado>();
-            let prefs = preferencias::cargar(&estado.dir_config, estado.simulado);
+            let estado = app.state::<AppState>();
+            let prefs = preferencias::cargar(&estado.config_dir, estado.simulated);
             inicio::aplicar(app.handle(), &estado, prefs);
             vigilancia::iniciar(app.handle());
             Ok(())

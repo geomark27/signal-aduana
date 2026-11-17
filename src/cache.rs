@@ -1,8 +1,8 @@
-//! Caché local: la última carga completa del tablero, para mostrarla al abrir y sin red.
-//! En Windows queda en `%LOCALAPPDATA%\ec.com.torresytorres.signal\cache.json`.
+//! Local cache: the last full board load, to show it on open and without a network.
+//! On Windows it lives at `%LOCALAPPDATA%\ec.com.torresytorres.signal\cache.json`.
 //!
-//! `datos` es opaco para Rust: la interfaz decide qué guarda. El archivo nunca contiene el token
-//! ni el correo; solo el `account_id` y el sitio, para no mostrar datos de otra cuenta.
+//! `data` is opaque to Rust: the UI decides what it stores. The file never contains the token
+//! or the email; only the `account_id` and the site, to avoid showing another account's data.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -10,157 +10,158 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
-/// Versión del formato del archivo. Si cambia, las cachés anteriores se ignoran.
+/// File format version. If it changes, earlier caches are ignored.
 const VERSION: u32 = 1;
 
-/// Tamaño máximo del archivo serializado: 20 MB.
+/// Maximum size of the serialized file: 20 MB.
 pub const MAX_BYTES: usize = 20 * 1024 * 1024;
 
-/// Lo que se devuelve a la interfaz (Contrato C).
+/// What is returned to the UI (Contract C).
 #[derive(Debug, Clone, PartialEq, Serialize)]
-pub struct Instantanea {
-    /// Fecha-hora RFC 3339 (UTC) en que se escribió el archivo.
-    pub guardado: String,
-    pub datos: Value,
+#[serde(rename_all = "camelCase")]
+pub struct Snapshot {
+    /// RFC 3339 date-time (UTC) at which the file was written.
+    pub saved_at: String,
+    pub data: Value,
 }
 
 #[derive(Serialize, Deserialize)]
-struct Archivo {
+struct CacheFile {
     version: u32,
     account_id: String,
-    sitio: String,
-    guardado: String,
-    datos: Value,
+    site: String,
+    saved_at: String,
+    data: Value,
 }
 
-pub fn ruta(dir: &Path, simulado: bool) -> PathBuf {
-    dir.join(if simulado { "cache.simulado.json" } else { "cache.json" })
+pub fn path(dir: &Path, simulated: bool) -> PathBuf {
+    dir.join(if simulated { "cache.simulated.json" } else { "cache.json" })
 }
 
-/// Guarda `datos` de forma atómica (temporal + renombrar).
-pub fn guardar(dir: &Path, simulado: bool, account_id: &str, sitio: &str, datos: Value) -> Resultado<()> {
-    let archivo = Archivo {
+/// Saves `data` atomically (temp file + rename).
+pub fn save(dir: &Path, simulated: bool, account_id: &str, site: &str, data: Value) -> AppResult<()> {
+    let file = CacheFile {
         version: VERSION,
         account_id: account_id.to_string(),
-        sitio: sitio.to_string(),
-        guardado: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
-        datos,
+        site: site.to_string(),
+        saved_at: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        data,
     };
-    let texto = serde_json::to_vec(&archivo).map_err(|e| ErrorApp::Cache(e.to_string()))?;
-    if texto.len() > MAX_BYTES {
-        return Err(ErrorApp::Cache(format!(
+    let text = serde_json::to_vec(&file).map_err(|e| AppError::Cache(e.to_string()))?;
+    if text.len() > MAX_BYTES {
+        return Err(AppError::Cache(format!(
             "Los datos guardados superan el tamaño máximo de {} MB.",
             MAX_BYTES / (1024 * 1024)
         )));
     }
-    fs::create_dir_all(dir).map_err(|e| ErrorApp::Cache(e.to_string()))?;
-    let destino = ruta(dir, simulado);
-    let tmp = destino.with_extension("json.tmp");
-    fs::write(&tmp, texto).map_err(|e| ErrorApp::Cache(e.to_string()))?;
-    fs::rename(&tmp, &destino).map_err(|e| {
+    fs::create_dir_all(dir).map_err(|e| AppError::Cache(e.to_string()))?;
+    let target = path(dir, simulated);
+    let tmp = target.with_extension("json.tmp");
+    fs::write(&tmp, text).map_err(|e| AppError::Cache(e.to_string()))?;
+    fs::rename(&tmp, &target).map_err(|e| {
         let _ = fs::remove_file(&tmp);
-        ErrorApp::Cache(e.to_string())
+        AppError::Cache(e.to_string())
     })
 }
 
-/// `None` si no hay archivo, está dañado, es de otra versión o es de otra cuenta o sitio.
-pub fn leer(dir: &Path, simulado: bool, account_id: &str, sitio: &str) -> Option<Instantanea> {
-    let bytes = fs::read(ruta(dir, simulado)).ok()?;
-    let a: Archivo = serde_json::from_slice(&bytes).ok()?;
-    if a.version != VERSION || a.account_id != account_id || a.sitio != sitio {
+/// `None` if there is no file, it is corrupt, it has another version or it belongs to another account or site.
+pub fn read(dir: &Path, simulated: bool, account_id: &str, site: &str) -> Option<Snapshot> {
+    let bytes = fs::read(path(dir, simulated)).ok()?;
+    let f: CacheFile = serde_json::from_slice(&bytes).ok()?;
+    if f.version != VERSION || f.account_id != account_id || f.site != site {
         return None;
     }
-    Some(Instantanea { guardado: a.guardado, datos: a.datos })
+    Some(Snapshot { saved_at: f.saved_at, data: f.data })
 }
 
-/// Borra la caché; que no exista no es error.
-pub fn borrar(dir: &Path, simulado: bool) {
-    let _ = fs::remove_file(ruta(dir, simulado));
+/// Deletes the cache; it not existing is not an error.
+pub fn delete(dir: &Path, simulated: bool) {
+    let _ = fs::remove_file(path(dir, simulated));
 }
 
 #[cfg(test)]
-mod pruebas {
+mod tests {
     use super::*;
     use serde_json::json;
 
-    const SITIO: &str = "https://x.atlassian.net";
+    const SITE: &str = "https://x.atlassian.net";
 
     #[test]
-    fn ida_y_vuelta() {
+    fn round_trip() {
         let dir = tempfile::tempdir().unwrap();
-        assert!(leer(dir.path(), false, "u1", SITIO).is_none());
-        let datos = json!({ "formato": 1, "issues": [{ "key": "APP-1" }] });
-        guardar(dir.path(), false, "u1", SITIO, datos.clone()).unwrap();
-        let i = leer(dir.path(), false, "u1", SITIO).unwrap();
-        assert_eq!(i.datos, datos);
-        assert!(chrono::DateTime::parse_from_rfc3339(&i.guardado).is_ok());
-        assert!(i.guardado.ends_with('Z'));
-        let texto = fs::read_to_string(ruta(dir.path(), false)).unwrap();
-        assert!(!texto.contains("token") && !texto.contains('@'));
+        assert!(read(dir.path(), false, "u1", SITE).is_none());
+        let data = json!({ "format": 1, "issues": [{ "key": "APP-1" }] });
+        save(dir.path(), false, "u1", SITE, data.clone()).unwrap();
+        let s = read(dir.path(), false, "u1", SITE).unwrap();
+        assert_eq!(s.data, data);
+        assert!(chrono::DateTime::parse_from_rfc3339(&s.saved_at).is_ok());
+        assert!(s.saved_at.ends_with('Z'));
+        let text = fs::read_to_string(path(dir.path(), false)).unwrap();
+        assert!(!text.contains("token") && !text.contains('@'));
     }
 
     #[test]
-    fn simulado_usa_otro_archivo() {
+    fn simulated_uses_another_file() {
         let dir = tempfile::tempdir().unwrap();
-        guardar(dir.path(), true, "u1", SITIO, json!(1)).unwrap();
-        assert!(ruta(dir.path(), true).ends_with("cache.simulado.json"));
-        assert!(leer(dir.path(), true, "u1", SITIO).is_some());
-        assert!(leer(dir.path(), false, "u1", SITIO).is_none());
+        save(dir.path(), true, "u1", SITE, json!(1)).unwrap();
+        assert!(path(dir.path(), true).ends_with("cache.simulated.json"));
+        assert!(read(dir.path(), true, "u1", SITE).is_some());
+        assert!(read(dir.path(), false, "u1", SITE).is_none());
     }
 
     #[test]
-    fn otra_cuenta_o_sitio_da_none() {
+    fn other_account_or_site_gives_none() {
         let dir = tempfile::tempdir().unwrap();
-        guardar(dir.path(), false, "u1", SITIO, json!({ "a": 1 })).unwrap();
-        assert!(leer(dir.path(), false, "u2", SITIO).is_none());
-        assert!(leer(dir.path(), false, "u1", "https://y.atlassian.net").is_none());
-        assert!(leer(dir.path(), false, "u1", SITIO).is_some());
+        save(dir.path(), false, "u1", SITE, json!({ "a": 1 })).unwrap();
+        assert!(read(dir.path(), false, "u2", SITE).is_none());
+        assert!(read(dir.path(), false, "u1", "https://y.atlassian.net").is_none());
+        assert!(read(dir.path(), false, "u1", SITE).is_some());
     }
 
     #[test]
-    fn archivo_danado_da_none() {
+    fn corrupt_file_gives_none() {
         let dir = tempfile::tempdir().unwrap();
-        fs::write(ruta(dir.path(), false), "esto no es json {{{").unwrap();
-        assert!(leer(dir.path(), false, "u1", SITIO).is_none());
-        fs::write(ruta(dir.path(), false), r#"{"version":1}"#).unwrap();
-        assert!(leer(dir.path(), false, "u1", SITIO).is_none());
+        fs::write(path(dir.path(), false), "esto no es json {{{").unwrap();
+        assert!(read(dir.path(), false, "u1", SITE).is_none());
+        fs::write(path(dir.path(), false), r#"{"version":1}"#).unwrap();
+        assert!(read(dir.path(), false, "u1", SITE).is_none());
     }
 
     #[test]
-    fn version_distinta_da_none() {
+    fn different_version_gives_none() {
         let dir = tempfile::tempdir().unwrap();
-        let otro = json!({ "version": 2, "account_id": "u1", "sitio": SITIO,
-            "guardado": "2026-01-01T00:00:00Z", "datos": {} });
-        fs::write(ruta(dir.path(), false), otro.to_string()).unwrap();
-        assert!(leer(dir.path(), false, "u1", SITIO).is_none());
+        let other = json!({ "version": 2, "account_id": "u1", "site": SITE,
+            "saved_at": "2026-01-01T00:00:00Z", "data": {} });
+        fs::write(path(dir.path(), false), other.to_string()).unwrap();
+        assert!(read(dir.path(), false, "u1", SITE).is_none());
     }
 
     #[test]
-    fn rechaza_datos_demasiado_grandes() {
+    fn rejects_data_that_is_too_large() {
         let dir = tempfile::tempdir().unwrap();
-        let grande = Value::String("a".repeat(MAX_BYTES + 1));
-        let r = guardar(dir.path(), false, "u1", SITIO, grande);
-        assert!(matches!(r, Err(ErrorApp::Cache(_))));
-        assert!(!ruta(dir.path(), false).exists());
+        let large = Value::String("a".repeat(MAX_BYTES + 1));
+        let r = save(dir.path(), false, "u1", SITE, large);
+        assert!(matches!(r, Err(AppError::Cache(_))));
+        assert!(!path(dir.path(), false).exists());
     }
 
     #[test]
-    fn borrar_no_falla_si_no_existe() {
+    fn delete_does_not_fail_if_missing() {
         let dir = tempfile::tempdir().unwrap();
-        borrar(dir.path(), false);
-        guardar(dir.path(), false, "u1", SITIO, json!(1)).unwrap();
-        borrar(dir.path(), false);
-        assert!(leer(dir.path(), false, "u1", SITIO).is_none());
+        delete(dir.path(), false);
+        save(dir.path(), false, "u1", SITE, json!(1)).unwrap();
+        delete(dir.path(), false);
+        assert!(read(dir.path(), false, "u1", SITE).is_none());
     }
 
     #[test]
-    fn crea_el_directorio_y_no_deja_temporales() {
+    fn creates_the_directory_and_leaves_no_temp_files() {
         let dir = tempfile::tempdir().unwrap();
-        let sub = dir.path().join("nuevo").join("anidado");
-        guardar(&sub, false, "u1", SITIO, json!(1)).unwrap();
-        let nombres: Vec<_> = fs::read_dir(&sub).unwrap().map(|e| e.unwrap().file_name()).collect();
-        assert_eq!(nombres, vec![std::ffi::OsString::from("cache.json")]);
+        let sub = dir.path().join("new").join("nested");
+        save(&sub, false, "u1", SITE, json!(1)).unwrap();
+        let names: Vec<_> = fs::read_dir(&sub).unwrap().map(|e| e.unwrap().file_name()).collect();
+        assert_eq!(names, vec![std::ffi::OsString::from("cache.json")]);
     }
 }

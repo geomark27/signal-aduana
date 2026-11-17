@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::calendar::{validate_date, ExtraHolidays};
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
 pub const HORA_CIERRE_DEFECTO: &str = "16:30";
 
@@ -52,7 +52,7 @@ pub fn ruta(dir: &Path, simulado: bool) -> PathBuf {
 }
 
 /// Valida `HH:MM` (00:00 a 23:59, dos dígitos cada parte) y lo devuelve igual.
-fn validar_hora(hora: &str) -> Resultado<String> {
+fn validar_hora(hora: &str) -> AppResult<String> {
     // Sin índices ni cortes de texto: se separa en `HH` y `MM` y cada parte debe ser de dos dígitos.
     let dos_digitos = |t: &str| t.chars().count() == 2 && t.chars().all(|c| c.is_ascii_digit());
     let valida = hora.split_once(':').is_some_and(|(h, m)| {
@@ -64,7 +64,7 @@ fn validar_hora(hora: &str) -> Resultado<String> {
     if valida {
         Ok(hora.to_string())
     } else {
-        Err(ErrorApp::Formato(format!(
+        Err(AppError::Format(format!(
             "La hora de cierre debe ser HH:MM entre 00:00 y 23:59: «{}»",
             hora.chars().take(20).collect::<String>()
         )))
@@ -73,7 +73,7 @@ fn validar_hora(hora: &str) -> Resultado<String> {
 
 impl Preferencias {
     /// Hora inválida → `Formato`; los feriados con fecha inválida se descartan.
-    pub fn normalizar(mut self) -> Resultado<Preferencias> {
+    pub fn normalizar(mut self) -> AppResult<Preferencias> {
         self.avisos.hora_cierre = validar_hora(self.avisos.hora_cierre.trim())?;
         self.feriados_extra = self
             .feriados_extra
@@ -101,14 +101,14 @@ pub fn cargar(dir: &Path, simulado: bool) -> Preferencias {
 }
 
 /// Normaliza y guarda (escritura atómica). Devuelve lo que quedó guardado.
-pub fn guardar(dir: &Path, simulado: bool, p: &Preferencias) -> Resultado<Preferencias> {
+pub fn guardar(dir: &Path, simulado: bool, p: &Preferencias) -> AppResult<Preferencias> {
     let p = p.clone().normalizar()?;
-    fs::create_dir_all(dir).map_err(|e| ErrorApp::Config(e.to_string()))?;
-    let texto = toml::to_string_pretty(&p).map_err(|e| ErrorApp::Config(e.to_string()))?;
+    fs::create_dir_all(dir).map_err(|e| AppError::Config(e.to_string()))?;
+    let texto = toml::to_string_pretty(&p).map_err(|e| AppError::Config(e.to_string()))?;
     let destino = ruta(dir, simulado);
     let tmp = destino.with_extension("toml.tmp");
-    fs::write(&tmp, texto).map_err(|e| ErrorApp::Config(e.to_string()))?;
-    fs::rename(&tmp, &destino).map_err(|e| ErrorApp::Config(e.to_string()))?;
+    fs::write(&tmp, texto).map_err(|e| AppError::Config(e.to_string()))?;
+    fs::rename(&tmp, &destino).map_err(|e| AppError::Config(e.to_string()))?;
     Ok(p)
 }
 
@@ -183,7 +183,7 @@ mod pruebas {
             let mut p = Preferencias::default();
             p.avisos.hora_cierre = mala.into();
             let e = guardar(dir.path(), false, &p).unwrap_err();
-            assert_eq!(e.codigo(), "formato", "{mala:?}");
+            assert_eq!(e.code(), "format", "{mala:?}");
         }
         assert!(!ruta(dir.path(), false).exists());
         // Los espacios de los extremos se recortan antes de validar.

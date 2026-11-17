@@ -5,7 +5,7 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::preferencias::{self, Preferencias};
-use crate::sesion::Estado;
+use crate::session::AppState;
 
 /// Evento que avisa a la interfaz de que las preferencias cambiaron por dentro.
 pub const EVENTO_PREFERENCIAS: &str = "signal://preferencias";
@@ -55,8 +55,8 @@ pub fn corregir(mut p: Preferencias, resultado: &Result<(), String>) -> (Prefere
 }
 
 /// Sincroniza y corrige; si la preferencia cambió la guarda y avisa a la interfaz.
-pub fn aplicar(app: &AppHandle, estado: &Estado, p: Preferencias) -> Preferencias {
-    let resultado = sincronizar(app, estado.simulado, p.iniciar_con_windows);
+pub fn aplicar(app: &AppHandle, estado: &AppState, p: Preferencias) -> Preferencias {
+    let resultado = sincronizar(app, estado.simulated, p.iniciar_con_windows);
     if let Err(e) = &resultado {
         eprintln!("inicio: no se pudo aplicar el inicio con Windows: {e}");
     }
@@ -64,7 +64,7 @@ pub fn aplicar(app: &AppHandle, estado: &Estado, p: Preferencias) -> Preferencia
     if !cambio {
         return p;
     }
-    let p = match preferencias::guardar(&estado.dir_config, estado.simulado, &p) {
+    let p = match preferencias::guardar(&estado.config_dir, estado.simulated, &p) {
         Ok(guardada) => guardada,
         Err(e) => {
             eprintln!("inicio: no se pudo guardar la preferencia corregida: {e}");

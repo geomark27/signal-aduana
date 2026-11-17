@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveDateTime};
 
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
 /// Hours of the full weekly target and of one workday.
 pub const WEEK_TARGET_H: i64 = 40;
@@ -28,11 +28,11 @@ pub const WEEKDAYS: [&str; 7] = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Do
 /// User changes on top of the base holidays (`feriadosExtra`).
 pub type ExtraHolidays = BTreeMap<String, bool>;
 
-fn parse_date(ymd: &str) -> Resultado<NaiveDate> {
+fn parse_date(ymd: &str) -> AppResult<NaiveDate> {
     if ymd.len() != 10 {
-        return Err(ErrorApp::Formato(format!("Fecha no válida: «{ymd}»")));
+        return Err(AppError::Format(format!("Fecha no válida: «{ymd}»")));
     }
-    NaiveDate::parse_from_str(ymd, "%Y-%m-%d").map_err(|_| ErrorApp::Formato(format!("Fecha no válida: «{ymd}»")))
+    NaiveDate::parse_from_str(ymd, "%Y-%m-%d").map_err(|_| AppError::Format(format!("Fecha no válida: «{ymd}»")))
 }
 
 fn date_text(d: NaiveDate) -> String {
@@ -60,15 +60,15 @@ pub fn instant_ms(s: &str) -> Option<i64> {
 }
 
 /// `localDate`: adds Ecuador's offset to the UTC instant and cuts the date.
-pub fn local_date(iso: &str) -> Resultado<String> {
-    let ms = instant_ms(iso).ok_or_else(|| ErrorApp::Formato(format!("Fecha-hora no válida: «{iso}»")))?;
+pub fn local_date(iso: &str) -> AppResult<String> {
+    let ms = instant_ms(iso).ok_or_else(|| AppError::Format(format!("Fecha-hora no válida: «{iso}»")))?;
     let d = DateTime::from_timestamp_millis(ms + UTC_OFFSET_HOURS * 3_600_000)
-        .ok_or_else(|| ErrorApp::Formato(format!("Fecha-hora fuera de rango: «{iso}»")))?;
+        .ok_or_else(|| AppError::Format(format!("Fecha-hora fuera de rango: «{iso}»")))?;
     Ok(date_text(d.date_naive()))
 }
 
 /// `dateOnly`: empty → `None`; longer than 10 characters → `local_date`; otherwise as is.
-pub fn date_only(s: Option<&str>) -> Resultado<Option<String>> {
+pub fn date_only(s: Option<&str>) -> AppResult<Option<String>> {
     match s {
         None | Some("") => Ok(None),
         Some(s) if s.chars().count() > 10 => local_date(s).map(Some),
@@ -77,31 +77,31 @@ pub fn date_only(s: Option<&str>) -> Resultado<Option<String>> {
 }
 
 /// Day of the week with Monday = 0.
-pub fn weekday_index(ymd: &str) -> Resultado<u32> {
+pub fn weekday_index(ymd: &str) -> AppResult<u32> {
     Ok(parse_date(ymd)?.weekday().num_days_from_monday())
 }
 
-pub fn monday_of(ymd: &str) -> Resultado<String> {
+pub fn monday_of(ymd: &str) -> AppResult<String> {
     let d = parse_date(ymd)?;
     Ok(date_text(d - Duration::days(d.weekday().num_days_from_monday() as i64)))
 }
 
-pub fn add_days(ymd: &str, n: i64) -> Resultado<String> {
+pub fn add_days(ymd: &str, n: i64) -> AppResult<String> {
     Ok(date_text(parse_date(ymd)? + Duration::days(n)))
 }
 
 /// Is the `YYYY-MM-DD` date a Monday?
-pub fn is_monday(ymd: &str) -> Resultado<bool> {
+pub fn is_monday(ymd: &str) -> AppResult<bool> {
     Ok(weekday_index(ymd)? == 0)
 }
 
 /// `isoWeek`: (ISO year, ISO week number).
-pub fn iso_week(ymd: &str) -> Resultado<(i32, i64)> {
+pub fn iso_week(ymd: &str) -> AppResult<(i32, i64)> {
     let d = parse_date(ymd)?;
     let wd = d.weekday().num_days_from_monday() as i64;
     let th = d + Duration::days(3 - wd);
     let y = th.year();
-    let j1 = NaiveDate::from_ymd_opt(y, 1, 4).ok_or_else(|| ErrorApp::Formato(format!("Año fuera de rango: {y}")))?;
+    let j1 = NaiveDate::from_ymd_opt(y, 1, 4).ok_or_else(|| AppError::Format(format!("Año fuera de rango: {y}")))?;
     let wj1 = j1.weekday().num_days_from_monday() as i64;
     let days = (th - j1).num_days() - 3 + wj1;
     // `Math.round(days / 7)`: `days` is a multiple of 7, but JS rounding is kept.
@@ -148,7 +148,7 @@ pub fn is_holiday(ymd: &str, extra: &ExtraHolidays) -> bool {
 }
 
 /// `laborDays`: Monday to Friday that are not holidays.
-pub fn workdays(wk: &str, extra: &ExtraHolidays) -> Resultado<Vec<String>> {
+pub fn workdays(wk: &str, extra: &ExtraHolidays) -> AppResult<Vec<String>> {
     let mut out = Vec::new();
     for d in 0..5 {
         let day = add_days(wk, d)?;
@@ -160,7 +160,7 @@ pub fn workdays(wk: &str, extra: &ExtraHolidays) -> Resultado<Vec<String>> {
 }
 
 /// `weekHolidays`: Monday to Friday that are holidays.
-pub fn week_holidays(wk: &str, extra: &ExtraHolidays) -> Resultado<Vec<String>> {
+pub fn week_holidays(wk: &str, extra: &ExtraHolidays) -> AppResult<Vec<String>> {
     let mut out = Vec::new();
     for d in 0..5 {
         let day = add_days(wk, d)?;
@@ -172,12 +172,12 @@ pub fn week_holidays(wk: &str, extra: &ExtraHolidays) -> Resultado<Vec<String>> 
 }
 
 /// `weekTarget`: the week's hour target (8 h per workday).
-pub fn week_target(wk: &str, extra: &ExtraHolidays) -> Resultado<i64> {
+pub fn week_target(wk: &str, extra: &ExtraHolidays) -> AppResult<i64> {
     Ok(workdays(wk, extra)?.len() as i64 * DAY_TARGET_H)
 }
 
 /// Validates `YYYY-MM-DD` and returns it normalized.
-pub fn validate_date(ymd: &str) -> Resultado<String> {
+pub fn validate_date(ymd: &str) -> AppResult<String> {
     parse_date(ymd).map(date_text)
 }
 
