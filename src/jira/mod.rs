@@ -426,4 +426,54 @@ mod pruebas {
         assert!(!recientes.is_empty() && recientes.len() < todas.len());
         assert!(!todas.contains(&"ADN-301".to_string()), "ADN-301 no tiene horas");
     }
+
+    fn fecha_pruebas() -> NaiveDate {
+        NaiveDate::from_ymd_opt(2026, 11, 13).unwrap()
+    }
+
+    fn sim_viernes(valido: bool) -> Fuente {
+        Fuente::Simulado(JiraSimulado::nuevo("a@b.com", valido, fecha_pruebas()))
+    }
+
+    #[tokio::test]
+    async fn cargar_para_resumen_devuelve_tareas_con_horas_propias() {
+        use chrono::{Datelike, Duration};
+        let f = sim_viernes(true);
+        let tareas = cargar_para_resumen(&f, Some("sim-0001"), fecha_pruebas()).await.unwrap();
+        assert!(!tareas.is_empty());
+        let atras = fecha_pruebas() - Duration::days(98);
+        let desde = (atras - Duration::days(i64::from(atras.weekday().num_days_from_monday()))).format("%Y-%m-%d").to_string();
+        let mut hubo_registros = false;
+        for t in &tareas {
+            assert!(t.get("key").and_then(Value::as_str).is_some());
+            assert!(!t.contains_key("hasPR"));
+            let wl = t.get("worklogs").and_then(Value::as_array).expect("worklogs es un arreglo");
+            for w in wl {
+                hubo_registros = true;
+                assert_ne!(w["a"].as_str(), Some("sim-0002"), "registro ajeno");
+                assert!(w["d"].as_str().unwrap() >= desde.as_str(), "registro anterior al lunes de hoy - 98 días");
+            }
+        }
+        assert!(hubo_registros);
+    }
+
+    #[tokio::test]
+    async fn cargar_para_resumen_con_token_invalido_es_no_autorizado() {
+        let f = sim_viernes(false);
+        let r = cargar_para_resumen(&f, None, fecha_pruebas()).await;
+        assert!(matches!(r, Err(ErrorApp::NoAutorizado)));
+    }
+
+    #[tokio::test]
+    async fn cargar_para_resumen_completa_spent_con_la_suma_de_registros() {
+        let f = sim_viernes(true);
+        let originales = cargar_tareas(&f, Some("sim-0001")).await.unwrap();
+        let sin_gastado: Vec<&str> = originales.iter().filter(|t| t.spent == 0).map(|t| t.key.as_str()).collect();
+        assert!(!sin_gastado.is_empty(), "el simulado debe traer alguna tarea sin tiempo gastado");
+        let tareas = cargar_para_resumen(&f, Some("sim-0001"), fecha_pruebas()).await.unwrap();
+        for t in tareas.iter().filter(|t| sin_gastado.contains(&t["key"].as_str().unwrap())) {
+            let suma: i64 = t["worklogs"].as_array().unwrap().iter().filter_map(|w| w["s"].as_i64()).sum();
+            assert_eq!(t["spent"].as_i64(), Some(suma), "{}", t["key"]);
+        }
+    }
 }
