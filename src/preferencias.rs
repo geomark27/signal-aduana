@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::dominio::calendario::{validar_fecha, FeriadosExtra};
+use crate::domain::calendar::{validate_date, ExtraHolidays};
 use crate::error::{ErrorApp, Resultado};
 
 pub const HORA_CIERRE_DEFECTO: &str = "16:30";
@@ -33,7 +33,7 @@ pub struct Preferencias {
     pub avisos: PrefAvisos,
     pub iniciar_con_windows: bool,
     pub minimizar_a_bandeja: bool,
-    pub feriados_extra: FeriadosExtra,
+    pub feriados_extra: ExtraHolidays,
 }
 
 impl Default for Preferencias {
@@ -42,7 +42,7 @@ impl Default for Preferencias {
             avisos: PrefAvisos::default(),
             iniciar_con_windows: false,
             minimizar_a_bandeja: true,
-            feriados_extra: FeriadosExtra::new(),
+            feriados_extra: ExtraHolidays::new(),
         }
     }
 }
@@ -78,7 +78,7 @@ impl Preferencias {
         self.feriados_extra = self
             .feriados_extra
             .into_iter()
-            .filter_map(|(k, v)| validar_fecha(&k).ok().map(|f| (f, v)))
+            .filter_map(|(k, v)| validate_date(&k).ok().map(|f| (f, v)))
             .collect();
         Ok(self)
     }

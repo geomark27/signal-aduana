@@ -256,9 +256,9 @@ let vista = null,
     VC = null,
     renderSeq = 0,
     vistaError = "";
-const hoyAct = () => (vista ? vista.hoy : todayLocal());
+const hoyAct = () => (vista ? vista.today : todayLocal());
 function setVista(v) {
-    const tareas = v.tareas,
+    const tareas = v.issues,
         byKey = new Map(tareas.map((i) => [i.key, i]));
     const resolved = v.stats.resolved.map((k) => byKey.get(k)).filter(Boolean);
     VC = {
@@ -270,31 +270,31 @@ function setVista(v) {
     };
     vista = v;
 }
-const inBoard = (i) => vista.tablero === "Todos" || i.board === vista.tablero;
+const inBoard = (i) => vista.board === "Todos" || i.board === vista.board;
 /* Pide la vista con los datos actuales (sin tocar la pantalla). */
 const pedirVista = () =>
     invoke("calcular_vista", {
         entrada: {
-            tareas: issues,
-            semana: weekKey,
-            tablero: board,
-            feriadosExtra,
+            issues,
+            week: weekKey,
+            board,
+            extraHolidays: feriadosExtra,
         },
     });
 
 function renderChips() {
-    const list = ["Todos", ...vista.tableros];
+    const list = ["Todos", ...vista.boards];
     $("boardChips").innerHTML = list
         .map(
             (b) =>
-                `<button type="button" class="chip" aria-pressed="${b === vista.tablero}" data-b="${esc(b)}">${b === "Todos" ? "" : `<i style="background:${bColor(b)}"></i>`}${esc(b)}</button>`,
+                `<button type="button" class="chip" aria-pressed="${b === vista.board}" data-b="${esc(b)}">${b === "Todos" ? "" : `<i style="background:${bColor(b)}"></i>`}${esc(b)}</button>`,
         )
         .join("");
 }
 
 function docCandidates(v) {
-    const from = addDays(v.hoy, -DOC_WINDOW_DAYS);
-    return v.tareas.filter(
+    const from = addDays(v.today, -DOC_WINDOW_DAYS);
+    return v.issues.filter(
         (i) =>
             i.needDoc &&
             ((i.resDay && i.resDay >= from) ||
@@ -310,7 +310,7 @@ function docStatus(i) {
 /* Tareas que requieren documento en la semana: concluidas en la semana con PR; en la semana actual, también las abiertas en pruebas o con Fin desarrollo */
 function docWeek(wk) {
     const end = addDays(wk, 4),
-        current = wk === mondayOf(vista.hoy);
+        current = wk === mondayOf(vista.today);
     return VC.tareas.filter(
         (i) =>
             inBoard(i) &&
@@ -322,7 +322,7 @@ function docWeek(wk) {
     );
 }
 function docKpi() {
-    const need = docWeek(vista.semana);
+    const need = docWeek(vista.week);
     const ok = need.filter((i) => docs[i.key]).length;
     const miss = need.filter((i) => docStatus(i) === "missing").length;
     const v =
@@ -346,8 +346,8 @@ function docKpi() {
     return `<button type="button" class="kpi" data-view="nodoc" aria-pressed="${view === "nodoc"}" title="Tareas con PR de la semana que tienen documento de despliegue"><span class="label">Doc. de despliegue</span><span class="v">${v}</span><span class="d">${d}</span><span class="go">Ver lista →</span></button>`;
 }
 function holidayNote() {
-    const H = vista.horas,
-        hs = H.feriados;
+    const H = vista.hours,
+        hs = H.holidays;
     return hs.length
         ? `${hs.length} ${hs.length === 1 ? "feriado" : "feriados"} (${hs.map((d) => DIA[(new Date(d + "T00:00:00Z").getUTCDay() + 6) % 7] + " " + fmtD(d)).join(", ")}): meta ${H.targetH} h.`
         : "";
@@ -356,9 +356,9 @@ function dayName(ymd) {
     return `${DIA[(new Date(ymd + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(ymd)}`;
 }
 function renderHoursAlert() {
-    const H = vista.horas,
+    const H = vista.hours,
         st = { ...H },
-        today = vista.hoy,
+        today = vista.today,
         prevSecs = H.prevSecs;
     if (st.sev === "warn" && !st.behind) st.sev = "info";
     let chip = {
@@ -393,15 +393,15 @@ function renderHoursAlert() {
       <div class="track2"><i style="width:${off ? 0 : tp}%"></i></div>
       <span class="det">${off ? "No suma a la meta de la semana." : st.todaySecs >= DAY_TARGET * 3600 ? "Jornada completa." : `Faltan ${fh(DAY_TARGET * 3600 - st.todaySecs)} para la jornada.`}</span></div>`;
     } else {
-        const n = H.laborables,
+        const n = H.workdays,
             avg = n ? st.total / n : 0;
         side = `<div class="blk today"><span class="label">Promedio por día laborable</span>
       <div class="fig">${h(avg)}<small>de ${DAY_TARGET} h</small></div>
       <div class="track2"><i style="width:${Math.min(100, (avg / (DAY_TARGET * 3600)) * 100)}%"></i></div>
       <span class="det">${n} ${n === 1 ? "día laborable" : "días laborables"} en la semana.</span></div>`;
     }
-    const days = H.dias
-        .map(({ day, secs, feriado: off }) => {
+    const days = H.days
+        .map(({ day, secs, holiday: off }) => {
             const cls = [
                 off ? "off" : "",
                 day === today ? "now" : "",
@@ -424,7 +424,7 @@ function renderHoursAlert() {
       <div class="fig">${h(st.total)}<small>de ${st.targetH} h</small></div>
       <div class="track2" role="img" aria-label="${h(st.total)} de ${st.targetH} horas"><i style="width:${pct}%"></i>${mark !== null && mark > 0 && mark < 100 ? `<u style="left:${mark}%" title="Esperado hasta ayer: ${fh(st.expected)}"></u>` : ""}</div>
       <span class="ttl">${st.title}</span>
-      <span class="det">${st.detail} Semana anterior: ${fh(prevSecs)}.${vista.tablero !== "Todos" ? " Suma de todos los tableros." : ""}</span></div>
+      <span class="det">${st.detail} Semana anterior: ${fh(prevSecs)}.${vista.board !== "Todos" ? " Suma de todos los tableros." : ""}</span></div>
     ${side}
     <div class="days" aria-label="Horas por día">${days}</div>`;
 }
@@ -433,7 +433,7 @@ function renderKpis() {
         varPct = s.est ? ((s.spent - s.est) / s.est) * 100 : null;
     const open = VC.tareas.filter((i) => inBoard(i) && i.cat !== "done");
     const overdue = VC.tareas.filter(
-        (i) => inBoard(i) && !i.resDay && i.due && i.due < vista.hoy,
+        (i) => inBoard(i) && !i.resDay && i.due && i.due < vista.today,
     );
     $("kpis").innerHTML = `
   <button type="button" class="kpi" data-view="worked" aria-pressed="${view === "worked"}"><span class="label">Tareas trabajadas</span><span class="v">${VC.worked.size}</span><span class="d">con horas en la semana</span><span class="go">Ver lista →</span></button>
@@ -491,14 +491,14 @@ function stackBars(el, cols, maxV, refV, opts) {
 }
 
 function renderCharts() {
-    const sem = vista.semana,
-        H = vista.horas,
+    const sem = vista.week,
+        H = vista.hours,
         cols = [];
     let max = 0;
-    for (const w of vista.semanas) {
+    for (const w of vista.weeks) {
         max = Math.max(max, w.secs / 3600);
         cols.push({
-            label: "S" + w.semanaIso,
+            label: "S" + w.isoWeek,
             sub: fmtD(w.wk),
             parts: w.perBoard,
             key: w.wk,
@@ -515,17 +515,17 @@ function renderCharts() {
     const dcols = [];
     let dmax = 0;
     for (let d = 0; d < 5; d++) {
-        const day = H.dias[d].day;
+        const day = H.days[d].day;
         const parts = s.perDay[day] || {};
         const tot = Object.values(parts).reduce((a, b) => a + b, 0) / 3600;
         dmax = Math.max(dmax, tot);
-        const off = H.dias[d].feriado;
+        const off = H.days[d].holiday;
         dcols.push({
             label: DIA[d],
             sub: fmtD(day).split(" ")[0],
             parts,
             key: day,
-            selected: day === vista.hoy,
+            selected: day === vista.today,
             off,
             ref: off ? 0 : DAY_TARGET,
         });
@@ -535,7 +535,7 @@ function renderCharts() {
         h: 250,
         w: 380,
     });
-    const bs = vista.tablero === "Todos" ? vista.tableros : [vista.tablero];
+    const bs = vista.board === "Todos" ? vista.boards : [vista.board];
     $("legend1").innerHTML =
         bs
             .map(
@@ -553,8 +553,8 @@ function statusPill(i) {
 }
 
 function renderBoards() {
-    const rows = vista.porTablero.filter(
-        (r) => vista.tablero === "Todos" || r.board === vista.tablero,
+    const rows = vista.byBoard.filter(
+        (r) => vista.board === "Todos" || r.board === vista.board,
     );
     const active = rows.filter((r) => r.secs),
         idle = rows.filter((r) => !r.secs);
@@ -569,7 +569,7 @@ function renderBoards() {
                 !ord.includes(i.status)
             )
                 ord.push(i.status);
-        return Object.entries(r.estados)
+        return Object.entries(r.statuses)
             .sort(
                 (a, b) => b[1] - a[1] || ord.indexOf(a[0]) - ord.indexOf(b[0]),
             )
@@ -577,8 +577,8 @@ function renderBoards() {
             .join(" · ");
     };
     const openBtn = (r) =>
-        r.abiertas
-            ? `<button type="button" class="linkbtn" data-open-board="${esc(r.board)}" title="${esc(stTxt(r))}">${r.abiertas} abiertas</button>`
+        r.open
+            ? `<button type="button" class="linkbtn" data-open-board="${esc(r.board)}" title="${esc(stTxt(r))}">${r.open} abiertas</button>`
             : `<span class="mini">0 abiertas</span>`;
     const totB = active.reduce((a, r) => a + r.secs, 0);
     $("boardsSum").textContent = collapsed.boards
@@ -602,16 +602,16 @@ function renderBoards() {
 
 function renderSignals() {
     const s = vista.stats,
-        H = vista.horas,
+        H = vista.hours,
         issues = VC.tareas,
-        weekKey = vista.semana;
+        weekKey = vista.week;
     const out = [];
-    const today = vista.hoy;
+    const today = vista.today;
     const tgtW = H.targetH,
         pctW = tgtW ? s.secs / (tgtW * 3600) : 1;
     for (let d = 0; d < 5; d++) {
-        const day = H.dias[d].day;
-        if (day >= today || H.dias[d].feriado) continue;
+        const day = H.days[d].day;
+        if (day >= today || H.days[d].holiday) continue;
         const tot = Object.values(s.perDay[day] || {}).reduce(
             (a, b) => a + b,
             0,
@@ -769,7 +769,7 @@ function renderSignals() {
                 sub: "Jira limita los registros por tarea en la búsqueda; las horas de esta tarea pueden estar incompletas",
             }),
         );
-    if (H.feriados.length)
+    if (H.holidays.length)
         out.push({
             sev: "info",
             t: `Semana con ${holidayNote().replace(/\.$/, "")}`,
@@ -836,9 +836,9 @@ function docCell(i) {
 }
 function renderTable() {
     const issues = VC.tareas,
-        weekKey = vista.semana,
-        board = vista.tablero,
-        hoy = vista.hoy,
+        weekKey = vista.week,
+        board = vista.board,
+        hoy = vista.today,
         end = addDays(weekKey, 4);
     const isCurrentWeek = weekKey === mondayOf(hoy);
     const VIEWS = {
@@ -971,11 +971,11 @@ function renderTrace() {
 }
 
 function paint() {
-    const iw = isoWeek(vista.semana);
+    const iw = isoWeek(vista.week);
     $("wTitle").textContent = `Semana ${iw.w} · ${iw.y}`;
     $("wRange").textContent =
-        `${fmtD(vista.semana)} – ${fmtD(addDays(vista.semana, 4))}`;
-    $("nextW").disabled = vista.semana >= mondayOf(vista.hoy);
+        `${fmtD(vista.week)} – ${fmtD(addDays(vista.week, 4))}`;
+    $("nextW").disabled = vista.week >= mondayOf(vista.today);
     $("gate").hidden = true;
     $("main").hidden = false;
     renderChips();
@@ -1005,7 +1005,7 @@ async function render() {
     if (g !== gen || !issues.length) return null;
     if (seq !== renderSeq) return v;
     board =
-        v.tablero; /* si el tablero guardado ya no existe, Rust devuelve «Todos» (como hacía renderChips) */
+        v.board; /* si el tablero guardado ya no existe, Rust devuelve «Todos» (como hacía renderChips) */
     if (vistaError) {
         if ($("notice").textContent === vistaError) showNotice("");
         vistaError = "";

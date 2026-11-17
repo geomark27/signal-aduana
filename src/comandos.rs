@@ -9,7 +9,7 @@ use serde_json::Value;
 use tauri::{AppHandle, State};
 
 use crate::cache::{self, Instantanea};
-use crate::dominio::{self, Entrada, Vista};
+use crate::domain::{self, View, ViewInput};
 use crate::error::{ErrorApp, Resultado};
 use crate::escritorio;
 use crate::inicio;
@@ -114,9 +114,9 @@ pub async fn guardar_cache(estado: State<'_, Estado>, datos: Value) -> Resultado
 
 /// Calcula todo el tablero de una semana a partir de las tareas recibidas. No requiere sesión.
 #[tauri::command]
-pub fn calcular_vista(entrada: Entrada) -> Resultado<Vista> {
+pub fn calcular_vista(entrada: ViewInput) -> Resultado<View> {
     let hoy_ecuador = crate::jira::simulado::hoy_ecuador().format("%Y-%m-%d").to_string();
-    dominio::calcular_vista(entrada, &hoy_ecuador)
+    domain::compute_view(entrada, &hoy_ecuador)
 }
 
 /// Preferencias del equipo (valores por defecto si no hay archivo o está dañado). No requiere sesión.

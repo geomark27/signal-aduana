@@ -4,7 +4,7 @@ pub mod avisos;
 pub mod cache;
 pub mod comandos;
 pub mod config;
-pub mod dominio;
+pub mod domain;
 pub mod escritorio;
 pub mod error;
 pub mod inicio;

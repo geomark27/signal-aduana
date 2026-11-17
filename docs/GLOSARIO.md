@@ -103,7 +103,7 @@ Módulo `dominio` → `domain` (`src/domain/`).
 |---|---|
 | `EstadoSemana` | `WeekState` (sus campos ya están en inglés) |
 | `estado_horas` | `hours_state` |
-| `dias` | `days_between` |
+| `dias` | `days_word` (devuelve «día» o «días») |
 
 **`week`**
 

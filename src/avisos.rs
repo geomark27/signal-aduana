@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
 
-use crate::dominio::calendario::{fh, META_DIA_H};
+use crate::domain::calendar::{fh, DAY_TARGET_H};
 use crate::error::{ErrorApp, Resultado};
 use crate::preferencias::Preferencias;
 use crate::resumen::Resumen;
@@ -77,7 +77,7 @@ pub fn decidir(
         }
         // Un resumen de otro día (dato viejo) no sirve para decidir.
         EstadoMonitor::Resumen(r) if r.hoy == hoy => {
-            let meta_dia = META_DIA_H * 3600;
+            let meta_dia = DAY_TARGET_H * 3600;
             let cierre = NaiveTime::parse_from_str(&prefs.avisos.hora_cierre, "%H:%M").ok();
             if r.hoy_laborable
                 && cierre.is_some_and(|c| ahora.time() >= c)
@@ -90,7 +90,7 @@ pub fn decidir(
                     cuerpo: format!(
                         "Llevas {} de {} h. Registra tus horas en Jira antes de cerrar el día.",
                         fh(r.hoy_secs).trim_end_matches(" h"),
-                        META_DIA_H
+                        DAY_TARGET_H
                     ),
                 });
             }

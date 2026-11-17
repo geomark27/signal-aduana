@@ -12,13 +12,13 @@ preferencias, avisos). El estado y las decisiones de cada fase están en `docs/P
 léelo antes de empezar una tarea.
 
 ```
-src/dominio/        Cálculos (semanas, horas, feriados, vista). La interfaz solo dibuja.
+src/domain/         Cálculos (semanas, horas, feriados, vista). La interfaz solo dibuja.
 src/jira/           Cliente de Jira/Confluence: http real, simulado y operaciones de alto nivel
 src/                auth, almacen (credenciales), config, preferencias, resumen, avisos,
                     sesion, comandos (comandos de Tauri), error, lib, main
 ui/                 index.html, app.js, styles.css (CSP: sin scripts ni manejadores en línea)
-examples/           volcar_simulado (volcado para la paridad)
-pruebas/paridad/    Casos de paridad del dominio (entradas y salidas esperadas)
+examples/           dump_simulated (volcado para la paridad)
+tests/parity/       Casos de paridad del dominio (entradas y salidas esperadas); tests/parity.rs los corre
 docs/               PLAN-FASE-N.md y bitácora (docs/bitacora/)
 ```
 
@@ -49,7 +49,7 @@ No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hac
 - **Sin efectos en el sistema durante el desarrollo**: en modo simulado no se registra el inicio
   con el sistema operativo y los avisos llevan el prefijo «[Simulado]». No dejes procesos de la
   app corriendo (usa `timeout`).
-- **Los cálculos viven en `src/dominio/`**; la interfaz no reimplementa reglas.
+- **Los cálculos viven en `src/domain/`**; la interfaz no reimplementa reglas.
 - **`ui/app.js` sigue el formato de Prettier** (`.prettierrc.json`; la versión está fijada en el
   `Makefile`). Se aplica con `make fmt-ui` y `make check` lo comprueba. Prettier actúa **solo** sobre
   ese archivo (`.prettierignore`): si tu editor formatea al guardar, que use esa configuración. Un
@@ -63,7 +63,7 @@ No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hac
     tooltips, valores mostrados como «Todos») y la documentación del repo (`CLAUDE.md`, `docs/`,
     bitácora).
   - Los atajos de `make` y los scripts de `scripts/` conservan sus nombres.
-  - `pruebas/paridad/legado.js` es el JS original y no se traduce.
+  - `tests/parity/legado.js` es el JS original y no se traduce.
   - Comentarios mínimos: el código se explica con nombres; la historia y el porqué van a la
     bitácora.
 - Los criterios aduaneros, tributarios o legales que aparezcan en textos son referenciales y los
