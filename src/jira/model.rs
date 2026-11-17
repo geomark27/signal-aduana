@@ -225,7 +225,7 @@ mod tests {
         // The UI expects the artifact's names.
         let js = serde_json::to_value(&t).unwrap();
         for field in ["finDev", "projectName", "wlTotal", "type"] {
-            assert!(js.get(field).is_some(), "falta {field}");
+            assert!(js.get(field).is_some(), "missing {field}");
         }
         assert_eq!(js["sprints"][0]["boardId"], 455);
     }

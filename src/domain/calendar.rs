@@ -1,7 +1,8 @@
 //! Dates, weeks, holidays, targets and hour formatting.
 //!
 //! Literal port of `localDate`, `dateOnly`, `mondayOf`, `addDays`, `isoWeek`, `fmtD`, `h`, `fh`,
-//! `isFeriado`, `laborDays`, `weekTarget` and `weekHolidays` from `ui/app.js`. Dates travel as
+//! the holiday check, `laborDays`, `weekTarget` and `weekHolidays` from the original JS
+//! (`tests/parity/legado.js`). Dates travel as
 //! `YYYY-MM-DD` text (compared as text, like in JS) and everything is computed in UTC.
 
 use std::collections::BTreeMap;
@@ -16,7 +17,7 @@ pub const DAY_TARGET_H: i64 = 8;
 /// Ecuador's offset from UTC, in hours (no daylight saving time).
 pub const UTC_OFFSET_HOURS: i64 = -5;
 
-/// Base national holidays (the same as `FERIADOS_BASE`).
+/// Base national holidays (the same as `BASE_HOLIDAYS` in `ui/app.js`).
 pub const BASE_HOLIDAYS: [&str; 12] = [
     "2026-01-01", "2026-02-16", "2026-02-17", "2026-04-03", "2026-05-01", "2026-05-25",
     "2026-08-10", "2026-10-09", "2026-11-02", "2026-11-03", "2026-12-25", "2027-01-01",
@@ -25,7 +26,7 @@ pub const BASE_HOLIDAYS: [&str; 12] = [
 const MONTHS: [&str; 12] = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 pub const WEEKDAYS: [&str; 7] = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-/// User changes on top of the base holidays (`feriadosExtra`).
+/// User changes on top of the base holidays (`extraHolidays` in `ui/app.js`).
 pub type ExtraHolidays = BTreeMap<String, bool>;
 
 fn parse_date(ymd: &str) -> AppResult<NaiveDate> {
@@ -139,7 +140,7 @@ pub fn fh(s: i64) -> String {
     }
 }
 
-/// `isFeriado`: the user's change wins over the base holidays.
+/// `isHoliday`: the user's change wins over the base holidays.
 pub fn is_holiday(ymd: &str, extra: &ExtraHolidays) -> bool {
     match extra.get(ymd) {
         Some(v) => *v,

@@ -35,7 +35,7 @@ sin migración.
 - **Comentarios:** todos en inglés, igual de breves (`//`, `///`, `//!`, `/* */` en JS). Los
   prefijos de log de `eprintln!` usan el módulo en inglés (`"watcher: …"`).
 - **Textos para quien programa:** mensajes de `assert!`/`panic!` en las pruebas, `expect("…")`,
-  logs de `eprintln!` y mensajes de scripts. No los ve la persona usuaria, así que van en inglés.
+  logs de `eprintln!`, mensajes de `console.*` en `ui/app.js` y mensajes de scripts. No los ve la persona usuaria, así que van en inglés.
   - Las tareas 5.12 y 5.13 los traducen en sus archivos.
   - La 5.14 hace una pasada final por `src/domain/` y `src/jira/`, que quedaron con algunos.
   - Excepción: si una prueba compara un texto visible, el texto comparado no cambia (solo el
@@ -695,7 +695,7 @@ Identificadores de `ui/app.js` que todavía queden en español después de las t
 | `cargarPrefs` | `loadPrefs` |
 | `MES` | `MONTHS` |
 | `DIA` | `WEEKDAYS` |
-| `vista` | `view` |
+| `vista` | `viewData` (`view` ya es el modo de la tabla) |
 | `vistaError` | `viewError` |
 | `hoyAct` | `currentToday` |
 | `setVista` | `setView` |

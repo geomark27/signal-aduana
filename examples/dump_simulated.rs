@@ -13,11 +13,11 @@ use signal_aduana::jira::{self, Source};
 #[tokio::main]
 async fn main() {
     let arg = std::env::args().nth(1).unwrap_or_else(|| {
-        eprintln!("uso: dump_simulated AAAA-MM-DD");
+        eprintln!("usage: dump_simulated YYYY-MM-DD");
         std::process::exit(2);
     });
     let today = NaiveDate::parse_from_str(&arg, "%Y-%m-%d").unwrap_or_else(|e| {
-        eprintln!("fecha no válida «{arg}»: {e}");
+        eprintln!("invalid date «{arg}»: {e}");
         std::process::exit(2);
     });
     match dump(today).await {
