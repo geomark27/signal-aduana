@@ -51,12 +51,23 @@ La numeración continúa la del roadmap (5.1 a 5.6); los números no implican or
 | 5.4 | Pruebas pendientes y resumen semanal en el primer día laborable | Sonnet 5.5 medio | `tarea/5.4-pruebas-avisos` | 1 |
 | 5.5 | El monitor sobrevive a un pánico del ciclo | Sonnet 5.5 medio | `tarea/5.5-monitor-resiliente` | 1 |
 | 5.6 | Cambios de preferencias llegan al monitor al instante | opencode `*-free` | `tarea/5.6-preferencias-al-instante` | 1 |
+| 5.9 | Glosario español → inglés y regla de idioma en `CLAUDE.md` | Orquestador | `tarea/5.9-glosario-ingles` | T |
+| 5.10 | Código en inglés: dominio (`src/dominio/` → `src/domain/`) y paridad | Sonnet 5.5 medio | `tarea/5.10-dominio-en-ingles` | T |
+| 5.11 | Código en inglés: Jira (`src/jira/`) | Sonnet 5.5 medio | `tarea/5.11-jira-en-ingles` | T |
+| 5.12 | Código en inglés: base (error, config, almacén, caché, auth, sesión) | Sonnet 5.5 medio | `tarea/5.12-base-en-ingles` | T |
+| 5.13 | Código en inglés: escritorio y comandos (preferencias, avisos, resumen, monitor, vigilancia, escritorio, inicio, comandos, archivos en disco) | Sonnet 5.5 medio | `tarea/5.13-escritorio-en-ingles` | T |
+| 5.14 | Código en inglés: interfaz (`ui/app.js`, `id` y clases) | Sonnet 5.5 medio | `tarea/5.14-interfaz-en-ingles` | T |
 | 5.7 | Guía de Windows con los datos confirmados y segunda pasada | Orquestador | `tarea/5.7-guia-confirmada` | 2 |
-| 5.9, 5.10… | Una tarea por cada hallazgo de Windows | Según el caso | por hallazgo | 2 |
+| 5.15+ | Una tarea por cada hallazgo de Windows | Según el caso | por hallazgo | 2 |
 | 5.8 | Cierre de la fase | Orquestador | `tarea/5.8-cierre-fase-5` | 3 |
 
 Las 5.1 a 5.3 no producen código ni rama: el autor reporta los resultados y estos quedan en la
 entrada de la 5.7. Las olas 1 y A corren a la vez; no comparten nada.
+
+Las tareas de la ola T (traducción del código al inglés, decisión del autor del 2026-11-17) van
+**una detrás de otra**, nunca en paralelo: cada renombre alcanza a los archivos que usan lo
+renombrado. Cada una es una rama con su PR y sale con las pruebas en verde por sí sola.
+Originalmente los hallazgos de Windows iban a numerarse desde la 5.9; ahora empiezan en la 5.15.
 
 ## Orden
 
@@ -65,9 +76,44 @@ Ola 0   5.0 documentos de la fase ───────────────�
 Ola A   5.1 → 5.2 → 5.3 (autor, Windows, sobre develop actual)  ─┤
 Ola 1   5.4 ‖ 5.5 ‖ 5.6 (WSL, tres worktrees en paralelo)        ─┤
                                                                   ▼
-Ola 2   hallazgos 5.9+ y 5.7 (guía + segunda pasada en Windows con 5.5 y 5.6 ya fusionadas)
+Ola T   5.9 → 5.10 → 5.11 → 5.12 → 5.13 → 5.14 (código en inglés, en serie)
+                                                                  ▼
+Ola 2   hallazgos 5.15+ y 5.7 (guía + segunda pasada en Windows)
 Ola 3   5.8 cierre
 ```
+
+## Ola T — Código en inglés
+
+**Decisión del autor (2026-11-17):**
+- El código pasa al inglés: identificadores, módulos, archivos, comentarios, campos serializados,
+  comandos de Tauri, códigos de error y archivos en disco.
+- Queda en español lo que ve el usuario de la app y la documentación del repo.
+- Los atajos de `make` y los scripts conservan sus nombres.
+- La app no está instalada en ningún equipo, así que los archivos en disco se renombran sin
+  migración.
+
+**Glosario.** `docs/GLOSARIO.md` es la fuente única de los nombres nuevos y lo escribe el
+orquestador en la 5.9, a partir de un inventario del código. Ningún ejecutor inventa un nombre que
+el glosario fije. Para los nombres locales que no aparecen ahí, se siguen sus convenciones.
+
+**Reglas comunes a las tareas 5.10 a 5.14:**
+- **Ningún texto visible cambia:** mensajes, etiquetas, avisos, tooltips ni valores mostrados. El
+  orquestador lo comprueba en el diff con la lista de literales.
+- **Pruebas:** el mismo número en verde que antes de la tarea, con los nombres traducidos. Además,
+  `cargo clippy --all-targets` sin advertencias, `node --check ui/app.js` y `make ui-format`.
+- Los archivos se mueven con `mv`; git detecta el renombre en el commit.
+- `pruebas/paridad/legado.js` no se toca.
+- Si una tarea cambia un contrato, cambia en el mismo diff `ui/app.js` y los documentos que lo citan
+  (por ejemplo, las rutas de `docs/COMPILAR-WINDOWS.md`).
+
+**Convivencia con Windows.**
+- Las pruebas manuales 5.1 a 5.3 pueden seguir.
+- Desde la 5.13, los archivos en disco cambian de nombre: las preferencias de prueba vuelven a sus
+  valores por defecto.
+- Las correcciones de código que salgan de Windows esperan a que termine la 5.14.
+
+Cada tarea de la ola T recibe su redacción detallada (alcance exacto y criterios) cuando le toca, a
+partir del glosario aprobado.
 
 ---
 
@@ -114,7 +160,7 @@ Cómo repetirlo: <pasos>
 Instalador: MSI | NSIS | cargo run
 ```
 
-Cada hallazgo se convierte en una tarea 5.9+ con su prueba cuando se pueda automatizar.
+Cada hallazgo se convierte en una tarea 5.15+ con su prueba cuando se pueda automatizar.
 
 ## Ola 1 — Tres tareas en WSL
 
@@ -286,7 +332,7 @@ sin advertencias, y `ui/` intacto.
     09:00, sí sale.
 - La entrada de bitácora recoge los resultados de 5.1 a 5.3 (hechos, no intenciones).
 
-**Hallazgos 5.9+:** una tarea por hallazgo, con su plan breve (objetivo, archivos, criterio) escrito
+**Hallazgos 5.15+:** una tarea por hallazgo, con su plan breve (objetivo, archivos, criterio) escrito
 por el orquestador cuando llegue el reporte, y aprobado por el autor antes de lanzarla. Los hallazgos
 de la interfaz (`ui/`) y los de Rust no comparten tarea.
 
@@ -297,7 +343,7 @@ bitácora, estado en `docs/ROADMAP.md`, y verificación con `bash scripts/verifi
 
 ## Hecha la fase cuando
 
-1. Los 14 puntos de la lista de comprobación pasan en Windows, o cada uno que falla tiene su tarea 5.9+.
+1. Los 14 puntos de la lista de comprobación pasan en Windows, o cada uno que falla tiene su tarea 5.15+.
 2. Los seis «a verificar» de la guía están confirmados o justificados.
 3. Instalar y desinstalar no deja credenciales, entradas de inicio ni carpetas inesperadas, o lo que
    deja está documentado en la guía.
