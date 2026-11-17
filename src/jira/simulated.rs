@@ -18,7 +18,7 @@ use serde_json::{json, Map, Value};
 
 use super::model::User;
 use super::{validate_key, RemoteLink, SearchPage, WikiPage};
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
 /// Same list as `BASE_HOLIDAYS` in `ui/app.js`: on those days the simulated source logs no hours.
 pub const BASE_HOLIDAYS: [&str; 12] = [
@@ -672,16 +672,16 @@ impl SimulatedJira {
     }
 
     /// Waits a little (so loading states are visible) and checks the token.
-    async fn serve(&self) -> Resultado<()> {
+    async fn serve(&self) -> AppResult<()> {
         tokio::time::sleep(DELAY).await;
         if self.valid_token {
             Ok(())
         } else {
-            Err(ErrorApp::NoAutorizado)
+            Err(AppError::Unauthorized)
         }
     }
 
-    pub async fn myself(&self) -> Resultado<User> {
+    pub async fn myself(&self) -> AppResult<User> {
         self.serve().await?;
         Ok(User {
             account_id: ME.to_string(),
@@ -698,7 +698,7 @@ impl SimulatedJira {
         fields: &[&str],
         next: Option<&str>,
         _size: u32,
-    ) -> Resultado<SearchPage> {
+    ) -> AppResult<SearchPage> {
         self.serve().await?;
         let since = if jql.contains("worklogDate") {
             Some(
@@ -727,7 +727,7 @@ impl SimulatedJira {
             Some(t) => t
                 .strip_prefix("sim-pag-")
                 .and_then(|n| n.parse::<usize>().ok())
-                .ok_or_else(|| ErrorApp::Formato("token de página no válido".into()))?,
+                .ok_or_else(|| AppError::Format("token de página no válido".into()))?,
         };
         let end = (start + PAGE_SIZE).min(chosen.len());
         let issues = chosen.get(start..end).unwrap_or(&[]).iter().map(|t| t.issue(fields)).collect();
@@ -736,7 +736,7 @@ impl SimulatedJira {
     }
 
     /// All the issue's worklogs (from any author) started since `since_ms`.
-    pub async fn worklogs(&self, key: &str, since_ms: i64) -> Resultado<Vec<Value>> {
+    pub async fn worklogs(&self, key: &str, since_ms: i64) -> AppResult<Vec<Value>> {
         let key = validate_key(key)?;
         self.serve().await?;
         Ok(self
@@ -749,7 +749,7 @@ impl SimulatedJira {
 
     /// Returns the «Documento de Despliegue» page of the issues with a document in Confluence
     /// whose key appears in the CQL.
-    pub async fn confluence(&self, cql: &str) -> Resultado<Vec<WikiPage>> {
+    pub async fn confluence(&self, cql: &str) -> AppResult<Vec<WikiPage>> {
         self.serve().await?;
         static RE: OnceLock<Regex> = OnceLock::new();
         let re = RE.get_or_init(|| Regex::new(r"[A-Z][A-Z0-9_]*-[0-9]+").expect("regex válida"));
@@ -763,7 +763,7 @@ impl SimulatedJira {
             .collect())
     }
 
-    pub async fn links(&self, key: &str) -> Resultado<Vec<RemoteLink>> {
+    pub async fn links(&self, key: &str) -> AppResult<Vec<RemoteLink>> {
         let key = validate_key(key)?;
         self.serve().await?;
         let Some((i, t)) = self.issues.iter().enumerate().find(|(_, t)| t.key == key) else {
@@ -919,15 +919,15 @@ mod tests {
     #[tokio::test]
     async fn invalid_token_rejects_all_calls() {
         let s = SimulatedJira::new("a@b.com", false, today());
-        assert!(matches!(s.myself().await, Err(ErrorApp::NoAutorizado)));
-        assert!(matches!(s.search("x", &[], None, 10).await, Err(ErrorApp::NoAutorizado)));
-        assert!(matches!(s.worklogs("APP-1", 0).await, Err(ErrorApp::NoAutorizado)));
+        assert!(matches!(s.myself().await, Err(AppError::Unauthorized)));
+        assert!(matches!(s.search("x", &[], None, 10).await, Err(AppError::Unauthorized)));
+        assert!(matches!(s.worklogs("APP-1", 0).await, Err(AppError::Unauthorized)));
     }
 
     #[tokio::test]
     async fn invalid_page_token_is_a_format_error() {
         let s = SimulatedJira::new("a@b.com", true, today());
-        assert!(matches!(s.search(ISSUES_JQL, FIELDS, Some("xx"), 10).await, Err(ErrorApp::Formato(_))));
+        assert!(matches!(s.search(ISSUES_JQL, FIELDS, Some("xx"), 10).await, Err(AppError::Format(_))));
     }
 
     #[test]

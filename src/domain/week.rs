@@ -8,7 +8,7 @@ use serde::Serialize;
 
 use super::calendar::{add_days, date_only};
 use super::issue::DerivedIssue;
-use crate::error::Resultado;
+use crate::error::AppResult;
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -27,7 +27,7 @@ pub struct Stats {
 }
 
 /// `weekStats(wk, filter)`. Weekend worklogs (null `wk`) do not add up.
-pub fn week_stats(issues: &[DerivedIssue], wk: &str, filter: &dyn Fn(&DerivedIssue) -> bool) -> Resultado<Stats> {
+pub fn week_stats(issues: &[DerivedIssue], wk: &str, filter: &dyn Fn(&DerivedIssue) -> bool) -> AppResult<Stats> {
     let end = add_days(wk, 4)?;
     let mut st = Stats {
         secs: 0,
@@ -74,7 +74,7 @@ pub fn day_secs(issues: &[DerivedIssue], day: &str) -> i64 {
 }
 
 /// `lastActivity(b)`: the most recent date among hours, resolution and update (`""` if none).
-pub fn last_activity(issues: &[DerivedIssue], board: &str) -> Resultado<String> {
+pub fn last_activity(issues: &[DerivedIssue], board: &str) -> AppResult<String> {
     let mut last = String::new();
     for t in issues.iter().filter(|t| t.c.board == board) {
         for w in &t.c.worklogs {
@@ -98,7 +98,7 @@ pub fn last_activity(issues: &[DerivedIssue], board: &str) -> Resultado<String> 
 
 /// `boards()`: unique names ordered by the week's hours, concluded in the week, open and
 /// last activity (all from highest to lowest) and, finally, by name.
-pub fn boards(issues: &[DerivedIssue], wk: &str) -> Resultado<Vec<String>> {
+pub fn boards(issues: &[DerivedIssue], wk: &str) -> AppResult<Vec<String>> {
     let mut names: Vec<String> = Vec::new();
     for t in issues {
         if !names.contains(&t.c.board) {

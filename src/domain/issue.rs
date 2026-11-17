@@ -13,7 +13,7 @@ use serde_json::{Map, Value};
 
 use super::board::{resolve_board, BoardData, SprintInfo};
 use super::calendar::{date_only, instant_ms, js_round, local_date, monday_of};
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
 const DAY_MS: f64 = 864e5;
 
@@ -121,9 +121,9 @@ fn days_late(res: &str, due: &str) -> Option<i64> {
     Some(js_round((a - b) as f64 / DAY_MS) as i64)
 }
 
-fn derive_worklog(w: &Value) -> Resultado<(Value, WorklogCalc)> {
-    let mut map = w.as_object().cloned().ok_or_else(|| ErrorApp::Formato("Un registro de horas no es un objeto.".into()))?;
-    let d = text(&map, "d").ok_or_else(|| ErrorApp::Formato("Un registro de horas no trae la fecha `d`.".into()))?;
+fn derive_worklog(w: &Value) -> AppResult<(Value, WorklogCalc)> {
+    let mut map = w.as_object().cloned().ok_or_else(|| AppError::Format("Un registro de horas no es un objeto.".into()))?;
+    let d = text(&map, "d").ok_or_else(|| AppError::Format("Un registro de horas no trae la fecha `d`.".into()))?;
     let day = local_date(d)?;
     let weekend = super::calendar::weekday_index(&day)? >= 5;
     let monday = monday_of(&day)?;
@@ -137,7 +137,7 @@ fn derive_worklog(w: &Value) -> Resultado<(Value, WorklogCalc)> {
 }
 
 /// Computes the derived fields of all issues, in the same order as the input.
-pub fn derive(issues: &[Map<String, Value>]) -> Resultado<Vec<DerivedIssue>> {
+pub fn derive(issues: &[Map<String, Value>]) -> AppResult<Vec<DerivedIssue>> {
     let data: Vec<BoardData> = issues.iter().map(board_data).collect();
     // `Object.fromEntries`: with repeated keys the last one wins.
     let mut by_key: HashMap<&str, &BoardData> = HashMap::new();
@@ -331,6 +331,6 @@ mod tests {
     #[test]
     fn worklog_without_date_is_a_format_error() {
         let e = derive(&[issue(json!({ "key": "A", "worklogs": [{ "s": 5 }] }))]).unwrap_err();
-        assert_eq!(e.codigo(), "formato");
+        assert_eq!(e.code(), "format");
     }
 }

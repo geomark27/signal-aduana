@@ -143,8 +143,8 @@ En modo simulado debes ver:
 - El título de la ventana «Signal Aduana — modo simulado».
 - Avisos con el prefijo «[Simulado]».
 - El inicio con Windows **no** se registra; solo queda constancia en el log.
-- Los archivos de datos con `.simulado.` en el nombre (`config.simulado.toml`,
-  `preferencias.simulado.toml`, `cache.simulado.json`, `avisos.simulado.json`).
+- Los archivos de datos con `.simulado.` en el nombre (`config.simulated.toml`,
+  `preferencias.simulado.toml`, `cache.simulated.json`, `avisos.simulado.json`).
 - Ninguna petición a Jira.
 
 Para volver al modo real en esa ventana, quita la variable:

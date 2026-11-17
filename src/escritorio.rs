@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter, Manager, Wry, WindowEvent};
 
 use crate::preferencias;
 use crate::resumen;
-use crate::sesion::Estado;
+use crate::session::AppState;
 
 /// Identificador del ícono de la bandeja.
 pub const ID_BANDEJA: &str = "bandeja";
@@ -65,7 +65,7 @@ fn debe_esconder_al_cerrar(minimizar_a_bandeja: bool, bandeja_ok: bool) -> bool 
 }
 
 fn crear_bandeja(app: &tauri::App) -> tauri::Result<()> {
-    let simulado = app.state::<Estado>().simulado;
+    let simulado = app.state::<AppState>().simulated;
 
     let abrir = MenuItemBuilder::with_id("abrir", "Abrir Signal Aduana").build(app)?;
     let actualizar = MenuItemBuilder::with_id("actualizar", "Actualizar ahora").build(app)?;
@@ -123,8 +123,8 @@ pub fn configurar(app: &tauri::App) -> tauri::Result<()> {
         let ventana_cierre = ventana.clone();
         ventana.on_window_event(move |evento| {
             if let WindowEvent::CloseRequested { api, .. } = evento {
-                let estado = app_handle.state::<Estado>();
-                let prefs = preferencias::cargar(&estado.dir_config, estado.simulado);
+                let estado = app_handle.state::<AppState>();
+                let prefs = preferencias::cargar(&estado.config_dir, estado.simulated);
                 if debe_esconder_al_cerrar(prefs.minimizar_a_bandeja, bandeja_ok) {
                     api.prevent_close();
                     if let Err(e) = ventana_cierre.hide() {

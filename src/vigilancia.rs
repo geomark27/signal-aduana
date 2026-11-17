@@ -14,7 +14,7 @@ use tokio::sync::Notify;
 
 use crate::escritorio;
 use crate::monitor::{self, Memoria, Salida};
-use crate::sesion::Estado;
+use crate::session::AppState;
 
 /// Espera antes del primer ciclo.
 pub const ESPERA_INICIAL: Duration = Duration::from_secs(30);
@@ -85,7 +85,7 @@ pub fn iniciar(app: &AppHandle) {
                 return;
             }
         };
-        let estado = app.state::<Estado>();
+        let estado = app.state::<AppState>();
         let salida = SalidaTauri(app.clone());
         bucle(&estado, &salida, &aviso, ESPERA_INICIAL, INTERVALO, None).await;
     });
@@ -112,7 +112,7 @@ pub async fn ciclo_protegido<F: Future>(f: F) -> Result<F::Output, String> {
 /// Bucle del monitor: espera, hace un ciclo y repite. Un pánico del ciclo se registra, se
 /// muestra en el tooltip y no detiene el bucle. `max_ciclos` es `None` en producción.
 pub async fn bucle(
-    estado: &Estado,
+    estado: &AppState,
     salida: &dyn Salida,
     aviso: &Notify,
     espera_inicial: Duration,
@@ -128,7 +128,7 @@ pub async fn bucle(
             Ok(r) => eprintln!("vigilancia: ciclo terminado: {r:?}"),
             Err(mensaje) => {
                 eprintln!("vigilancia: el ciclo entró en pánico: {mensaje}");
-                let texto = monitor::texto_error_interno(estado.simulado);
+                let texto = monitor::texto_error_interno(estado.simulated);
                 if catch_unwind(AssertUnwindSafe(|| salida.tooltip(&texto))).is_err() {
                     eprintln!("vigilancia: no se pudo fijar el tooltip de error interno");
                 }
@@ -145,7 +145,7 @@ mod pruebas {
     use std::sync::Mutex;
 
     use super::*;
-    use crate::almacen::AlmacenMemoria;
+    use crate::secret_store::MemorySecretStore;
 
     #[tokio::test]
     async fn sin_pedir_termina_por_tiempo() {
@@ -225,11 +225,11 @@ mod pruebas {
     #[tokio::test]
     async fn el_bucle_sobrevive_a_un_panico_del_ciclo() {
         let dir = tempfile::tempdir().unwrap();
-        let estado = Estado::nuevo(
+        let estado = AppState::new(
             true,
             dir.path().to_path_buf(),
             dir.path().join("datos"),
-            Box::new(AlmacenMemoria::default()),
+            Box::new(MemorySecretStore::default()),
         );
         let salida = SalidaQueFallaUnaVez { llamadas: AtomicUsize::new(0), tooltips: Mutex::new(Vec::new()) };
         let aviso = Notify::new();
@@ -254,11 +254,11 @@ mod pruebas {
     #[tokio::test]
     async fn un_segundo_panico_al_fijar_el_tooltip_tampoco_termina_el_bucle() {
         let dir = tempfile::tempdir().unwrap();
-        let estado = Estado::nuevo(
+        let estado = AppState::new(
             true,
             dir.path().to_path_buf(),
             dir.path().join("datos"),
-            Box::new(AlmacenMemoria::default()),
+            Box::new(MemorySecretStore::default()),
         );
         let aviso = Notify::new();
         let ms = Duration::from_millis(5);

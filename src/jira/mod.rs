@@ -15,7 +15,7 @@ use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 use model::{Issue, User, Worklog};
 
 /// A page of results from `POST /rest/api/3/search/jql`.
@@ -64,13 +64,13 @@ pub const FIELDS: &[&str] = &[
 ];
 
 /// A valid Jira key: `APP-123`. Keeps arbitrary text from reaching a URL or a JQL.
-pub fn validate_key(key: &str) -> Resultado<&str> {
+pub fn validate_key(key: &str) -> AppResult<&str> {
     static RE: OnceLock<Regex> = OnceLock::new();
     let re = RE.get_or_init(|| Regex::new(r"^[A-Z][A-Z0-9_]{0,19}-[0-9]{1,9}$").expect("regex válida"));
     if re.is_match(key) {
         Ok(key)
     } else {
-        Err(ErrorApp::ClaveInvalida(key.chars().take(40).collect()))
+        Err(AppError::InvalidKey(key.chars().take(40).collect()))
     }
 }
 
@@ -81,7 +81,7 @@ pub enum Source {
 }
 
 impl Source {
-    pub async fn myself(&self) -> Resultado<User> {
+    pub async fn myself(&self) -> AppResult<User> {
         match self {
             Source::Http(h) => h.myself().await,
             Source::Simulated(s) => s.myself().await,
@@ -94,7 +94,7 @@ impl Source {
         fields: &[&str],
         next: Option<&str>,
         size: u32,
-    ) -> Resultado<SearchPage> {
+    ) -> AppResult<SearchPage> {
         match self {
             Source::Http(h) => h.search(jql, fields, next, size).await,
             Source::Simulated(s) => s.search(jql, fields, next, size).await,
@@ -102,21 +102,21 @@ impl Source {
     }
 
     /// The issue's worklogs (raw Jira JSON), from any author.
-    pub async fn worklogs(&self, key: &str, since_ms: i64) -> Resultado<Vec<Value>> {
+    pub async fn worklogs(&self, key: &str, since_ms: i64) -> AppResult<Vec<Value>> {
         match self {
             Source::Http(h) => h.worklogs(key, since_ms).await,
             Source::Simulated(s) => s.worklogs(key, since_ms).await,
         }
     }
 
-    pub async fn confluence(&self, cql: &str) -> Resultado<Vec<WikiPage>> {
+    pub async fn confluence(&self, cql: &str) -> AppResult<Vec<WikiPage>> {
         match self {
             Source::Http(h) => h.confluence(cql).await,
             Source::Simulated(s) => s.confluence(cql).await,
         }
     }
 
-    pub async fn links(&self, key: &str) -> Resultado<Vec<RemoteLink>> {
+    pub async fn links(&self, key: &str) -> AppResult<Vec<RemoteLink>> {
         match self {
             Source::Http(h) => h.links(key).await,
             Source::Simulated(s) => s.links(key).await,
@@ -125,7 +125,7 @@ impl Source {
 }
 
 /// Walks the pages of a search (with a cap) and returns all the `issues`.
-async fn search_all(f: &Source, jql: &str, fields: &[&str], size: u32, max_pages: usize) -> Resultado<Vec<Value>> {
+async fn search_all(f: &Source, jql: &str, fields: &[&str], size: u32, max_pages: usize) -> AppResult<Vec<Value>> {
     let mut all = Vec::new();
     let mut token: Option<String> = None;
     for _ in 0..max_pages {
@@ -144,23 +144,23 @@ fn keys_of(issues: &[Value]) -> Vec<String> {
 }
 
 /// The user's issues (assigned or with their worklogs), already converted to the UI model.
-pub async fn load_issues(f: &Source, me: Option<&str>) -> Resultado<Vec<Issue>> {
+pub async fn load_issues(f: &Source, me: Option<&str>) -> AppResult<Vec<Issue>> {
     let issues = search_all(f, ISSUES_JQL, FIELDS, 100, 20).await?;
     Ok(issues.iter().filter_map(|v| Issue::from_jira(v, me)).collect())
 }
 
 /// Keys of the issues where the user logged hours since `since` (`YYYY-MM-DD`).
-pub async fn keys_with_hours(f: &Source, since: &str) -> Resultado<Vec<String>> {
+pub async fn keys_with_hours(f: &Source, since: &str) -> AppResult<Vec<String>> {
     let date = chrono::NaiveDate::parse_from_str(since, "%Y-%m-%d")
         .ok()
         .filter(|_| since.len() == 10)
-        .ok_or_else(|| ErrorApp::Formato(format!("fecha no válida (se esperaba AAAA-MM-DD): {}", since.chars().take(20).collect::<String>())))?;
+        .ok_or_else(|| AppError::Format(format!("fecha no válida (se esperaba AAAA-MM-DD): {}", since.chars().take(20).collect::<String>())))?;
     let jql = format!("worklogAuthor = currentUser() AND worklogDate >= \"{}\"", date.format("%Y-%m-%d"));
     Ok(keys_of(&search_all(f, &jql, &["summary"], 100, 10).await?))
 }
 
 /// Keys of the user's issues that have pull requests in the development panel.
-pub async fn keys_with_pr(f: &Source) -> Resultado<Vec<String>> {
+pub async fn keys_with_pr(f: &Source) -> AppResult<Vec<String>> {
     Ok(keys_of(&search_all(f, PR_JQL, &["summary"], 100, 20).await?))
 }
 
@@ -175,7 +175,7 @@ pub struct WorklogsResult {
 /// Reads the user's own worklogs for each issue (4 queries at a time).
 ///
 /// An issue that fails is reported in `failed`; if it fails because of credentials, or all fail, it is an error.
-pub async fn read_worklogs(f: &Source, keys: &[String], since_ms: i64, me: Option<&str>) -> Resultado<WorklogsResult> {
+pub async fn read_worklogs(f: &Source, keys: &[String], since_ms: i64, me: Option<&str>) -> AppResult<WorklogsResult> {
     for c in keys {
         validate_key(c)?;
     }
@@ -185,7 +185,7 @@ pub async fn read_worklogs(f: &Source, keys: &[String], since_ms: i64, me: Optio
             unique.push(c.clone());
         }
     }
-    let results: Vec<(String, Resultado<Vec<Value>>)> = stream::iter(unique.iter().cloned())
+    let results: Vec<(String, AppResult<Vec<Value>>)> = stream::iter(unique.iter().cloned())
         .map(|c| async move {
             let r = f.worklogs(&c, since_ms).await;
             (c, r)
@@ -196,7 +196,7 @@ pub async fn read_worklogs(f: &Source, keys: &[String], since_ms: i64, me: Optio
 
     let mut by_key = HashMap::new();
     let mut failed = Vec::new();
-    let mut last: Option<ErrorApp> = None;
+    let mut last: Option<AppError> = None;
     for (key, r) in results {
         match r {
             Ok(values) => {
@@ -204,7 +204,7 @@ pub async fn read_worklogs(f: &Source, keys: &[String], since_ms: i64, me: Optio
                     values.iter().filter_map(Worklog::from_jira).filter(|r| r.is_by(me)).collect();
                 by_key.insert(key, worklogs);
             }
-            Err(ErrorApp::NoAutorizado) => return Err(ErrorApp::NoAutorizado),
+            Err(AppError::Unauthorized) => return Err(AppError::Unauthorized),
             Err(e) => {
                 failed.push(key);
                 last = Some(e);
@@ -227,7 +227,7 @@ pub async fn load_for_summary(
     f: &Source,
     me: Option<&str>,
     today: chrono::NaiveDate,
-) -> Resultado<Vec<serde_json::Map<String, Value>>> {
+) -> AppResult<Vec<serde_json::Map<String, Value>>> {
     use chrono::{Datelike, Duration};
 
     let issues = load_issues(f, me).await?;
@@ -235,16 +235,16 @@ pub async fn load_for_summary(
         .iter()
         .map(|t| match serde_json::to_value(t) {
             Ok(Value::Object(m)) => Ok(m),
-            _ => Err(ErrorApp::Formato("tarea no serializable".into())),
+            _ => Err(AppError::Format("tarea no serializable".into())),
         })
-        .collect::<Resultado<_>>()?;
+        .collect::<AppResult<_>>()?;
 
     let back = today - Duration::days(98);
     let since_monday = back - Duration::days(i64::from(back.weekday().num_days_from_monday()));
     let since = since_monday.format("%Y-%m-%d").to_string();
     let after_ms = since_monday
         .and_hms_opt(5, 0, 0)
-        .ok_or_else(|| ErrorApp::Formato("hora no válida".into()))?
+        .ok_or_else(|| AppError::Format("hora no válida".into()))?
         .and_utc()
         .timestamp_millis();
 
@@ -254,7 +254,7 @@ pub async fn load_for_summary(
     for t in &mut issues {
         let key = t.get("key").and_then(Value::as_str).unwrap_or_default().to_string();
         let wl = match hours.as_ref().and_then(|h| h.by_key.get(&key)) {
-            Some(r) => serde_json::to_value(r).map_err(|e| ErrorApp::Formato(e.to_string()))?,
+            Some(r) => serde_json::to_value(r).map_err(|e| AppError::Format(e.to_string()))?,
             None => Value::Array(Vec::new()),
         };
         let sum: i64 = wl.as_array().map(|a| a.iter().filter_map(|w| w["s"].as_i64()).sum()).unwrap_or(0);
@@ -269,7 +269,7 @@ pub async fn load_for_summary(
 
 /// Looks for each issue's «Documento de Despliegue»: first in Confluence (by title) and, for those
 /// that do not show up, in the issue's remote links. Returns `key → url`.
-pub async fn find_documents(f: &Source, keys: &[String]) -> Resultado<HashMap<String, String>> {
+pub async fn find_documents(f: &Source, keys: &[String]) -> AppResult<HashMap<String, String>> {
     static RE: OnceLock<Regex> = OnceLock::new();
     let re = RE.get_or_init(|| Regex::new(r"(?i)Despliegue\s*-?\s*([A-Z][A-Z0-9]+-\d+)").expect("regex válida"));
 
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(validate_key("APP-123").unwrap(), "APP-123");
         assert!(validate_key("A1_B-9").is_ok());
         for bad in ["app-1", "APP-", "-1", "APP-1x", "../../myself", "APP-1\n", "", "1APP-2", "APP-1234567890"] {
-            assert!(matches!(validate_key(bad), Err(ErrorApp::ClaveInvalida(_))), "{bad:?}");
+            assert!(matches!(validate_key(bad), Err(AppError::InvalidKey(_))), "{bad:?}");
         }
     }
 
@@ -378,15 +378,15 @@ mod tests {
     async fn read_worklogs_with_invalid_token_is_error() {
         let f = sim(false);
         let r = read_worklogs(&f, &["APP-401".to_string()], 0, None).await;
-        assert!(matches!(r, Err(ErrorApp::NoAutorizado)));
-        assert!(matches!(f.myself().await, Err(ErrorApp::NoAutorizado)));
+        assert!(matches!(r, Err(AppError::Unauthorized)));
+        assert!(matches!(f.myself().await, Err(AppError::Unauthorized)));
     }
 
     #[tokio::test]
     async fn read_worklogs_rejects_invalid_keys() {
         let f = sim(true);
         let r = read_worklogs(&f, &["APP-401".to_string(), "x y".to_string()], 0, None).await;
-        assert!(matches!(r, Err(ErrorApp::ClaveInvalida(_))));
+        assert!(matches!(r, Err(AppError::InvalidKey(_))));
     }
 
     #[tokio::test]
@@ -418,7 +418,7 @@ mod tests {
     async fn keys_with_hours_validates_the_date() {
         let f = sim(true);
         for bad in ["2026-13-01", "ayer", "2026-1-5", "", "2026-11-16'; DROP", "16/11/2026"] {
-            assert!(matches!(keys_with_hours(&f, bad).await, Err(ErrorApp::Formato(_))), "{bad:?}");
+            assert!(matches!(keys_with_hours(&f, bad).await, Err(AppError::Format(_))), "{bad:?}");
         }
         let all = keys_with_hours(&f, "2020-01-01").await.unwrap();
         let recent = keys_with_hours(&f, "2026-11-10").await.unwrap();
@@ -461,7 +461,7 @@ mod tests {
     async fn load_for_summary_with_invalid_token_is_unauthorized() {
         let f = sim_friday(false);
         let r = load_for_summary(&f, None, test_date()).await;
-        assert!(matches!(r, Err(ErrorApp::NoAutorizado)));
+        assert!(matches!(r, Err(AppError::Unauthorized)));
     }
 
     #[tokio::test]

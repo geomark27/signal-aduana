@@ -4,11 +4,11 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime, Timelike, Utc};
 
 use crate::avisos::{self, EstadoMonitor};
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 use crate::jira;
 use crate::preferencias::{self, Preferencias};
 use crate::resumen::{self, Resumen, MAX_TEXTO_BANDEJA};
-use crate::sesion::Estado;
+use crate::session::AppState;
 
 /// Destino de lo que produce el ciclo (la bandeja y las notificaciones de Windows).
 pub trait Salida: Send + Sync {
@@ -61,36 +61,36 @@ async fn leer_resumen(
     cuenta: &str,
     hoy: NaiveDate,
     prefs: &Preferencias,
-) -> Resultado<Resumen> {
+) -> AppResult<Resumen> {
     let tareas = jira::load_for_summary(fuente, Some(cuenta), hoy).await?;
     resumen::resumir(tareas, hoy, &prefs.feriados_extra)
 }
 
 /// Una pasada del monitor. La hora `ahora` (Ecuador) entra por parámetro.
 pub async fn ciclo(
-    estado: &Estado,
+    estado: &AppState,
     salida: &dyn Salida,
     ahora: NaiveDateTime,
     memoria: &mut Memoria,
 ) -> ResultadoCiclo {
     let hoy = ahora.date();
-    let prefs = preferencias::cargar(&estado.dir_config, estado.simulado);
-    let mut registro = avisos::cargar_registro(&estado.dir_datos, estado.simulado);
+    let prefs = preferencias::cargar(&estado.config_dir, estado.simulated);
+    let mut registro = avisos::cargar_registro(&estado.data_dir, estado.simulated);
 
     let mut leido: Option<Resumen> = None;
-    let (tooltip, resultado) = match estado.actual().await {
-        Err(_) => (texto_sin_sesion(estado.simulado), ResultadoCiclo::SinSesion),
-        Ok(s) => match leer_resumen(&s.fuente, &s.usuario.account_id, hoy, &prefs).await {
+    let (tooltip, resultado) = match estado.current().await {
+        Err(_) => (texto_sin_sesion(estado.simulated), ResultadoCiclo::SinSesion),
+        Ok(s) => match leer_resumen(&s.source, &s.user.account_id, hoy, &prefs).await {
             Ok(r) => {
                 memoria.ultimo = Some((r.clone(), ahora));
-                let texto = resumen::texto_bandeja(Some(&r), estado.simulado);
+                let texto = resumen::texto_bandeja(Some(&r), estado.simulated);
                 leido = Some(r);
                 (texto, ResultadoCiclo::Datos)
             }
-            Err(ErrorApp::NoAutorizado) => {
-                estado.limpiar().await;
+            Err(AppError::Unauthorized) => {
+                estado.clear().await;
                 (
-                    con_marca_simulado("Signal Aduana · Sin conexión con Jira".into(), estado.simulado),
+                    con_marca_simulado("Signal Aduana · Sin conexión con Jira".into(), estado.simulated),
                     ResultadoCiclo::NoAutorizado,
                 )
             }
@@ -99,11 +99,11 @@ pub async fn ciclo(
                 let texto = match &memoria.ultimo {
                     Some((r, t)) => recortar(format!(
                         "{} · último dato {:02}:{:02}",
-                        resumen::texto_bandeja(Some(r), estado.simulado),
+                        resumen::texto_bandeja(Some(r), estado.simulated),
                         t.hour(),
                         t.minute()
                     )),
-                    None => resumen::texto_bandeja(None, estado.simulado),
+                    None => resumen::texto_bandeja(None, estado.simulated),
                 };
                 (texto, ResultadoCiclo::Fallo)
             }
@@ -118,13 +118,13 @@ pub async fn ciclo(
         (None, ResultadoCiclo::NoAutorizado) => EstadoMonitor::NoAutorizado,
         (None, _) => EstadoMonitor::Error,
     };
-    let lista = avisos::decidir(estado_monitor, ahora, &prefs, &registro, estado.simulado);
+    let lista = avisos::decidir(estado_monitor, ahora, &prefs, &registro, estado.simulated);
     for a in &lista {
         salida.notificar(&a.titulo, &a.cuerpo);
     }
     if !lista.is_empty() {
         avisos::marcar(&mut registro, &lista, hoy);
-        if let Err(e) = avisos::guardar_registro(&estado.dir_datos, estado.simulado, &registro) {
+        if let Err(e) = avisos::guardar_registro(&estado.data_dir, estado.simulated, &registro) {
             eprintln!("monitor: no se pudo guardar el registro de avisos: {e}");
         }
     }
@@ -141,12 +141,12 @@ mod pruebas {
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     use super::*;
-    use crate::almacen::AlmacenMemoria;
-    use crate::auth::{Credenciales, Sitio};
+    use crate::secret_store::MemorySecretStore;
+    use crate::auth::{Credentials, Site};
     use crate::jira::http::JiraHttp;
     use crate::jira::simulated::SimulatedJira;
     use crate::jira::Source;
-    use crate::sesion::Sesion;
+    use crate::session::Session;
 
     #[derive(Default)]
     struct Registrador {
@@ -180,25 +180,25 @@ mod pruebas {
         NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").unwrap()
     }
 
-    fn estado(dir: &tempfile::TempDir) -> Estado {
-        Estado::nuevo(
+    fn estado(dir: &tempfile::TempDir) -> AppState {
+        AppState::new(
             true,
             dir.path().join("config"),
             dir.path().join("datos"),
-            Box::new(AlmacenMemoria::default()),
+            Box::new(MemorySecretStore::default()),
         )
     }
 
-    fn sitio() -> Sitio {
-        Sitio::parse("prueba.atlassian.net").unwrap()
+    fn sitio() -> Site {
+        Site::parse("prueba.atlassian.net").unwrap()
     }
 
-    async fn poner_sesion(estado: &Estado, fuente: Source, usuario: crate::jira::model::User) {
-        let s = Sesion { fuente, usuario, sitio: sitio(), correo: "persona@ejemplo.test".into() };
-        *estado.sesion.write().await = Some(Arc::new(s));
+    async fn poner_sesion(estado: &AppState, fuente: Source, usuario: crate::jira::model::User) {
+        let s = Session { source: fuente, user: usuario, site: sitio(), email: "persona@ejemplo.test".into() };
+        *estado.session.write().await = Some(Arc::new(s));
     }
 
-    async fn sesion_simulada(estado: &Estado, hoy: &str, token_valido: bool) {
+    async fn sesion_simulada(estado: &AppState, hoy: &str, token_valido: bool) {
         let valida = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha(hoy)));
         let usuario = valida.myself().await.unwrap();
         let fuente = if token_valido {
@@ -323,7 +323,7 @@ mod pruebas {
         let e = estado(&dir);
         let mut p = Preferencias::default();
         p.avisos.activos = false;
-        preferencias::guardar(&e.dir_config, true, &p).unwrap();
+        preferencias::guardar(&e.config_dir, true, &p).unwrap();
         sesion_simulada(&e, "2026-11-13", true).await;
         let salida = Registrador::default();
         let mut mem = Memoria::default();
@@ -344,7 +344,7 @@ mod pruebas {
 
         let r = ciclo(&e, &salida, ahora("2026-11-13 10:00"), &mut mem).await;
         assert_eq!(r, ResultadoCiclo::NoAutorizado);
-        assert!(matches!(e.actual().await, Err(ErrorApp::SinSesion)));
+        assert!(matches!(e.current().await, Err(AppError::NoSession)));
         let t = salida.tooltips();
         assert_eq!(t.len(), 1);
         assert!(t[0].contains("Sin conexión con Jira"));
@@ -373,7 +373,7 @@ mod pruebas {
 
         let servidor = MockServer::start().await;
         Mock::given(wiremock::matchers::any()).respond_with(ResponseTemplate::new(500)).mount(&servidor).await;
-        let cred = Credenciales::token_clasico(sitio(), "persona@ejemplo.test", SecretString::from("tok")).unwrap();
+        let cred = Credentials::classic_token(sitio(), "persona@ejemplo.test", SecretString::from("tok")).unwrap();
         let base = Url::parse(&format!("{}/", servidor.uri())).unwrap();
         let usuario = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha("2026-11-13")))
             .myself()
@@ -383,7 +383,7 @@ mod pruebas {
 
         let r = ciclo(&e, &salida, ahora("2026-11-13 10:15"), &mut mem).await;
         assert_eq!(r, ResultadoCiclo::Fallo);
-        assert!(e.actual().await.is_ok());
+        assert!(e.current().await.is_ok());
         let t = salida.tooltips();
         assert_eq!(t.len(), 2);
         assert!(t[1].contains("último dato 10:00"), "tooltip: {}", t[1]);

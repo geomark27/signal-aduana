@@ -6,7 +6,7 @@ use serde::Serialize;
 use super::calendar::{add_days, fh, is_holiday, week_target, workdays, ExtraHolidays, DAY_TARGET_H};
 use super::issue::DerivedIssue;
 use super::week::{day_secs, week_stats};
-use crate::error::Resultado;
+use crate::error::AppResult;
 
 /// The fields that `hoursState(wk)` returns (without the view's extras).
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -31,7 +31,7 @@ fn days_word(n: usize) -> &'static str {
     if n == 1 { "día" } else { "días" }
 }
 
-pub fn hours_state(issues: &[DerivedIssue], wk: &str, today: &str, extra: &ExtraHolidays) -> Resultado<WeekState> {
+pub fn hours_state(issues: &[DerivedIssue], wk: &str, today: &str, extra: &ExtraHolidays) -> AppResult<WeekState> {
     let total = week_stats(issues, wk, &|_| true)?.secs;
     let target_h = week_target(wk, extra)?;
     let target = target_h * 3600;

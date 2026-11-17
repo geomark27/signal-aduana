@@ -8,7 +8,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::calendar::{fh, DAY_TARGET_H};
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 use crate::preferencias::Preferencias;
 use crate::resumen::Resumen;
 
@@ -139,13 +139,13 @@ pub fn cargar_registro(dir: &Path, simulado: bool) -> Registro {
     fs::read_to_string(ruta(dir, simulado)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
 }
 
-pub fn guardar_registro(dir: &Path, simulado: bool, r: &Registro) -> Resultado<()> {
-    fs::create_dir_all(dir).map_err(|e| ErrorApp::Config(e.to_string()))?;
-    let texto = serde_json::to_string_pretty(r).map_err(|e| ErrorApp::Config(e.to_string()))?;
+pub fn guardar_registro(dir: &Path, simulado: bool, r: &Registro) -> AppResult<()> {
+    fs::create_dir_all(dir).map_err(|e| AppError::Config(e.to_string()))?;
+    let texto = serde_json::to_string_pretty(r).map_err(|e| AppError::Config(e.to_string()))?;
     let destino = ruta(dir, simulado);
     let tmp = destino.with_extension("json.tmp");
-    fs::write(&tmp, texto).map_err(|e| ErrorApp::Config(e.to_string()))?;
-    fs::rename(&tmp, &destino).map_err(|e| ErrorApp::Config(e.to_string()))
+    fs::write(&tmp, texto).map_err(|e| AppError::Config(e.to_string()))?;
+    fs::rename(&tmp, &destino).map_err(|e| AppError::Config(e.to_string()))
 }
 
 #[cfg(test)]

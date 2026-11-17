@@ -1081,12 +1081,10 @@ function showNotice(msg) {
 }
 function errText(e) {
     const msg =
-        (e && typeof e === "object" ? e.mensaje || e.message : e) ||
-        "error desconocido";
-    return String(msg).slice(0, 300) + (e?.codigo ? ` [${e.codigo}]` : "");
+        (e && typeof e === "object" ? e.message : e) || "error desconocido";
+    return String(msg).slice(0, 300);
 }
-const isAuthErr = (e) =>
-    e?.codigo === "no_autorizado" || e?.codigo === "sin_sesion";
+const isAuthErr = (e) => e?.code === "unauthorized" || e?.code === "no_session";
 const WL_WINDOW_DAYS = 98;
 let wlState = "idle",
     wlError = "";
@@ -1167,7 +1165,7 @@ function showConnect(info, err) {
     stopAuto();
     if (info) {
         lastInfo = info;
-        simulado = !!info.simulado;
+        simulado = !!info.simulated;
     }
     $("main").hidden = true;
     $("gate").hidden = true;
@@ -1179,26 +1177,26 @@ function showConnect(info, err) {
         "Tus horas, tareas y estados de Jira por semana y por tablero";
     $("simTag").hidden = !simulado;
     $("simNote").hidden = !simulado;
-    const aviso = info?.aviso || "";
+    const aviso = info?.notice || "";
     $("connAviso").hidden = !aviso;
     $("connAviso").textContent = aviso;
     $("connError").hidden = !err;
     $("connError").textContent = err || "";
     $("siteInput").value =
-        info?.sitio ||
+        info?.site ||
         $("siteInput").value ||
         "https://torresytorres.atlassian.net";
-    if (info?.correo) $("emailInput").value = info.correo;
+    if (info?.email) $("emailInput").value = info.email;
     $("tokenInput").value = "";
     $("connBtn").disabled = false;
     setSync("", "Sin conexión con Jira");
 }
 /* Repinta el tablero con lo guardado. Devuelve false (sin tocar nada) si la caché no sirve. */
 async function restoreCache(snap) {
-    const d = snap && snap.datos;
+    const d = snap && snap.data;
     if (
         !d ||
-        d.formato !== CACHE_FORMAT ||
+        d.format !== CACHE_FORMAT ||
         !Array.isArray(d.issues) ||
         !d.issues.length ||
         !d.issues.every(
@@ -1213,7 +1211,7 @@ async function restoreCache(snap) {
         prMode = d.prMode === "pr" ? "pr" : "keywords";
         syncedAt =
             validIso(d.syncedAt) ||
-            validIso(snap.guardado) ||
+            validIso(snap.savedAt) ||
             new Date().toISOString();
         source = "cache";
         wlState = "done";
@@ -1247,7 +1245,7 @@ async function restoreCache(snap) {
 async function saveCache(g) {
     try {
         await invoke("guardar_cache", {
-            datos: { formato: CACHE_FORMAT, issues, docs, prMode, syncedAt },
+            datos: { format: CACHE_FORMAT, issues, docs, prMode, syncedAt },
         });
     } catch (e) {
         if (g === gen)
@@ -1256,13 +1254,13 @@ async function saveCache(g) {
 }
 async function enterApp(info) {
     lastInfo = info;
-    simulado = !!info.simulado;
-    ME = info.usuario?.accountId || null;
-    SITE = String(info.sitio || "").replace(/\/+$/, "") + "/browse/";
+    simulado = !!info.simulated;
+    ME = info.user?.accountId || null;
+    SITE = String(info.site || "").replace(/\/+$/, "") + "/browse/";
     $("connect").hidden = true;
     $("connError").hidden = true;
     $("tokenInput").value = "";
-    const name = info.usuario?.name;
+    const name = info.user?.name;
     if (name)
         $("who").textContent =
             `${name} · horas, tareas y estados de Jira por semana y por tablero`;
@@ -1283,13 +1281,13 @@ async function enterApp(info) {
     }
     refresh(false);
 }
-/* Si una llamada de datos devuelve no_autorizado / sin_sesion, se vuelve a la pantalla de conexión. */
+/* Si una llamada de datos devuelve unauthorized / no_session, se vuelve a la pantalla de conexión. */
 function handleAuth(e) {
     if (!isAuthErr(e)) return false;
     showConnect({
         ...(lastInfo || {}),
-        conectado: false,
-        aviso: e.mensaje || "Tu sesión ya no es válida. Vuelve a conectarte.",
+        connected: false,
+        notice: e.message || "Tu sesión ya no es válida. Vuelve a conectarte.",
     });
     return true;
 }
@@ -1527,7 +1525,7 @@ async function refresh(force) {
             /* hay datos en pantalla: se conservan */
             $("gate").hidden = true;
             $("main").hidden = false;
-            if (e?.codigo === "red" || e?.codigo === "limite") {
+            if (e?.code === "network" || e?.code === "rate_limit") {
                 showNotice(
                     `Sin conexión con Jira. Mostrando los datos guardados del ${fmtWhen(syncedAt)}.`,
                 );
@@ -1663,7 +1661,7 @@ $("connForm").onsubmit = async (ev) => {
     }
 };
 $("logoutBtn").onclick = async () => {
-    let info = { ...(lastInfo || {}), conectado: false, aviso: null },
+    let info = { ...(lastInfo || {}), connected: false, notice: null },
         err = null;
     try {
         info = await invoke("cerrar_sesion");
@@ -1790,7 +1788,7 @@ escucharEventos();
     await cargarPrefs(); /* no requiere sesión y no lanza: las preferencias (feriados) deben estar antes de pedir la primera vista */
     try {
         const info = await invoke("restaurar_sesion");
-        if (info.conectado) enterApp(info);
+        if (info.connected) enterApp(info);
         else showConnect(info);
     } catch (e) {
         showConnect(null, `No se pudo iniciar la aplicación: ${errText(e)}`);

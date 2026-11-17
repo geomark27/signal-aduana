@@ -1,49 +1,49 @@
-//! Autenticación con Atlassian.
+//! Authentication with Atlassian.
 //!
-//! Fase 1: API token clásico (correo + token, encabezado `Authorization: Basic`).
-//! El diseño deja espacio para otros métodos (token con alcances, OAuth 2.0): basta con
-//! agregar una variante a [`Credenciales`] y resolverla en el `match` de [`Autenticador`].
-//! El resto del código solo conoce el `trait`.
+//! Phase 1: classic API token (email + token, `Authorization: Basic` header).
+//! The design leaves room for other methods (scoped token, OAuth 2.0): add a variant to
+//! [`Credentials`] and resolve it in the `match` of [`Authenticator`].
+//! The rest of the code only knows the `trait`.
 
 use reqwest::RequestBuilder;
 use secrecy::{ExposeSecret, SecretString};
 use url::Url;
 
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
-/// Sitio de Jira Cloud validado: siempre `https://<algo>.atlassian.net`, sin ruta.
+/// Validated Jira Cloud site: always `https://<something>.atlassian.net`, without a path.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Sitio(Url);
+pub struct Site(Url);
 
-impl Sitio {
-    /// Acepta `torresytorres.atlassian.net`, `https://torresytorres.atlassian.net/` o
-    /// una URL de Jira con ruta (se queda solo con el origen).
-    pub fn parse(entrada: &str) -> Resultado<Self> {
-        let texto = entrada.trim();
-        if texto.is_empty() {
-            return Err(ErrorApp::SitioInvalido("está vacío".into()));
+impl Site {
+    /// Accepts `torresytorres.atlassian.net`, `https://torresytorres.atlassian.net/` or
+    /// a Jira URL with a path (only the origin is kept).
+    pub fn parse(input: &str) -> AppResult<Self> {
+        let text = input.trim();
+        if text.is_empty() {
+            return Err(AppError::InvalidSite("está vacío".into()));
         }
-        let con_esquema = if texto.contains("://") {
-            texto.to_string()
+        let with_scheme = if text.contains("://") {
+            text.to_string()
         } else {
-            format!("https://{texto}")
+            format!("https://{text}")
         };
-        let url = Url::parse(&con_esquema).map_err(|e| ErrorApp::SitioInvalido(e.to_string()))?;
+        let url = Url::parse(&with_scheme).map_err(|e| AppError::InvalidSite(e.to_string()))?;
         if url.scheme() != "https" {
-            return Err(ErrorApp::SitioInvalido("debe usar https".into()));
+            return Err(AppError::InvalidSite("debe usar https".into()));
         }
         let host = url
             .host_str()
-            .ok_or_else(|| ErrorApp::SitioInvalido("falta el dominio".into()))?
+            .ok_or_else(|| AppError::InvalidSite("falta el dominio".into()))?
             .to_ascii_lowercase();
         let sub = host.strip_suffix(".atlassian.net").unwrap_or("");
         if sub.is_empty() || sub.contains('.') || !url.username().is_empty() || url.port().is_some() {
-            return Err(ErrorApp::SitioInvalido(
+            return Err(AppError::InvalidSite(
                 "debe ser un sitio de Jira Cloud, por ejemplo empresa.atlassian.net".into(),
             ));
         }
-        let origen = Url::parse(&format!("https://{host}/")).expect("origen válido");
-        Ok(Sitio(origen))
+        let origin = Url::parse(&format!("https://{host}/")).expect("valid origin");
+        Ok(Site(origin))
     }
 
     pub fn url(&self) -> &Url {
@@ -54,103 +54,103 @@ impl Sitio {
         self.0.host_str().unwrap_or_default()
     }
 
-    /// `https://empresa.atlassian.net` (sin barra final), para armar enlaces en la interfaz.
-    pub fn como_texto(&self) -> String {
+    /// `https://empresa.atlassian.net` (no trailing slash), to build links in the UI.
+    pub fn as_text(&self) -> String {
         self.0.as_str().trim_end_matches('/').to_string()
     }
 }
 
-/// Correo con forma mínima válida (no se verifica contra Atlassian hasta iniciar sesión).
-pub fn validar_correo(correo: &str) -> Resultado<String> {
-    let c = correo.trim();
-    let valido = c.len() <= 254
-        && !c.contains(char::is_whitespace)
-        && c.split_once('@').is_some_and(|(u, d)| !u.is_empty() && d.contains('.') && !d.starts_with('.') && !d.ends_with('.'));
-    if valido {
-        Ok(c.to_string())
+/// Email with a minimal valid shape (it is not checked against Atlassian until sign-in).
+pub fn validate_email(email: &str) -> AppResult<String> {
+    let e = email.trim();
+    let valid = e.len() <= 254
+        && !e.contains(char::is_whitespace)
+        && e.split_once('@').is_some_and(|(u, d)| !u.is_empty() && d.contains('.') && !d.starts_with('.') && !d.ends_with('.'));
+    if valid {
+        Ok(e.to_string())
     } else {
-        Err(ErrorApp::CorreoInvalido)
+        Err(AppError::InvalidEmail)
     }
 }
 
-/// Formas de autenticarse. Por ahora solo existe el token clásico.
+/// Ways to authenticate. For now only the classic token exists.
 #[derive(Clone)]
-pub enum Credenciales {
-    TokenClasico {
-        sitio: Sitio,
-        correo: String,
+pub enum Credentials {
+    ClassicToken {
+        site: Site,
+        email: String,
         token: SecretString,
     },
 }
 
-impl Credenciales {
-    pub fn token_clasico(sitio: Sitio, correo: &str, token: SecretString) -> Resultado<Self> {
-        let correo = validar_correo(correo)?;
+impl Credentials {
+    pub fn classic_token(site: Site, email: &str, token: SecretString) -> AppResult<Self> {
+        let email = validate_email(email)?;
         if token.expose_secret().trim().is_empty() {
-            return Err(ErrorApp::TokenVacio);
+            return Err(AppError::EmptyToken);
         }
-        Ok(Credenciales::TokenClasico { sitio, correo, token })
+        Ok(Credentials::ClassicToken { site, email, token })
     }
 }
 
-/// `Debug` a mano para que el token nunca aparezca en logs ni en `{:?}`.
-impl std::fmt::Debug for Credenciales {
+/// Hand-written `Debug` so the token never appears in logs or in `{:?}`.
+impl std::fmt::Debug for Credentials {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Credenciales::TokenClasico { sitio, correo, .. } => f
-                .debug_struct("TokenClasico")
-                .field("sitio", &sitio.host())
-                .field("correo", correo)
-                .field("token", &"[oculto]")
+            Credentials::ClassicToken { site, email, .. } => f
+                .debug_struct("ClassicToken")
+                .field("site", &site.host())
+                .field("email", email)
+                .field("token", &"[hidden]")
                 .finish(),
         }
     }
 }
 
-/// Lo único que el cliente HTTP necesita saber de la autenticación.
-pub trait Autenticador: Send + Sync {
-    /// URL base para las APIs REST (`/rest/api/3/...`, `/wiki/rest/api/...`).
-    fn url_base(&self) -> &Url;
-    /// Agrega el encabezado de autenticación a una petición.
-    fn firmar(&self, req: RequestBuilder) -> RequestBuilder;
+/// The only thing the HTTP client needs to know about authentication.
+pub trait Authenticator: Send + Sync {
+    /// Base URL for the REST APIs (`/rest/api/3/...`, `/wiki/rest/api/...`).
+    fn base_url(&self) -> &Url;
+    /// Adds the authentication header to a request.
+    fn sign(&self, req: RequestBuilder) -> RequestBuilder;
 }
 
-impl Autenticador for Credenciales {
-    fn url_base(&self) -> &Url {
+impl Authenticator for Credentials {
+    fn base_url(&self) -> &Url {
         match self {
-            Credenciales::TokenClasico { sitio, .. } => sitio.url(),
+            Credentials::ClassicToken { site, .. } => site.url(),
         }
     }
 
-    fn firmar(&self, req: RequestBuilder) -> RequestBuilder {
+    fn sign(&self, req: RequestBuilder) -> RequestBuilder {
         match self {
-            Credenciales::TokenClasico { correo, token, .. } => {
-                req.basic_auth(correo, Some(token.expose_secret()))
+            Credentials::ClassicToken { email, token, .. } => {
+                req.basic_auth(email, Some(token.expose_secret()))
             }
         }
     }
 }
 
 #[cfg(test)]
-mod pruebas {
+mod tests {
     use super::*;
 
     #[test]
-    fn sitio_acepta_formas_comunes() {
-        for entrada in [
+    fn site_accepts_common_forms() {
+        for input in [
             "torresytorres.atlassian.net",
             "https://torresytorres.atlassian.net",
             "https://TorresYTorres.atlassian.net/browse/APP-1",
             "  torresytorres.atlassian.net/  ",
         ] {
-            let s = Sitio::parse(entrada).unwrap_or_else(|e| panic!("{entrada}: {e}"));
-            assert_eq!(s.como_texto(), "https://torresytorres.atlassian.net");
+            let s = Site::parse(input).unwrap_or_else(|e| panic!("{input}: {e}"));
+            assert_eq!(s.as_text(), "https://torresytorres.atlassian.net");
         }
     }
 
     #[test]
-    fn sitio_rechaza_lo_que_no_es_jira_cloud() {
-        for entrada in [
+    fn site_rejects_what_is_not_jira_cloud() {
+        for input in [
             "",
             "http://torresytorres.atlassian.net",
             "atlassian.net",
@@ -160,42 +160,42 @@ mod pruebas {
             "https://torresytorres.atlassian.net:8443",
             "ejemplo.com",
         ] {
-            assert!(Sitio::parse(entrada).is_err(), "debería rechazar {entrada:?}");
+            assert!(Site::parse(input).is_err(), "should reject {input:?}");
         }
     }
 
     #[test]
-    fn correo_valida_forma_minima() {
-        assert!(validar_correo(" persona@empresa.com ").is_ok());
-        for malo in ["", "persona", "@empresa.com", "persona@empresa", "per sona@empresa.com", "a@.com"] {
-            assert!(validar_correo(malo).is_err(), "debería rechazar {malo:?}");
+    fn email_validates_minimal_shape() {
+        assert!(validate_email(" persona@empresa.com ").is_ok());
+        for bad in ["", "persona", "@empresa.com", "persona@empresa", "per sona@empresa.com", "a@.com"] {
+            assert!(validate_email(bad).is_err(), "should reject {bad:?}");
         }
     }
 
     #[test]
-    fn token_vacio_no_crea_credenciales() {
-        let sitio = Sitio::parse("x.atlassian.net").unwrap();
-        let r = Credenciales::token_clasico(sitio, "a@b.com", SecretString::from("   "));
-        assert!(matches!(r, Err(ErrorApp::TokenVacio)));
+    fn empty_token_does_not_create_credentials() {
+        let site = Site::parse("x.atlassian.net").unwrap();
+        let r = Credentials::classic_token(site, "a@b.com", SecretString::from("   "));
+        assert!(matches!(r, Err(AppError::EmptyToken)));
     }
 
     #[test]
-    fn debug_no_muestra_el_token() {
-        let sitio = Sitio::parse("x.atlassian.net").unwrap();
-        let c = Credenciales::token_clasico(sitio, "a@b.com", SecretString::from("super-secreto")).unwrap();
-        let txt = format!("{c:?}");
-        assert!(!txt.contains("super-secreto"));
-        assert!(txt.contains("[oculto]"));
+    fn debug_does_not_show_the_token() {
+        let site = Site::parse("x.atlassian.net").unwrap();
+        let c = Credentials::classic_token(site, "a@b.com", SecretString::from("super-secret")).unwrap();
+        let text = format!("{c:?}");
+        assert!(!text.contains("super-secret"));
+        assert!(text.contains("[hidden]"));
     }
 
     #[test]
-    fn firma_con_basic_auth() {
-        let sitio = Sitio::parse("x.atlassian.net").unwrap();
-        let c = Credenciales::token_clasico(sitio, "a@b.com", SecretString::from("tok")).unwrap();
-        let req = c.firmar(reqwest::Client::new().get(c.url_base().clone())).build().unwrap();
-        let valor = req.headers().get(reqwest::header::AUTHORIZATION).unwrap().to_str().unwrap();
+    fn signs_with_basic_auth() {
+        let site = Site::parse("x.atlassian.net").unwrap();
+        let c = Credentials::classic_token(site, "a@b.com", SecretString::from("tok")).unwrap();
+        let req = c.sign(reqwest::Client::new().get(c.base_url().clone())).build().unwrap();
+        let value = req.headers().get(reqwest::header::AUTHORIZATION).unwrap().to_str().unwrap();
         // base64("a@b.com:tok") = YUBiLmNvbTp0b2s=
-        assert_eq!(valor, "Basic YUBiLmNvbTp0b2s=");
+        assert_eq!(value, "Basic YUBiLmNvbTp0b2s=");
         assert!(req.headers().get(reqwest::header::AUTHORIZATION).unwrap().is_sensitive());
     }
 }

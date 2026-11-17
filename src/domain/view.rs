@@ -11,7 +11,7 @@ use super::calendar::{
 use super::hours::{hours_state, WeekState};
 use super::issue::{derive, DerivedIssue};
 use super::week::{boards, day_secs, last_activity, week_stats, Stats};
-use crate::error::{ErrorApp, Resultado};
+use crate::error::{AppError, AppResult};
 
 pub const ALL_BOARDS: &str = "Todos";
 
@@ -84,10 +84,10 @@ pub struct View {
 }
 
 /// Computes the view. `default_today` is used when the input carries no `today`.
-pub fn compute_view(input: ViewInput, default_today: &str) -> Resultado<View> {
+pub fn compute_view(input: ViewInput, default_today: &str) -> AppResult<View> {
     let week = validate_date(&input.week)?;
     if !is_monday(&week)? {
-        return Err(ErrorApp::Formato(format!("La semana debe empezar en lunes: «{week}»")));
+        return Err(AppError::Format(format!("La semana debe empezar en lunes: «{week}»")));
     }
     let today = validate_date(input.today.as_deref().unwrap_or(default_today))?;
     let extra = &input.extra_holidays;
@@ -211,11 +211,11 @@ mod tests {
     #[test]
     fn invalid_week_is_a_format_error() {
         let e = compute_view(input("2026-11-10", "Todos", None), "2026-11-13").unwrap_err();
-        assert_eq!(e.codigo(), "formato");
+        assert_eq!(e.code(), "format");
         let e = compute_view(input("hoy", "Todos", None), "2026-11-13").unwrap_err();
-        assert_eq!(e.codigo(), "formato");
+        assert_eq!(e.code(), "format");
         let e = compute_view(input("2026-11-09", "Todos", Some("mañana")), "2026-11-13").unwrap_err();
-        assert_eq!(e.codigo(), "formato");
+        assert_eq!(e.code(), "format");
     }
 
     #[test]
