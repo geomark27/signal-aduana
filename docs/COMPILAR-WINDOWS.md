@@ -82,7 +82,7 @@ Test-Path tauri.conf.json
 
 ## 3. Compilar el instalador
 
-`cargo tauri build` compila la app en modo `release` y genera los instaladores. La primera vez
+`cargo tauri build` compila la app en modo `release` y genera el instalador. La primera vez
 compila todas las dependencias en release y puede tardar bastante; no hay una cifra confirmada de
 duración: a verificar en el primer equipo. Un `release` usa el **modo real** de Jira salvo que
 fuerces el modo simulado con `SIGNAL_SIMULADO=1`.
@@ -93,30 +93,28 @@ Compila y empaqueta:
 cargo tauri build
 ```
 
-El proyecto genera dos instaladores: `nsis` y `msi`. Como no hay `src-tauri`, la salida queda en la
-raíz del proyecto:
+El proyecto genera **un** instalador, de tipo `nsis`, que se instala por usuario. Como no hay
+`src-tauri`, la salida queda en la raíz del proyecto:
 
-- `target\release\bundle\msi\Signal Aduana_0.1.0_x64_en-US.msi`
 - `target\release\bundle\nsis\Signal Aduana_0.1.0_x64-setup.exe`
 
-Las rutas y los nombres exactos de estos archivos están **a verificar** en la primera compilación:
-no se pudieron generar desde WSL. Lista lo que se produjo:
+La ruta y el nombre exacto de este archivo están **a verificar** en la primera compilación: no se
+pudo generar desde WSL. Lista lo que se produjo:
 
 ```powershell
-Get-ChildItem .\target\release\bundle -Recurse -Include *.msi,*setup.exe | Select-Object FullName
+Get-ChildItem .\target\release\bundle -Recurse -Include *setup.exe | Select-Object FullName
 ```
 
-Instala con uno de los dos archivos (doble clic y sigue el asistente). Los dos instalan la misma app;
-elige uno. El instalador no está firmado.
+Instala con ese archivo (doble clic y sigue el asistente, en español). El instalador no está firmado.
 
 ## 4. Aviso de SmartScreen
 
 El instalador no tiene firma de código, así que Windows puede mostrar «Windows protegió su equipo».
 No es un error de la compilación: es la advertencia normal para un ejecutable sin firmar.
 
-Para continuar, pulsa «Más información» y luego «Ejecutar de todas formas». Si el instalador es un
-`.msi`, Windows también puede pedir confirmación de administrador. La firma de código del instalador
-está fuera del alcance de esta fase.
+Para continuar, pulsa «Más información» y luego «Ejecutar de todas formas». El instalador es por
+usuario y no pide permisos de administrador. La firma de código del instalador está fuera del alcance
+de esta fase.
 
 ## 5. Probar primero en modo simulado
 
@@ -125,10 +123,12 @@ simulado y `SIGNAL_SIMULADO=0` el real; sin definir, una compilación debug arra
 release arranca real. La variable solo afecta a los procesos que se abren desde esa misma ventana de
 PowerShell; si abres la app desde el menú Inicio o con doble clic, no llega a la app.
 
-Localiza el ejecutable instalado; la ruta exacta depende del instalador usado y está a verificar:
+Localiza el ejecutable instalado. Según la plantilla de Tauri para la instalación por usuario, queda
+en `%LOCALAPPDATA%\Signal Aduana\signal-aduana.exe`; esa ruta está a verificar en Windows. El comando
+busca primero ahí:
 
 ```powershell
-Get-ChildItem "$env:LOCALAPPDATA\Programs","C:\Program Files" -Recurse -Filter signal-aduana.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+Get-ChildItem "$env:LOCALAPPDATA\Signal Aduana","$env:LOCALAPPDATA\Programs" -Recurse -Filter signal-aduana.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
 ```
 
 Activa el modo simulado en esta ventana de PowerShell:
@@ -271,10 +271,31 @@ Lista las credenciales; busca una cuyo nombre empiece por `signal-aduana:`. No m
 cmdkey /list
 ```
 
-## 9. Desinstalar y limpiar todo
+## 9. Desinstalar
 
-Desinstala desde «Aplicaciones instaladas» (Configuración > Aplicaciones) y luego borra los datos,
-la credencial y el inicio con Windows. El desinstalador no borra por sí solo todos estos restos.
+Desinstala desde «Aplicaciones instaladas» (Configuración > Aplicaciones). Al **actualizar** no se
+borra nada. Al **desinstalar**, el desinstalador:
+
+- **Conserva** lo útil para reinstalar:
+  - la configuración (`%APPDATA%\ec.com.torresytorres.signal\config*.toml`);
+  - las preferencias (`preferences*.toml`, en esa misma carpeta);
+  - la caché (`%LOCALAPPDATA%\ec.com.torresytorres.signal\cache*.json`);
+  - el token de Jira (credencial `signal-aduana:<host>` del Administrador de credenciales; el
+    instalador nunca la toca).
+- **Borra siempre**:
+  - el registro de avisos (`notifications.json` y `notifications.simulated.json`, en la carpeta de
+    datos locales);
+  - el perfil de WebView2 (carpeta `EBWebView`, en la carpeta de datos locales);
+  - la entrada de inicio con Windows.
+
+El desinstalador trae la casilla «borrar datos de la aplicación», desmarcada por defecto. Si la
+marcas, borra las carpetas completas de datos (`%APPDATA%\ec.com.torresytorres.signal` y
+`%LOCALAPPDATA%\ec.com.torresytorres.signal`), es decir, todo salvo el token del Administrador de
+credenciales. Que el desinstalador conserve o borre cada cosa está **a verificar** en Windows.
+
+### Limpieza completa opcional
+
+Si quieres que no quede nada, haz esto a mano después de desinstalar.
 
 Borra la configuración y las preferencias, incluidos los archivos simulados:
 
@@ -301,7 +322,8 @@ cmdkey /delete:signal-aduana:empresa.atlassian.net
 Si usaste más de un host de Jira, repite el comando para cada `signal-aduana:<host>` que aparezca en
 `cmdkey /list`.
 
-Revisa la entrada de inicio con Windows; debe estar en la clave del usuario actual:
+La entrada de inicio con Windows la quita el desinstalador. Para comprobarlo, revisa la clave del
+usuario actual:
 
 ```powershell
 Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
