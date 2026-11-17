@@ -60,8 +60,13 @@ Copia el proyecto desde WSL sin `target\`, `.git` ni los worktrees anidados. Cam
 la carpeta de destino:
 
 ```powershell
-robocopy "\\wsl$\<distro>\home\<usuario>\signal-aduana" "C:\dev\signal-aduana" /E /XD target .git .worktrees
+robocopy "\\wsl$\<distro>\home\<usuario>\signal-aduana" "C:\dev\signal-aduana" /MIR /XD target .git .worktrees
 ```
+
+`/MIR` deja el destino igual al origen: borra los archivos que ya no existen en el repositorio, por
+ejemplo los que cambiaron de nombre al pasar el código a inglés. No toca las carpetas excluidas con
+`/XD`, así que se conserva `target` y la siguiente compilación es más rápida. `robocopy` termina con
+código 1 cuando copió archivos: eso es éxito, no un error (los códigos de 8 en adelante sí lo son).
 
 Entra en la carpeta copiada:
 
@@ -192,9 +197,12 @@ Windows normal.
 - [ ] El arranque con `--hidden` (acceso directo con ese argumento) empieza sin ventana visible y deja
       el ícono en la bandeja.
 - [ ] Al activar «Iniciar con Windows», cerrar sesión de Windows y volver a entrar, la app arranca
-      oculta (solo bandeja).
+      oculta (solo bandeja). **Solo en modo real**: en modo simulado la app no registra el inicio con
+      Windows, a propósito, y deja constancia en el log. En la fase 5 se marca «no aplica en
+      simulado» y se prueba en la fase 6.
 - [ ] Llega el aviso de cierre de jornada cuando pasa la hora configurada y faltan horas del día.
-- [ ] Llega el resumen del lunes cuando la semana anterior quedó incompleta.
+- [ ] Llega el resumen semanal (el primer día laborable de la semana) cuando la semana anterior
+      quedó incompleta.
 - [ ] Llega el aviso de reconexión cuando el token fue revocado.
 - [ ] Los feriados marcados antes en el navegador aparecen migrados en las preferencias
       (`extraHolidays` en `preferences.toml`).
@@ -212,7 +220,27 @@ Get-Process signal-aduana -ErrorAction SilentlyContinue | Select-Object Id, Main
 ```
 
 El ciclo del monitor corre a los 30 segundos de arrancar y luego cada 15 minutos, así que espera ese
-tiempo antes de dar por fallido un aviso.
+tiempo antes de dar por fallido un aviso. La excepción son los cambios de preferencias: piden un ciclo
+al instante.
+
+### Segunda pasada
+
+Comprueba lo que cambió en la fase 5 después de la primera lista:
+
+- [ ] **Hora de cierre:** con horas faltantes en el día, cambia la hora de cierre en las preferencias a
+      una que ya pasó. El aviso de cierre de jornada llega en segundos, sin esperar 15 minutos.
+- [ ] **Feriado:** marca un día como feriado en el calendario. El tooltip de la bandeja se actualiza en
+      segundos.
+- [ ] **Resumen semanal:** sale el **primer día laborable** de la semana, desde las 09:00, y no
+      siempre el lunes. Para probarlo un martes, con la semana anterior incompleta, marca como feriado el
+      lunes de esta semana. El resumen debe llegar ese martes. Si lo pruebas un lunes, con ese lunes
+      marcado como feriado, el resumen no debe salir.
+- [ ] **Controles de la interfaz:** todos responden: preferencias (abrir, cambiar y guardar cada
+      opción, cancelar), conexión, feriados del calendario, filtros por tablero, vistas, orden y páginas
+      de la tabla, y «Actualizar». Los identificadores internos de la interfaz cambiaron de nombre al
+      pasar el código a inglés. Un control que no responde es un hallazgo.
+- [ ] **Mensaje de error:** al conectar con el token «rechazar», el mensaje sale sin un código entre
+      corchetes al final.
 
 ## 8. Dónde quedan los datos
 
@@ -279,7 +307,8 @@ Revisa la entrada de inicio con Windows; debe estar en la clave del usuario actu
 Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 ```
 
-Si queda una entrada que apunta a Signal Aduana, bórrala con su nombre exacto (está a verificar; no
+Si queda una entrada que apunta a Signal Aduana, bórrala con su nombre exacto (está a verificar en
+modo real, en la fase 6, porque en modo simulado no se crea; no
 borres valores de otras aplicaciones):
 
 ```powershell
