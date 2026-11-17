@@ -54,8 +54,18 @@ No se compila ni se prueba el instalador desde WSL ni sobre `\\wsl$`: eso se hac
   `Makefile`). Se aplica con `make fmt-ui` y `make check` lo comprueba. Prettier actúa **solo** sobre
   ese archivo (`.prettierignore`): si tu editor formatea al guardar, que use esa configuración. Un
   reformateo accidental con otra configuración produjo un diff de más de 2000 líneas (entrada 012).
-- Interfaz, mensajes, comentarios y documentación en **español**. Comentarios mínimos: el código se
-  explica con nombres; la historia y el porqué van a la bitácora.
+- **Idioma.**
+  - **Código en inglés**: identificadores, módulos, archivos, comentarios, nombres serializados
+    (campos JSON y TOML), comandos de Tauri, códigos de error y archivos en disco. La traducción se
+    hace en las tareas 5.10 a 5.14 y sigue `docs/GLOSARIO.md`; hasta entonces conviven ambos
+    idiomas.
+  - **En español queda lo que ve el usuario de la app** (interfaz, mensajes de error, avisos,
+    tooltips, valores mostrados como «Todos») y la documentación del repo (`CLAUDE.md`, `docs/`,
+    bitácora).
+  - Los atajos de `make` y los scripts de `scripts/` conservan sus nombres.
+  - `pruebas/paridad/legado.js` es el JS original y no se traduce.
+  - Comentarios mínimos: el código se explica con nombres; la historia y el porqué van a la
+    bitácora.
 - Los criterios aduaneros, tributarios o legales que aparezcan en textos son referenciales y los
   valida el responsable competente.
 

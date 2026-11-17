@@ -40,6 +40,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [013](./fase-5/013-plan-fase-5.md) | 5.0 Plan de la fase 5 y roadmap | `tarea/5.0-plan-fase-5` | 2026-11-17 | `ROADMAP.md` y `PLAN-FASE-5.md` registrados y aprobados; resumen semanal en el primer día laborable (decisión del autor); ejecutores mixtos (Sonnet para la 5.4 y la 5.5, opencode free para la 5.6); `delegar.json` apunta al plan de la fase 5 |
 | [014](./fase-5/014-monitor-resiliente.md) | 5.5 El monitor sobrevive a un pánico del ciclo | `tarea/5.5-monitor-resiliente` | 2026-11-17 | `vigilancia::bucle`, que se prueba sin Tauri; cada ciclo corre bajo `catch_unwind`: un pánico se registra (mensaje recortado a 200), el tooltip pasa a «Error interno, se reintenta» y el bucle sigue; `monitor::texto_error_interno` |
 | [015](./fase-5/015-preferencias-al-instante.md) | 5.6 Los cambios de preferencias llegan al monitor al instante | `tarea/5.6-preferencias-al-instante` | 2026-11-17 | `Preferencias::afecta_al_monitor` (avisos y feriados, no inicio ni bandeja); `guardar_preferencias` pide un ciclo con `pedir_ciclo` solo si cambió algo que usa el monitor |
+| [016](./fase-5/016-glosario-ingles.md) | 5.9 Glosario español → inglés y regla de idioma | `tarea/5.9-glosario-ingles` | 2026-11-17 | `docs/GLOSARIO.md` (nombres nuevos por tarea, claves JSON/TOML, valores visibles que no cambian, colisiones resueltas); regla de idioma en `CLAUDE.md`; ola T (5.10 a 5.14, en serie) en el plan; códigos de error en inglés sin mostrarse, `--hidden` |
 
 ## Formato de cada entrada
 
