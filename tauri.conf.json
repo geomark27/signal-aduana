@@ -25,7 +25,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": ["nsis"],
     "publisher": "Torres & Torres",
     "shortDescription": "Horas, tareas y estados de Jira por semana",
     "category": "Productivity",
@@ -37,7 +37,12 @@
       "icons/icon.png"
     ],
     "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper" }
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["Spanish"],
+        "installerHooks": "windows/hooks.nsh"
+      }
     }
   }
 }
