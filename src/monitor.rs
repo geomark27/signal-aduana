@@ -57,12 +57,12 @@ pub fn texto_error_interno(simulado: bool) -> String {
 }
 
 async fn leer_resumen(
-    fuente: &jira::Fuente,
+    fuente: &jira::Source,
     cuenta: &str,
     hoy: NaiveDate,
     prefs: &Preferencias,
 ) -> Resultado<Resumen> {
-    let tareas = jira::cargar_para_resumen(fuente, Some(cuenta), hoy).await?;
+    let tareas = jira::load_for_summary(fuente, Some(cuenta), hoy).await?;
     resumen::resumir(tareas, hoy, &prefs.feriados_extra)
 }
 
@@ -144,8 +144,8 @@ mod pruebas {
     use crate::almacen::AlmacenMemoria;
     use crate::auth::{Credenciales, Sitio};
     use crate::jira::http::JiraHttp;
-    use crate::jira::simulado::JiraSimulado;
-    use crate::jira::Fuente;
+    use crate::jira::simulated::SimulatedJira;
+    use crate::jira::Source;
     use crate::sesion::Sesion;
 
     #[derive(Default)]
@@ -193,18 +193,18 @@ mod pruebas {
         Sitio::parse("prueba.atlassian.net").unwrap()
     }
 
-    async fn poner_sesion(estado: &Estado, fuente: Fuente, usuario: crate::jira::modelo::Usuario) {
+    async fn poner_sesion(estado: &Estado, fuente: Source, usuario: crate::jira::model::User) {
         let s = Sesion { fuente, usuario, sitio: sitio(), correo: "persona@ejemplo.test".into() };
         *estado.sesion.write().await = Some(Arc::new(s));
     }
 
     async fn sesion_simulada(estado: &Estado, hoy: &str, token_valido: bool) {
-        let valida = Fuente::Simulado(JiraSimulado::nuevo("persona@ejemplo.test", true, fecha(hoy)));
-        let usuario = valida.yo().await.unwrap();
+        let valida = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha(hoy)));
+        let usuario = valida.myself().await.unwrap();
         let fuente = if token_valido {
             valida
         } else {
-            Fuente::Simulado(JiraSimulado::nuevo("persona@ejemplo.test", false, fecha(hoy)))
+            Source::Simulated(SimulatedJira::new("persona@ejemplo.test", false, fecha(hoy)))
         };
         poner_sesion(estado, fuente, usuario).await;
     }
@@ -273,9 +273,9 @@ mod pruebas {
     }
 
     async fn resumen_esperado(hoy: &str) -> Resumen {
-        let f = Fuente::Simulado(JiraSimulado::nuevo("persona@ejemplo.test", true, fecha(hoy)));
-        let yo = f.yo().await.unwrap().account_id;
-        let tareas = jira::cargar_para_resumen(&f, Some(&yo), fecha(hoy)).await.unwrap();
+        let f = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha(hoy)));
+        let yo = f.myself().await.unwrap().account_id;
+        let tareas = jira::load_for_summary(&f, Some(&yo), fecha(hoy)).await.unwrap();
         resumen::resumir(tareas, fecha(hoy), &Preferencias::default().feriados_extra).unwrap()
     }
 
@@ -375,11 +375,11 @@ mod pruebas {
         Mock::given(wiremock::matchers::any()).respond_with(ResponseTemplate::new(500)).mount(&servidor).await;
         let cred = Credenciales::token_clasico(sitio(), "persona@ejemplo.test", SecretString::from("tok")).unwrap();
         let base = Url::parse(&format!("{}/", servidor.uri())).unwrap();
-        let usuario = Fuente::Simulado(JiraSimulado::nuevo("persona@ejemplo.test", true, fecha("2026-11-13")))
-            .yo()
+        let usuario = Source::Simulated(SimulatedJira::new("persona@ejemplo.test", true, fecha("2026-11-13")))
+            .myself()
             .await
             .unwrap();
-        poner_sesion(&e, Fuente::Http(JiraHttp::con_base(cred, base)), usuario).await;
+        poner_sesion(&e, Source::Http(JiraHttp::with_base(cred, base)), usuario).await;
 
         let r = ciclo(&e, &salida, ahora("2026-11-13 10:15"), &mut mem).await;
         assert_eq!(r, ResultadoCiclo::Fallo);

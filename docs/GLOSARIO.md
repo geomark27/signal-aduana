@@ -34,6 +34,12 @@ sin migración.
   Siempre el mismo número de pruebas.
 - **Comentarios:** todos en inglés, igual de breves (`//`, `///`, `//!`, `/* */` en JS). Los
   prefijos de log de `eprintln!` usan el módulo en inglés (`"watcher: …"`).
+- **Textos para quien programa:** mensajes de `assert!`/`panic!` en las pruebas, `expect("…")`,
+  logs de `eprintln!` y mensajes de scripts. No los ve la persona usuaria, así que van en inglés.
+  - Las tareas 5.12 y 5.13 los traducen en sus archivos.
+  - La 5.14 hace una pasada final por `src/domain/` y `src/jira/`, que quedaron con algunos.
+  - Excepción: si una prueba compara un texto visible, el texto comparado no cambia (solo el
+    mensaje de la aserción).
 - **Verbos frecuentes:**
 
   | Español | Inglés |
@@ -337,7 +343,7 @@ Los métodos de `Source`, `JiraHttp` y `SimulatedJira` siguen las mismas traducc
 | `EnPruebas` | `InTesting` |
 | `Finalizada` | `Done` |
 | `Estimacion` | `Estimate` |
-| `Ninguna` | `NoEstimate` |
+| `Ninguna` | `Unset` |
 | `Horas` | `Hours` |
 | `Factor` | `Factor` |
 | `Documento` | `DocKind` |
