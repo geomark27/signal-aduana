@@ -1,14 +1,14 @@
-//! Vuelca en JSON las tareas del Jira simulado para un `hoy` dado, tal como las tiene la interfaz
-//! en memoria tras `jira::cargar_para_resumen` (equivale a `cargar_tareas` + `claves_con_horas` + `leer_horas`) más `hasPR`.
+//! Dumps as JSON the issues of the simulated Jira for a given `today`, as the UI holds them
+//! in memory after `jira::load_for_summary` (equivalent to `load_issues` + `keys_with_hours` + `read_worklogs`) plus `hasPR`.
 //!
-//! Uso: `cargo run --example dump_simulated -- 2026-11-13 > tests/parity/dumps/friday.json`
-//! (y `2026-11-16` → `tests/parity/dumps/monday.json`)
-//! Solo usa el simulado: no hay ninguna conexión de red.
+//! Usage: `cargo run --example dump_simulated -- 2026-11-13 > tests/parity/dumps/friday.json`
+//! (and `2026-11-16` → `tests/parity/dumps/monday.json`)
+//! It only uses the simulated source: there is no network connection.
 
 use chrono::NaiveDate;
 use serde_json::{json, Value};
-use signal_aduana::jira::simulado::JiraSimulado;
-use signal_aduana::jira::{self, Fuente};
+use signal_aduana::jira::simulated::SimulatedJira;
+use signal_aduana::jira::{self, Source};
 
 #[tokio::main]
 async fn main() {
@@ -16,11 +16,11 @@ async fn main() {
         eprintln!("uso: dump_simulated AAAA-MM-DD");
         std::process::exit(2);
     });
-    let hoy = NaiveDate::parse_from_str(&arg, "%Y-%m-%d").unwrap_or_else(|e| {
+    let today = NaiveDate::parse_from_str(&arg, "%Y-%m-%d").unwrap_or_else(|e| {
         eprintln!("fecha no válida «{arg}»: {e}");
         std::process::exit(2);
     });
-    match volcar(hoy).await {
+    match dump(today).await {
         Ok(v) => println!("{}", serde_json::to_string_pretty(&v).expect("JSON serializable")),
         Err(e) => {
             eprintln!("error: {e}");
@@ -29,18 +29,18 @@ async fn main() {
     }
 }
 
-async fn volcar(hoy: NaiveDate) -> Result<Value, Box<dyn std::error::Error>> {
-    let fuente = Fuente::Simulado(JiraSimulado::nuevo("persona@ejemplo.com", true, hoy));
-    let yo = fuente.yo().await?.account_id;
+async fn dump(today: NaiveDate) -> Result<Value, Box<dyn std::error::Error>> {
+    let source = Source::Simulated(SimulatedJira::new("persona@ejemplo.com", true, today));
+    let me = source.myself().await?.account_id;
 
-    // Tareas con horas unidas, como las tiene la interfaz (la misma función que usa el monitor).
-    let mut tareas = jira::cargar_para_resumen(&fuente, Some(&yo), hoy).await?;
+    // Issues with joined worklogs, as the UI holds them (the same function the monitor uses).
+    let mut issues = jira::load_for_summary(&source, Some(&me), today).await?;
 
-    // El volcado de paridad además incluye `hasPR`.
-    let con_pr = jira::claves_con_pr(&fuente).await?;
-    for t in &mut tareas {
-        let clave = t.get("key").and_then(Value::as_str).unwrap_or_default().to_string();
-        t.insert("hasPR".into(), json!(con_pr.contains(&clave)));
+    // The parity dump also includes `hasPR`.
+    let with_pr = jira::keys_with_pr(&source).await?;
+    for t in &mut issues {
+        let key = t.get("key").and_then(Value::as_str).unwrap_or_default().to_string();
+        t.insert("hasPR".into(), json!(with_pr.contains(&key)));
     }
-    Ok(Value::Array(tareas.into_iter().map(Value::Object).collect()))
+    Ok(Value::Array(issues.into_iter().map(Value::Object).collect()))
 }

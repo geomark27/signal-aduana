@@ -13,8 +13,8 @@ use crate::domain::{self, View, ViewInput};
 use crate::error::{ErrorApp, Resultado};
 use crate::escritorio;
 use crate::inicio;
-use crate::jira::modelo::Tarea;
-use crate::jira::{self, ResultadoHoras};
+use crate::jira::model::Issue;
+use crate::jira::{self, WorklogsResult};
 use crate::monitor;
 use crate::preferencias::{self, Preferencias};
 use crate::sesion::{self, Estado, InfoSesion, Sesion};
@@ -64,21 +64,21 @@ pub async fn cerrar_sesion(app: AppHandle, estado: State<'_, Estado>) -> Resulta
 }
 
 #[tauri::command]
-pub async fn cargar_tareas(estado: State<'_, Estado>) -> Resultado<Vec<Tarea>> {
+pub async fn cargar_tareas(estado: State<'_, Estado>) -> Resultado<Vec<Issue>> {
     con_sesion(&estado, |s| async move {
-        jira::cargar_tareas(&s.fuente, Some(&s.usuario.account_id)).await
+        jira::load_issues(&s.fuente, Some(&s.usuario.account_id)).await
     })
     .await
 }
 
 #[tauri::command]
 pub async fn claves_con_horas(estado: State<'_, Estado>, desde: String) -> Resultado<Vec<String>> {
-    con_sesion(&estado, |s| async move { jira::claves_con_horas(&s.fuente, &desde).await }).await
+    con_sesion(&estado, |s| async move { jira::keys_with_hours(&s.fuente, &desde).await }).await
 }
 
 #[tauri::command]
 pub async fn claves_con_pr(estado: State<'_, Estado>) -> Resultado<Vec<String>> {
-    con_sesion(&estado, |s| async move { jira::claves_con_pr(&s.fuente).await }).await
+    con_sesion(&estado, |s| async move { jira::keys_with_pr(&s.fuente).await }).await
 }
 
 #[tauri::command]
@@ -86,9 +86,9 @@ pub async fn leer_horas(
     estado: State<'_, Estado>,
     claves: Vec<String>,
     desde: i64,
-) -> Resultado<ResultadoHoras> {
+) -> Resultado<WorklogsResult> {
     con_sesion(&estado, |s| async move {
-        jira::leer_horas(&s.fuente, &claves, desde, Some(&s.usuario.account_id)).await
+        jira::read_worklogs(&s.fuente, &claves, desde, Some(&s.usuario.account_id)).await
     })
     .await
 }
@@ -98,7 +98,7 @@ pub async fn buscar_documentos(
     estado: State<'_, Estado>,
     claves: Vec<String>,
 ) -> Resultado<HashMap<String, String>> {
-    con_sesion(&estado, |s| async move { jira::buscar_documentos(&s.fuente, &claves).await }).await
+    con_sesion(&estado, |s| async move { jira::find_documents(&s.fuente, &claves).await }).await
 }
 
 /// Última carga guardada de la cuenta activa, o `null`.
@@ -115,7 +115,7 @@ pub async fn guardar_cache(estado: State<'_, Estado>, datos: Value) -> Resultado
 /// Calcula todo el tablero de una semana a partir de las tareas recibidas. No requiere sesión.
 #[tauri::command]
 pub fn calcular_vista(entrada: ViewInput) -> Resultado<View> {
-    let hoy_ecuador = crate::jira::simulado::hoy_ecuador().format("%Y-%m-%d").to_string();
+    let hoy_ecuador = crate::jira::simulated::today_ecuador().format("%Y-%m-%d").to_string();
     domain::compute_view(entrada, &hoy_ecuador)
 }
 

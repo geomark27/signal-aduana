@@ -1262,7 +1262,7 @@ async function enterApp(info) {
     $("connect").hidden = true;
     $("connError").hidden = true;
     $("tokenInput").value = "";
-    const name = info.usuario?.nombre;
+    const name = info.usuario?.name;
     if (name)
         $("who").textContent =
             `${name} · horas, tareas y estados de Jira por semana y por tablero`;
@@ -1308,12 +1308,12 @@ async function fetchWorklogs(quiet) {
         kept = false;
     try {
         const keys = await invoke("claves_con_horas", { desde: from });
-        let r = { porClave: {}, fallidas: [], error: null };
+        let r = { byKey: {}, failed: [], error: null };
         if (keys.length)
             r = await invoke("leer_horas", { claves: keys, desde: after });
         if (g !== gen) return false;
-        const byKey = r.porClave || {},
-            failed = r.fallidas || [];
+        const byKey = r.byKey || {},
+            failed = r.failed || [];
         for (const i of issues) {
             const wl = byKey[i.key] || [];
             i.worklogs = wl;

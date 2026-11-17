@@ -1,61 +1,60 @@
-//! Modelo de datos que recibe la interfaz.
+//! Data model received by the UI.
 //!
-//! Convierte el JSON de la API REST de Jira al formato que ya usaba el artifact
-//! (los mismos nombres de campo: `key`, `summary`, `cat`, `finDev`, `worklogs`…),
-//! para que el código de la interfaz casi no cambie. Las fechas de Jira
-//! (`2026-11-10T08:30:00.000-0500`) se pasan a RFC 3339 (`…-05:00`), que todos los
-//! motores web interpretan igual.
+//! Converts the JSON of the Jira REST API into the format the artifact already used
+//! (the same field names: `key`, `summary`, `cat`, `finDev`, `worklogs`…), so the UI
+//! code barely changes. Jira dates (`2026-11-10T08:30:00.000-0500`) become RFC 3339
+//! (`…-05:00`), which every web engine interprets the same way.
 
 use chrono::{DateTime, SecondsFormat};
 use serde::Serialize;
 use serde_json::Value;
 
-/// Campos personalizados de Jira de Torres & Torres.
-pub const CAMPO_INICIO: &str = "customfield_10015";
-pub const CAMPO_SPRINTS: &str = "customfield_10020";
-pub const CAMPO_PUNTOS: &str = "customfield_10031";
-pub const CAMPO_FIN_DESARROLLO: &str = "customfield_10057";
+/// Torres & Torres custom Jira fields.
+pub const START_FIELD: &str = "customfield_10015";
+pub const SPRINTS_FIELD: &str = "customfield_10020";
+pub const POINTS_FIELD: &str = "customfield_10031";
+pub const DEV_END_FIELD: &str = "customfield_10057";
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Usuario {
+pub struct User {
     pub account_id: String,
-    pub nombre: String,
-    pub correo: Option<String>,
+    pub name: String,
+    pub email: Option<String>,
 }
 
-impl Usuario {
-    /// Desde `GET /rest/api/3/myself`.
-    pub fn desde_jira(v: &Value) -> Option<Usuario> {
-        Some(Usuario {
+impl User {
+    /// From `GET /rest/api/3/myself`.
+    pub fn from_jira(v: &Value) -> Option<User> {
+        Some(User {
             account_id: v.get("accountId")?.as_str()?.to_string(),
-            nombre: texto(v, "/displayName").unwrap_or_default(),
-            correo: texto(v, "/emailAddress"),
+            name: text(v, "/displayName").unwrap_or_default(),
+            email: text(v, "/emailAddress"),
         })
     }
 }
 
-/// Un registro de horas: día de inicio (`d`), segundos (`s`) y autor (`a`).
+/// A worklog: start day (`d`), seconds (`s`) and author (`a`).
 #[derive(Debug, Clone, Serialize, PartialEq)]
-pub struct Registro {
+pub struct Worklog {
     pub d: String,
     pub s: i64,
     pub a: Option<String>,
 }
 
-impl Registro {
-    pub fn desde_jira(v: &Value) -> Option<Registro> {
-        Some(Registro {
-            d: normalizar_fecha(v.get("started")?.as_str()?),
+impl Worklog {
+    pub fn from_jira(v: &Value) -> Option<Worklog> {
+        Some(Worklog {
+            d: normalize_date(v.get("started")?.as_str()?),
             s: v.get("timeSpentSeconds").and_then(Value::as_i64).unwrap_or(0),
-            a: texto(v, "/author/accountId"),
+            a: text(v, "/author/accountId"),
         })
     }
 
-    /// Solo cuentan los registros propios. Si no se conoce el usuario o el autor, se conserva.
-    pub fn es_de(&self, yo: Option<&str>) -> bool {
-        match (yo, self.a.as_deref()) {
-            (Some(y), Some(a)) => a == y,
+    /// Only the user's own worklogs count. If the user or the author is unknown, it is kept.
+    pub fn is_by(&self, me: Option<&str>) -> bool {
+        match (me, self.a.as_deref()) {
+            (Some(m), Some(a)) => a == m,
             _ => true,
         }
     }
@@ -72,27 +71,27 @@ pub struct Sprint {
 }
 
 impl Sprint {
-    fn desde_jira(v: &Value) -> Option<Sprint> {
+    fn from_jira(v: &Value) -> Option<Sprint> {
         Some(Sprint {
             id: v.get("id")?.as_i64()?,
-            name: texto(v, "/name").unwrap_or_default(),
+            name: text(v, "/name").unwrap_or_default(),
             board_id: v.get("boardId").and_then(Value::as_i64),
-            state: texto(v, "/state"),
-            end: texto(v, "/endDate").or_else(|| texto(v, "/completeDate")).unwrap_or_default(),
+            state: text(v, "/state"),
+            end: text(v, "/endDate").or_else(|| text(v, "/completeDate")).unwrap_or_default(),
         })
     }
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Tarea {
+pub struct Issue {
     pub key: String,
     pub summary: String,
     pub project: Option<String>,
     pub project_name: Option<String>,
     pub comp: String,
     #[serde(rename = "type")]
-    pub tipo: Option<String>,
+    pub issue_type: Option<String>,
     pub subtask: bool,
     pub status: Option<String>,
     pub cat: Option<String>,
@@ -112,46 +111,46 @@ pub struct Tarea {
     pub sprint: Option<String>,
     pub parent: Option<String>,
     pub wl_total: i64,
-    pub worklogs: Vec<Registro>,
+    pub worklogs: Vec<Worklog>,
 }
 
-impl Tarea {
-    /// Desde un elemento de `issues` de `POST /rest/api/3/search/jql`.
-    pub fn desde_jira(v: &Value, yo: Option<&str>) -> Option<Tarea> {
+impl Issue {
+    /// From an element of `issues` in `POST /rest/api/3/search/jql`.
+    pub fn from_jira(v: &Value, me: Option<&str>) -> Option<Issue> {
         let key = v.get("key")?.as_str()?.to_string();
-        let vacio = Value::Null;
-        let f = v.get("fields").unwrap_or(&vacio);
-        let fecha = |p: &str| texto(f, p).map(|s| normalizar_fecha(&s));
+        let empty = Value::Null;
+        let f = v.get("fields").unwrap_or(&empty);
+        let date = |p: &str| text(f, p).map(|s| normalize_date(&s));
         let sprints: Vec<Sprint> = f
-            .get(CAMPO_SPRINTS)
+            .get(SPRINTS_FIELD)
             .and_then(Value::as_array)
-            .map(|a| a.iter().filter_map(Sprint::desde_jira).collect())
+            .map(|a| a.iter().filter_map(Sprint::from_jira).collect())
             .unwrap_or_default();
-        let worklogs: Vec<Registro> = f
+        let worklogs: Vec<Worklog> = f
             .pointer("/worklog/worklogs")
             .and_then(Value::as_array)
-            .map(|a| a.iter().filter_map(Registro::desde_jira).filter(|r| r.es_de(yo)).collect())
+            .map(|a| a.iter().filter_map(Worklog::from_jira).filter(|r| r.is_by(me)).collect())
             .unwrap_or_default();
-        Some(Tarea {
-            summary: texto(f, "/summary").unwrap_or_default(),
-            project: texto(f, "/project/key"),
-            project_name: texto(f, "/project/name"),
-            comp: texto(f, "/components/0/name").unwrap_or_else(|| "Sin componente".into()),
-            tipo: texto(f, "/issuetype/name"),
+        Some(Issue {
+            summary: text(f, "/summary").unwrap_or_default(),
+            project: text(f, "/project/key"),
+            project_name: text(f, "/project/name"),
+            comp: text(f, "/components/0/name").unwrap_or_else(|| "Sin componente".into()),
+            issue_type: text(f, "/issuetype/name"),
             subtask: f.pointer("/issuetype/subtask").and_then(Value::as_bool).unwrap_or(false),
-            status: texto(f, "/status/name"),
-            cat: texto(f, "/status/statusCategory/key"),
-            priority: texto(f, "/priority/name"),
-            scd: fecha("/statuscategorychangedate"),
-            created: fecha("/created"),
-            updated: fecha("/updated"),
-            resolved: fecha("/resolutiondate"),
-            due: fecha("/duedate"),
-            start: fecha(&format!("/{CAMPO_INICIO}")),
-            fin_dev: fecha(&format!("/{CAMPO_FIN_DESARROLLO}")),
+            status: text(f, "/status/name"),
+            cat: text(f, "/status/statusCategory/key"),
+            priority: text(f, "/priority/name"),
+            scd: date("/statuscategorychangedate"),
+            created: date("/created"),
+            updated: date("/updated"),
+            resolved: date("/resolutiondate"),
+            due: date("/duedate"),
+            start: date(&format!("/{START_FIELD}")),
+            fin_dev: date(&format!("/{DEV_END_FIELD}")),
             est: f.get("timeoriginalestimate").and_then(Value::as_i64).unwrap_or(0),
             spent: f.get("timespent").and_then(Value::as_i64).unwrap_or(0),
-            sp: f.get(CAMPO_PUNTOS).and_then(Value::as_f64),
+            sp: f.get(POINTS_FIELD).and_then(Value::as_f64),
             labels: f
                 .get("labels")
                 .and_then(Value::as_array)
@@ -159,7 +158,7 @@ impl Tarea {
                 .unwrap_or_default(),
             sprint: sprints.last().map(|s| s.name.clone()),
             sprints,
-            parent: texto(f, "/parent/key"),
+            parent: text(f, "/parent/key"),
             wl_total: f.pointer("/worklog/total").and_then(Value::as_i64).unwrap_or(0),
             worklogs,
             key,
@@ -167,12 +166,12 @@ impl Tarea {
     }
 }
 
-fn texto(v: &Value, puntero: &str) -> Option<String> {
-    v.pointer(puntero).and_then(Value::as_str).map(String::from)
+fn text(v: &Value, pointer: &str) -> Option<String> {
+    v.pointer(pointer).and_then(Value::as_str).map(String::from)
 }
 
-/// Fecha-hora de Jira → RFC 3339. Las fechas sin hora (`2026-11-10`) quedan igual.
-pub fn normalizar_fecha(s: &str) -> String {
+/// Jira date-time → RFC 3339. Dates without a time (`2026-11-10`) stay the same.
+pub fn normalize_date(s: &str) -> String {
     DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f%z")
         .or_else(|_| DateTime::parse_from_rfc3339(s))
         .map(|d| d.to_rfc3339_opts(SecondsFormat::Millis, false))
@@ -180,19 +179,19 @@ pub fn normalizar_fecha(s: &str) -> String {
 }
 
 #[cfg(test)]
-mod pruebas {
+mod tests {
     use super::*;
     use serde_json::json;
 
     #[test]
-    fn normaliza_fechas_de_jira() {
-        assert_eq!(normalizar_fecha("2026-11-10T08:30:00.000-0500"), "2026-11-10T08:30:00.000-05:00");
-        assert_eq!(normalizar_fecha("2026-11-10T08:30:00-05:00"), "2026-11-10T08:30:00.000-05:00");
-        assert_eq!(normalizar_fecha("2026-11-10"), "2026-11-10");
+    fn normalizes_jira_dates() {
+        assert_eq!(normalize_date("2026-11-10T08:30:00.000-0500"), "2026-11-10T08:30:00.000-05:00");
+        assert_eq!(normalize_date("2026-11-10T08:30:00-05:00"), "2026-11-10T08:30:00.000-05:00");
+        assert_eq!(normalize_date("2026-11-10"), "2026-11-10");
     }
 
     #[test]
-    fn convierte_tarea_y_filtra_registros_ajenos() {
+    fn converts_issue_and_filters_foreign_worklogs() {
         let v = json!({
             "key": "APP-1",
             "fields": {
@@ -211,7 +210,7 @@ mod pruebas {
                 ]}
             }
         });
-        let t = Tarea::desde_jira(&v, Some("yo")).unwrap();
+        let t = Issue::from_jira(&v, Some("yo")).unwrap();
         assert_eq!(t.key, "APP-1");
         assert_eq!(t.comp, "Sin componente");
         assert_eq!(t.cat.as_deref(), Some("indeterminate"));
@@ -223,16 +222,16 @@ mod pruebas {
         assert_eq!(t.worklogs.len(), 1);
         assert_eq!(t.worklogs[0].s, 3600);
 
-        // La interfaz espera los nombres del artifact.
+        // The UI expects the artifact's names.
         let js = serde_json::to_value(&t).unwrap();
-        for campo in ["finDev", "projectName", "wlTotal", "type"] {
-            assert!(js.get(campo).is_some(), "falta {campo}");
+        for field in ["finDev", "projectName", "wlTotal", "type"] {
+            assert!(js.get(field).is_some(), "falta {field}");
         }
         assert_eq!(js["sprints"][0]["boardId"], 455);
     }
 
     #[test]
-    fn sin_key_no_hay_tarea() {
-        assert!(Tarea::desde_jira(&json!({"fields": {}}), None).is_none());
+    fn no_key_means_no_issue() {
+        assert!(Issue::from_jira(&json!({"fields": {}}), None).is_none());
     }
 }

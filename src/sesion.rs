@@ -16,16 +16,16 @@ use crate::auth::{validar_correo, Credenciales, Sitio};
 use crate::config::{self, Config};
 use crate::error::{ErrorApp, Resultado};
 use crate::jira::http::JiraHttp;
-use crate::jira::modelo::Usuario;
-use crate::jira::simulado::{hoy_ecuador, JiraSimulado};
-use crate::jira::Fuente;
+use crate::jira::model::User;
+use crate::jira::simulated::{today_ecuador, SimulatedJira};
+use crate::jira::Source;
 
 /// Token que, en modo simulado, hace que Jira «rechace» las credenciales.
 const TOKEN_RECHAZADO: &str = "rechazar";
 
 pub struct Sesion {
-    pub fuente: Fuente,
-    pub usuario: Usuario,
+    pub fuente: Source,
+    pub usuario: User,
     pub sitio: Sitio,
     pub correo: String,
 }
@@ -43,7 +43,7 @@ pub struct Estado {
 pub struct InfoSesion {
     pub conectado: bool,
     pub simulado: bool,
-    pub usuario: Option<Usuario>,
+    pub usuario: Option<User>,
     pub sitio: Option<String>,
     pub correo: Option<String>,
     pub aviso: Option<String>,
@@ -73,11 +73,11 @@ impl Estado {
         *self.sesion.write().await = None;
     }
 
-    fn crear_fuente(&self, cred: Credenciales, correo: &str, token: &str) -> Resultado<Fuente> {
+    fn crear_fuente(&self, cred: Credenciales, correo: &str, token: &str) -> Resultado<Source> {
         if self.simulado {
-            Ok(Fuente::Simulado(JiraSimulado::nuevo(correo, token != TOKEN_RECHAZADO, hoy_ecuador())))
+            Ok(Source::Simulated(SimulatedJira::new(correo, token != TOKEN_RECHAZADO, today_ecuador())))
         } else {
-            Ok(Fuente::Http(JiraHttp::nuevo(cred)?))
+            Ok(Source::Http(JiraHttp::new(cred)?))
         }
     }
 
@@ -104,7 +104,7 @@ pub async fn iniciar(estado: &Estado, sitio: &str, correo: &str, token: &str) ->
     let secreto = SecretString::from(token.to_string());
     let cred = Credenciales::token_clasico(sitio.clone(), &correo, secreto.clone())?;
     let fuente = estado.crear_fuente(cred, &correo, token)?;
-    let usuario = fuente.yo().await?;
+    let usuario = fuente.myself().await?;
 
     // La conexión ya funcionó: si guardar falla, la sesión sigue y se avisa.
     let mut aviso = None;
@@ -143,7 +143,7 @@ pub async fn restaurar(estado: &Estado) -> InfoSesion {
     let intento = async {
         let cred = Credenciales::token_clasico(sitio.clone(), &correo, token)?;
         let fuente = estado.crear_fuente(cred, &correo, &texto)?;
-        let usuario = fuente.yo().await?;
+        let usuario = fuente.myself().await?;
         Ok::<_, ErrorApp>(Sesion { fuente, usuario, sitio: sitio.clone(), correo: correo.clone() })
     };
     match intento.await {

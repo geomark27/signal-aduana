@@ -86,17 +86,17 @@ fn horas_sin_unidad(s: i64) -> String {
 #[cfg(test)]
 mod pruebas {
     use super::*;
-    use crate::jira::simulado::JiraSimulado;
-    use crate::jira::{self, Fuente};
+    use crate::jira::simulated::SimulatedJira;
+    use crate::jira::{self, Source};
 
     fn fecha(s: &str) -> NaiveDate {
         NaiveDate::parse_from_str(s, "%Y-%m-%d").unwrap()
     }
 
     async fn tareas(hoy: NaiveDate) -> Vec<Map<String, Value>> {
-        let f = Fuente::Simulado(JiraSimulado::nuevo("persona@ejemplo.com", true, hoy));
-        let yo = f.yo().await.unwrap().account_id;
-        jira::cargar_para_resumen(&f, Some(&yo), hoy).await.unwrap()
+        let f = Source::Simulated(SimulatedJira::new("persona@ejemplo.com", true, hoy));
+        let yo = f.myself().await.unwrap().account_id;
+        jira::load_for_summary(&f, Some(&yo), hoy).await.unwrap()
     }
 
     async fn contra_vista(hoy: &str, extra: &ExtraHolidays) {
