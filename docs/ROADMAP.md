@@ -1,9 +1,9 @@
 # Roadmap — Signal Aduana de escritorio
 
 **Estado:** aprobado por el autor el 2026-11-17. La fase 5 se cerró ese mismo día (ver «Estado al
-cierre» en `docs/PLAN-FASE-5.md`). La fase 6 todavía no tiene `PLAN-FASE-6.md`: cada plan se escribe
-al empezar su fase, con tareas, archivos y ramas, y el autor lo aprueba antes de lanzar la primera
-ola.
+cierre» en `docs/PLAN-FASE-5.md`). La fase 6 tiene su plan en `docs/PLAN-FASE-6.md` (2026-11-18),
+aprobado por el autor; Tecnología ya autorizó los API tokens personales. Cada
+plan se escribe al empezar su fase y el autor lo aprueba antes de lanzar la primera ola.
 
 ## Dónde estamos
 
@@ -14,6 +14,7 @@ ola.
 | 3 | Cálculos en Rust (hoy `src/domain/`) con paridad contra el JS (31 casos) | Hecha |
 | 4 | Bandeja, avisos, una instancia, preferencias, guía de Windows (tareas 4.1 a 4.10) | Hecha en `develop` |
 | 5 | Validar en Windows, cerrar deuda técnica, código en inglés e instalador NSIS (`docs/PLAN-FASE-5.md`) | Hecha el 2026-11-17, con pendientes de Windows que pasan a la fase 6 |
+| 6 | Validar con el Jira real (`docs/PLAN-FASE-6.md`) | En curso desde el 2026-11-18 |
 
 La app compila, se instala y funciona en Windows en modo simulado, según el autor; falta el registro
 punto por punto y confirmar el instalador nuevo. **Nada se ha probado contra el Jira real.** De ahí

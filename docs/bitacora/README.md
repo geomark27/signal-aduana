@@ -51,6 +51,12 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | [024](./fase-5/024-pruebas-avisos.md) | 5.4 Resumen semanal en el primer día laborable y pruebas | `tarea/5.4-pruebas-avisos` | 2026-11-17 | Entrada retroactiva (escrita en la 5.8; el PR #16 se fusionó sin ella): `primer_laborable` en el resumen y `decidir` lo usa en vez del lunes; 11 pruebas (una de `spent` sin efecto real) |
 | [025](./fase-5/025-cierre-fase-5.md) | 5.8 Cierre de la fase 5 | `tarea/5.8-cierre-fase-5` | 2026-11-17 | «Estado al cierre» en el plan (13 tareas, PR #15 a #26, criterios con su estado real); roadmap: fase 5 hecha y pendientes de Windows heredados por la fase 6 |
 
+### Fase 6 — Validar con el Jira real
+
+| # | Tarea | Rama | Fecha | Resumen |
+|---|---|---|---|---|
+| [026](./fase-6/026-plan-fase-6.md) | 6.0 Plan de la fase 6 | `tarea/6.0-plan-fase-6` | 2026-11-18 | `PLAN-FASE-6.md`: reglas de datos reales (el autor prueba y reporta formas anonimizadas), 6.H heredado de Windows, 6.1 a 6.5 con lo que mirar en el cliente real, 6.7 diagnóstico anónimo (aprobada); decisiones: respaldo por palabras para PR, ids de campos fijos; Tecnología ya autorizó los tokens; `delegar.json` al plan nuevo |
+
 ## Formato de cada entrada
 
 Archivo `fase-N/NNN-<tema>.md`: `N` es la fase, `NNN` el número correlativo global de tres dígitos
