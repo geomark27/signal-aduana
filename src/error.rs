@@ -51,6 +51,9 @@ pub enum AppError {
 
     #[error("No se pudo guardar la caché local: {0}")]
     Cache(String),
+
+    #[error("No se pudo actualizar: {0}")]
+    Update(String),
 }
 
 impl AppError {
@@ -71,6 +74,7 @@ impl AppError {
             AppError::SecretStore(_) => "secret_store",
             AppError::Config(_) => "config",
             AppError::Cache(_) => "cache",
+            AppError::Update(_) => "update",
         }
     }
 }

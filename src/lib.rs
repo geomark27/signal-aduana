@@ -14,6 +14,7 @@ pub mod preferences;
 pub mod secret_store;
 pub mod session;
 pub mod summary;
+pub mod updater;
 pub mod watcher;
 
 use tauri::Manager;
@@ -40,6 +41,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![desktop::HIDDEN_ARG]),
         ))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
             let config_dir = app.path().app_config_dir()?;
             let data_dir = app.path().app_local_data_dir()?;
@@ -57,6 +59,9 @@ pub fn run() {
             let prefs = preferences::load(&state.config_dir, state.simulated);
             autostart::apply(app.handle(), &state, prefs);
             watcher::start(app.handle());
+            if !simulated {
+                updater::start(app.handle());
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -74,6 +79,8 @@ pub fn run() {
             commands::read_preferences,
             commands::save_preferences,
             commands::build_diagnostics,
+            updater::check_update,
+            updater::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error starting Signal Aduana");

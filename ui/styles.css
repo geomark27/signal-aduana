@@ -264,6 +264,9 @@ dialog::backdrop{background:rgba(14,22,28,.55)}
 .check:has(input:disabled),.field:has(input:disabled){opacity:.5;cursor:default}
 .field input[type="time"]{max-width:150px;font-family:var(--mono)}
 .prefs fieldset>.btn{justify-self:start}
+.updbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent)}
+.updtext{flex:1 1 260px;min-width:0}
+#updNotes{font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap;max-height:30vh;overflow:auto;margin:6px 0 0}
 #diagText{font:11.5px/1.45 var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical;max-height:40vh;overflow:auto}
 #diagText:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 .pactions{display:flex;justify-content:flex-end;gap:8px}

@@ -1,6 +1,6 @@
 [package]
 name = "signal-aduana"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Signal Aduana: horas, tareas y estados de Jira por semana (escritorio Windows)"
 authors = ["Torres & Torres - Tecnología"]
@@ -24,6 +24,8 @@ tauri-plugin-opener = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-autostart = "2"
+# Actualización automática desde GitHub Releases (firma verificada)
+tauri-plugin-updater = "2"
 
 # JSON y configuración
 serde = { version = "1", features = ["derive"] }
