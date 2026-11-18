@@ -61,3 +61,7 @@ Lo que comprueban `make check`, la llave y el release se completa al publicar (v
   - «Actualizar ahora» descarga, verifica la firma, instala y reinicia;
   - se conservan la configuración, las preferencias, la caché y el token.
 - **Respaldo de la llave privada:** lo hace el autor, en un gestor de contraseñas.
+
+**Nota (2026-11-18, entrada 035):** esta tarea se fusionó (PR #40) sin haber corrido
+`make updater-key`. `tauri.conf.json` siguió con la `pubkey` en «PENDIENTE», así que lo que la
+sección 3 dice de la llave no ocurrió aquí. La llave se creó en la 6.15 (entrada 035).
