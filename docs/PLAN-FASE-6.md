@@ -62,11 +62,13 @@ Las de `CLAUDE.md`, que mandan sobre este documento. En esta fase pesan en espec
 | 6.4 | PR y documentos de despliegue | Autor | sin rama | A |
 | 6.5 | Volumen, tiempos y límites | Autor | sin rama | A |
 | 6.7 | Diagnóstico anónimo: la app arma un resumen sin datos reales para reportar | Sonnet 5.5 medio | `tarea/6.7-diagnostico-anonimo` | B |
-| 6.6, 6.8+ | Una corrección por hallazgo, con su prueba | Según el caso | por hallazgo | C |
-| 6.9 | Cierre de la fase | Orquestador | `tarea/6.9-cierre-fase-6` | D |
+| 6.8 | Flujo de release: `make bump`, `make release` y GitHub Actions (adelantado de la fase 7, sin firma ni actualizador) | Sonnet 5.5 medio + orquestador | `tarea/6.8-release` | B |
+| 6.6, 6.9+ | Una corrección por hallazgo, con su prueba | Según el caso | por hallazgo | C |
+| (libre) | Cierre de la fase | Orquestador | `tarea/N.M-cierre-fase-6` | D |
 
-Los números siguen al roadmap (6.1 a 6.6). Las correcciones toman el 6.6 y después del 6.8 en
-adelante; el cierre toma el primer número libre cuando llegue.
+Los números siguen al roadmap (6.1 a 6.6). Las correcciones toman el 6.6 y después del 6.9 en
+adelante (el 6.8 se usó para el flujo de release, pedido por el autor el 2026-11-18); el cierre
+toma el primer número libre cuando llegue.
 
 ## Orden
 
@@ -186,7 +188,7 @@ de una respuesta sin datos reales.
 clave, título, correo ni URL del origen.
 
 
-## Ola C — Correcciones (6.6, 6.8+)
+## Ola C — Correcciones (6.6, 6.9+)
 
 Una tarea por hallazgo. El orquestador escribe su plan breve: objetivo, archivos, la prueba que
 reproduce la forma anonimizada y el criterio. Lo presenta al autor antes de lanzarlo. Los hallazgos
