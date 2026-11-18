@@ -4,6 +4,7 @@ pub mod cache;
 pub mod commands;
 pub mod config;
 pub mod desktop;
+pub mod diagnostics;
 pub mod domain;
 pub mod error;
 pub mod jira;
@@ -72,6 +73,7 @@ pub fn run() {
             commands::compute_view,
             commands::read_preferences,
             commands::save_preferences,
+            commands::build_diagnostics,
         ])
         .run(tauri::generate_context!())
         .expect("error starting Signal Aduana");

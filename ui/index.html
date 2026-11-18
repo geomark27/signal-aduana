@@ -119,6 +119,14 @@
       <label class="check"><input type="checkbox" id="prefAutostart"><span>Iniciar con Windows<small>Arranca oculta en la bandeja al iniciar sesión en el equipo.</small></span></label>
       <label class="check"><input type="checkbox" id="prefTray"><span>Minimizar a la bandeja al cerrar<small>Cerrar la ventana la esconde; para salir usa «Salir» en el menú de la bandeja.</small></span></label>
     </fieldset>
+    <fieldset>
+      <legend class="label">Diagnóstico</legend>
+      <p class="mini">Arma un resumen sin datos reales (sin claves, títulos, nombres, correos ni URLs) para reportar un problema. Revísalo antes de compartirlo.</p>
+      <button class="btn" id="diagBtn" type="button">Generar diagnóstico</button>
+      <textarea id="diagText" readonly rows="10" spellcheck="false" aria-label="Diagnóstico anónimo" hidden></textarea>
+      <button class="btn" id="diagCopy" type="button" hidden>Copiar</button>
+      <span id="diagStatus" class="mini" aria-live="polite"></span>
+    </fieldset>
     <div class="formerr" id="prefsError" role="alert" hidden></div>
     <div class="pactions">
       <button class="btn" id="prefsCancel" type="button">Cancelar</button>

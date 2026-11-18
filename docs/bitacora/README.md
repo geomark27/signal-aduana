@@ -56,6 +56,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 | # | Tarea | Rama | Fecha | Resumen |
 |---|---|---|---|---|
 | [026](./fase-6/026-plan-fase-6.md) | 6.0 Plan de la fase 6 | `tarea/6.0-plan-fase-6` | 2026-11-18 | `PLAN-FASE-6.md`: reglas de datos reales (el autor prueba y reporta formas anonimizadas), 6.H heredado de Windows, 6.1 a 6.5 con lo que mirar en el cliente real, 6.7 diagnóstico anónimo (aprobada); decisiones: respaldo por palabras para PR, ids de campos fijos; Tecnología ya autorizó los tokens; `delegar.json` al plan nuevo |
+| [027](./fase-6/027-diagnostico-anonimo.md) | 6.7 Diagnóstico anónimo |  | 2026-11-18 | Comando : recorre la carga con la sesión activa y devuelve JSON sin valores de Jira (pasos con tiempos y errores, conteos, , forma de cada campo de ); mensajes de error anonimizados (, , , …); sección «Diagnóstico» en Preferencias con «Copiar». Sin probar en la app ni con Jira real |
 
 ## Formato de cada entrada
 

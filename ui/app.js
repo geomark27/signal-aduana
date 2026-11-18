@@ -1700,6 +1700,9 @@ function openPrefs() {
     $("prefsSimNote").hidden = !simulated;
     $("prefsError").hidden = true;
     $("prefsSave").disabled = false;
+    $("diagText").hidden = $("diagCopy").hidden = true;
+    $("diagText").value = $("diagStatus").textContent = "";
+    $("diagBtn").disabled = false;
     if (!$("prefsDlg").open) $("prefsDlg").showModal();
 }
 function showPrefsError(msg) {
@@ -1709,6 +1712,40 @@ function showPrefsError(msg) {
 $("prefsBtn").onclick = openPrefs;
 $("prefsCancel").onclick = () => $("prefsDlg").close();
 $("prefNotifications").onchange = notificationPrefInputs;
+$("diagBtn").onclick = async () => {
+    if (!sessionActive) {
+        $("diagStatus").textContent =
+            "Conéctate a Jira para generar el diagnóstico.";
+        return;
+    }
+    $("diagBtn").disabled = true;
+    $("diagStatus").textContent =
+        "Generando… puede tardar como una actualización desde Jira.";
+    try {
+        $("diagText").value = await invoke("build_diagnostics");
+        $("diagText").hidden = $("diagCopy").hidden = false;
+        $("diagStatus").textContent = "Listo. Revísalo y cópialo al reporte.";
+    } catch (e) {
+        if (isAuthErr(e)) {
+            $("prefsDlg").close();
+            handleAuth(e);
+        } else
+            $("diagStatus").textContent =
+                e?.message || "No se pudo generar el diagnóstico.";
+    } finally {
+        $("diagBtn").disabled = false;
+    }
+};
+$("diagCopy").onclick = async () => {
+    try {
+        await navigator.clipboard.writeText($("diagText").value);
+        $("diagStatus").textContent = "Copiado. Pégalo en el reporte.";
+    } catch (e) {
+        $("diagText").select();
+        $("diagStatus").textContent =
+            "No se pudo copiar automáticamente: el texto quedó seleccionado, cópialo con Ctrl+C.";
+    }
+};
 $("prefsForm").onsubmit = async (ev) => {
     ev.preventDefault();
     if (prefsBusy) return;

@@ -243,6 +243,9 @@ dialog::backdrop{background:rgba(14,22,28,.55)}
 .check small{color:var(--muted);font-size:12px}
 .check:has(input:disabled),.field:has(input:disabled){opacity:.5;cursor:default}
 .field input[type="time"]{max-width:150px;font-family:var(--mono)}
+.prefs fieldset>.btn{justify-self:start}
+#diagText{font:11.5px/1.45 var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical;max-height:40vh;overflow:auto}
+#diagText:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 .pactions{display:flex;justify-content:flex-end;gap:8px}
 @media (max-width:520px){.prefs{padding:16px}}
 .simtag{justify-self:start;font-size:11px;font-weight:600;letter-spacing:.04em;padding:2px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
