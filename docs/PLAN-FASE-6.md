@@ -66,6 +66,9 @@ Las de `CLAUDE.md`, que mandan sobre este documento. En esta fase pesan en espec
 | 6.9 | Versión 0.1.0: `make bump ver=0.1.0`, `make promote` y el primer `make release` | Autor y orquestador | `tarea/6.9-version-0-1-0` | B |
 | 6.10 | Componente Lista: búsqueda, filtros, filas por página y paginado únicos para todas las listas | Sonnet 5.5 medio | `tarea/6.10-componente-lista` | E |
 | 6.11 | Pestañas (propuesta A): Resumen · Tareas · Señales · Despliegues | Sonnet 5.5 medio | `tarea/6.11-pestanas` | E |
+| 6.12 | Versión 0.2.0 con el rediseño (`make bump bump=minor`, `promote`, `release`) | Autor | `tarea/6.12-version-0-2-0` | E |
+| 6.13 | Actualizador automático (adelantado de la 7.3): plugin de Tauri, firma, `latest.json` y aviso en la app | 3 × Sonnet 5.5 medio | `tarea/6.13-actualizador` | E |
+| 6.14 | Versión 0.3.0, la primera con actualizador (`make updater-key` y `make bump bump=minor`) | Autor y orquestador | `tarea/6.14-version-0-3-0` | E |
 | 6.6 y libres | Una corrección por hallazgo, con su prueba | Según el caso | por hallazgo | C |
 | (libre) | Cierre de la fase | Orquestador | `tarea/N.M-cierre-fase-6` | D |
 
@@ -207,6 +210,13 @@ arriba, y un único componente de lista para todas las secciones.
 - **6.10 Componente Lista.** Búsqueda, filtros con conteo, filas por página recordadas y un solo
   paginado para la tabla de tareas y Señales. No cambia el diseño ni ninguna regla.
 - **6.11 Pestañas.** El diseño de la propuesta A sobre el componente de la 6.10.
+- **6.12 Versión 0.2.0.** La publicó el autor el 2026-11-18 con el rediseño, todavía sin
+  actualizador.
+- **6.13 Actualizador.** El autor eligió adelantar la 7.3 el 2026-11-18. Va dividido en tres
+  ejecutores en paralelo, con el contrato fijado: Rust, workflow y scripts, e interfaz.
+- **6.14 Versión 0.3.0.** El autor crea la llave con `make updater-key` dentro de la tarea. Las
+  versiones 0.1.0 y 0.2.0 instaladas se actualizan a mano una última vez; desde la 0.3.0 se
+  actualizan solas.
 
 Van en serie porque las dos tocan `ui/app.js`, `ui/index.html` y `ui/styles.css`. El autor las
 revisa en la app (`make run` en modo simulado) antes de fusionar, y salen en la versión 0.2.0. Las

@@ -129,6 +129,9 @@ Ya existen `make bump`, `make release` y un workflow de GitHub Actions que compi
 sin firmar y lo publica en los releases del repositorio, que es público por decisión del autor. Siguen
 pendientes la firma (7.1), el actualizador (7.3) y la decisión del canal con Tecnología.
 
+**Adelantado también (tarea 6.13, 2026-11-18):** el actualizador de la 7.3, con el plugin de Tauri
+y `latest.json` en los releases, como Nudge. Sigue pendiente la firma de código (7.1).
+
 ---
 
 ## Fase 8 — Evolución (opcional)

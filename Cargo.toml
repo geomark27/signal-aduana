@@ -24,6 +24,8 @@ tauri-plugin-opener = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-autostart = "2"
+# Actualización automática desde GitHub Releases (firma verificada)
+tauri-plugin-updater = "2"
 
 # JSON y configuración
 serde = { version = "1", features = ["derive"] }

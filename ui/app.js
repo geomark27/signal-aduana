@@ -1932,6 +1932,7 @@ function openPrefs() {
     $("diagText").hidden = $("diagCopy").hidden = true;
     $("diagText").value = $("diagStatus").textContent = "";
     $("diagBtn").disabled = false;
+    $("updStatus").textContent = "";
     if (!$("prefsDlg").open) $("prefsDlg").showModal();
 }
 function showPrefsError(msg) {
@@ -1973,6 +1974,62 @@ $("diagCopy").onclick = async () => {
         $("diagText").select();
         $("diagStatus").textContent =
             "No se pudo copiar automáticamente: el texto quedó seleccionado, cópialo con Ctrl+C.";
+    }
+};
+/* ---------- updater ---------- */
+const UPDATE_INSTALL_LABEL = "Actualizar ahora";
+let updInstalling = false;
+function showUpdate(u) {
+    if (!u || updInstalling) return;
+    $("updTitle").textContent = `Signal Aduana ${u.version} está disponible.`;
+    $("updNotes").textContent = u.notes || "";
+    $("updNotesBox").hidden = !u.notes;
+    $("updInstall").disabled = $("updLater").disabled = false;
+    $("updInstall").textContent = UPDATE_INSTALL_LABEL;
+    $("updBar").hidden = false;
+}
+function showUpdateProgress(payload) {
+    const [done, total] = Array.isArray(payload) ? payload : [0, null];
+    $("updInstall").textContent = total
+        ? `Descargando… ${Math.min(100, Math.floor((done / total) * 100))} %`
+        : `Descargando… ${(done / 1048576).toFixed(1)} MB`;
+}
+$("updLater").onclick = () => {
+    $("updBar").hidden = true;
+};
+$("updInstall").onclick = async () => {
+    updInstalling = true;
+    $("updInstall").disabled = $("updLater").disabled = true;
+    $("updInstall").textContent = "Descargando…";
+    try {
+        await invoke("install_update");
+    } catch (e) {
+        updInstalling = false;
+        $("updInstall").disabled = $("updLater").disabled = false;
+        $("updInstall").textContent = UPDATE_INSTALL_LABEL;
+        $("updTitle").textContent = errText(e);
+    }
+};
+$("updCheck").onclick = async () => {
+    $("updCheck").disabled = true;
+    $("updStatus").textContent = "Buscando…";
+    try {
+        const r = await invoke("check_update");
+        $("updVersion").textContent = `Versión instalada: ${r.current}`;
+        if (r.simulated)
+            $("updStatus").textContent =
+                "En modo simulado no se buscan actualizaciones.";
+        else if (r.update) {
+            showUpdate(r.update);
+            $("updStatus").textContent =
+                `Hay una versión nueva: ${r.update.version}. Usa «Actualizar ahora» arriba.`;
+        } else
+            $("updStatus").textContent =
+                `Tienes la última versión (${r.current}).`;
+    } catch (e) {
+        $("updStatus").textContent = errText(e);
+    } finally {
+        $("updCheck").disabled = false;
     }
 };
 $("prefsForm").onsubmit = async (ev) => {
@@ -2033,6 +2090,8 @@ function listenEvents() {
     on("signal://refresh", () => {
         if (sessionActive && !(busy && busyGen === gen)) refresh(true);
     });
+    on("signal://update-available", (e) => showUpdate(e.payload));
+    on("signal://update-progress", (e) => showUpdateProgress(e.payload));
     on("signal://preferences", async () => {
         const previous = prefs.startWithWindows;
         try {
