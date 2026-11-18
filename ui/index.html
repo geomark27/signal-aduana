@@ -48,6 +48,7 @@
 
   <div class="inner" id="main" hidden>
 
+  <div class="stickybar">
   <section class="controls" aria-label="Filtros">
     <div class="weeknav">
       <button class="btn arrow" id="prevW" type="button" aria-label="Semana anterior">&#8249;</button>
@@ -57,46 +58,68 @@
     </div>
     <div class="chips" id="boardChips" role="group" aria-label="Tablero"></div>
   </section>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones">
+    <button type="button" role="tab" id="tab-resumen" data-tab="resumen" aria-controls="pane-resumen" aria-selected="true" tabindex="0">Resumen</button>
+    <button type="button" role="tab" id="tab-tareas" data-tab="tareas" aria-controls="pane-tareas" aria-selected="false" tabindex="-1">Tareas <span class="tcount" id="tcTareas" hidden></span></button>
+    <button type="button" role="tab" id="tab-senales" data-tab="senales" aria-controls="pane-senales" aria-selected="false" tabindex="-1">Señales <span class="tcount" id="tcSenales" hidden></span></button>
+    <button type="button" role="tab" id="tab-despliegues" data-tab="despliegues" aria-controls="pane-despliegues" aria-selected="false" tabindex="-1">Despliegues <span class="tcount" id="tcDocs" hidden></span></button>
+  </nav>
+  </div>
 
-  <section class="halert" id="hoursAlert" aria-live="polite"></section>
-  <section class="kpis" id="kpis"></section>
+  <section class="pane" role="tabpanel" id="pane-resumen" aria-labelledby="tab-resumen" tabindex="0">
+    <section class="halert" id="hoursAlert" aria-live="polite"></section>
+    <section class="kpis" id="kpis"></section>
 
-  <section class="grid2">
-    <div class="panel">
-      <div class="phead"><h2>Horas por semana</h2><span class="hint">Últimas 12 semanas · clic en una barra para verla</span></div>
-      <div id="weeklyChart"></div>
-      <div class="legend" id="legend1"></div>
-    </div>
-    <div class="panel">
-      <div class="phead"><h2>Horas por día</h2><span class="hint">Línea punteada = jornada de 8 h</span></div>
-      <div id="dailyChart"></div>
-    </div>
+    <section class="grid2">
+      <div class="panel">
+        <div class="phead"><h2>Horas por semana</h2><span class="hint">Últimas 12 semanas · clic en una barra para verla</span></div>
+        <div id="weeklyChart"></div>
+        <div class="legend" id="legend1"></div>
+      </div>
+      <div class="panel">
+        <div class="phead"><h2>Horas por día</h2><span class="hint">Línea punteada = jornada de 8 h</span></div>
+        <div id="dailyChart"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="pBoards">
+      <div class="phead"><h2>Horas por tablero</h2><span class="hint" id="boardsSum">Semana seleccionada · clic en «abiertas» para ver la lista</span></div>
+      <div class="boards" id="boards"></div>
+    </section>
   </section>
 
-  <section class="grid2 top">
-    <div class="panel" id="pBoards">
-      <div class="phead"><button type="button" class="ptoggle" data-panel="boards" aria-expanded="true" aria-controls="boardsBody"><span class="chev" aria-hidden="true">▼</span><h2>Horas por tablero</h2></button><span class="hint" id="boardsSum">Semana seleccionada · clic en «abiertas» para ver la lista</span></div>
-      <div id="boardsBody"><div class="boards" id="boards"></div></div>
-    </div>
-    <div class="panel" id="pSignals">
-      <div class="phead"><button type="button" class="ptoggle" data-panel="signals" aria-expanded="true" aria-controls="signalsBody"><span class="chev" aria-hidden="true">▼</span><h2>Señales</h2></button><span class="hint" id="signalsSum">Reglas simples sobre la semana</span></div>
-      <div id="signalsBody"><div class="ltools" id="sigTools"></div><ul class="signals" id="signals"></ul><div class="pager" id="sigPager" hidden></div></div>
-    </div>
+  <section class="pane" role="tabpanel" id="pane-tareas" aria-labelledby="tab-tareas" tabindex="0" hidden>
+    <div class="seg" id="viewSeg" role="group" aria-label="Vista de tareas"></div>
+    <section class="panel">
+      <div class="phead" id="tableHead"><h2 id="tTitle">Tareas de la semana</h2><span class="hint" id="tHint"></span></div>
+      <div class="ltools" id="tTools"></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th data-sort="act" title="Último día con horas tuyas en la semana; si no hay, fecha de fin, de creación o de última actualización">Fecha</th><th data-sort="key">Clave</th><th data-sort="summary">Resumen</th><th data-sort="board">Tablero</th><th data-sort="status">Estado</th>
+            <th data-sort="wk" class="r">Horas semana</th><th data-sort="spent" class="r">Real / Est.</th><th data-sort="start">Inicio</th><th data-sort="due">Vence</th><th data-sort="resDay">Fin desarrollo</th><th>Despliegue</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager" id="tPager" hidden></div>
+    </section>
   </section>
 
-  <section class="panel">
-    <div class="phead" id="tableHead"><h2 id="tTitle">Tareas de la semana</h2><span class="hint"><span id="tHint"></span> <button type="button" class="linkbtn" id="tReset" hidden>Ver todas las de la semana</button></span></div>
-    <div class="ltools" id="tTools"></div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr>
-          <th data-sort="act" title="Último día con horas tuyas en la semana; si no hay, fecha de fin, de creación o de última actualización">Fecha</th><th data-sort="key">Clave</th><th data-sort="summary">Resumen</th><th data-sort="board">Tablero</th><th data-sort="status">Estado</th>
-          <th data-sort="wk" class="r">Horas semana</th><th data-sort="spent" class="r">Real / Est.</th><th data-sort="start">Inicio</th><th data-sort="due">Vence</th><th data-sort="resDay">Fin desarrollo</th><th>Despliegue</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div class="pager" id="tPager" hidden></div>
+  <section class="pane" role="tabpanel" id="pane-senales" aria-labelledby="tab-senales" tabindex="0" hidden>
+    <section class="panel" id="pSignals">
+      <div class="phead"><h2>Señales</h2><span class="hint" id="signalsSum">Reglas simples sobre la semana</span></div>
+      <div class="ltools" id="sigTools"></div><ul class="signals" id="signals"></ul><div class="pager" id="sigPager" hidden></div>
+    </section>
+  </section>
+
+  <section class="pane" role="tabpanel" id="pane-despliegues" aria-labelledby="tab-despliegues" tabindex="0" hidden>
+    <section class="panel">
+      <div class="phead"><h2 id="dTitle">Documentos de despliegue de la semana</h2><span class="hint" id="dHint"></span></div>
+      <div class="ltools" id="dTools"></div>
+      <div class="tablewrap"><table><thead><tr><th>Clave</th><th>Resumen</th><th>Tablero</th><th>Estado</th><th>Fin desarrollo</th><th>Despliegue</th></tr></thead><tbody id="dbody"></tbody></table></div>
+      <div class="pager" id="dPager" hidden></div>
+    </section>
   </section>
 
   <footer id="trace"></footer>
