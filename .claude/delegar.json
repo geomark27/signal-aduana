@@ -1,6 +1,6 @@
 {
   "rama_base": "develop",
-  "instrucciones": ["CLAUDE.md", "docs/PLAN-FASE-5.md", "docs/bitacora/README.md"],
+  "instrucciones": ["CLAUDE.md", "docs/PLAN-FASE-6.md", "docs/bitacora/README.md"],
   "instalar": "",
   "verificar_agente": [
     "export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo test",
@@ -11,5 +11,5 @@
   "build": "export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo build",
   "fusionar": "git add -A && git commit -m \"Tarea: <id> <tema>\" && git push -u origin HEAD && gh pr create --base develop --fill",
   "comandos_denegados": ["cargo install*", "cargo publish*", "cargo tauri*"],
-  "archivos_orquestador": ["CLAUDE.md", ".claude/", "docs/bitacora/", "docs/PLAN-FASE-5.md", "docs/ROADMAP.md"]
+  "archivos_orquestador": ["CLAUDE.md", ".claude/", "docs/bitacora/", "docs/PLAN-FASE-6.md", "docs/ROADMAP.md"]
 }
