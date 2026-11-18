@@ -11,6 +11,8 @@ usa esa sección como notas del release en GitHub (ver «Publicar una versión»
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-18
+
 ### Añadido
 
 - Actualizaciones automáticas: la app busca versiones nuevas al iniciar y cada 6 horas, avisa con una barra arriba y una notificación de Windows, y «Actualizar ahora» descarga, verifica la firma e instala la nueva versión. En Preferencias se ve la versión instalada y se puede buscar a mano. Quien tenga la 0.1.0 o la 0.2.0 instala esta versión a mano una última vez; desde aquí se actualiza sola.
@@ -50,6 +52,7 @@ usa esa sección como notas del release en GitHub (ver «Publicar una versión»
 - La comparación con el Jira real (fase 6) sigue en curso.
 - El instalador no tiene firma de código: Windows SmartScreen muestra un aviso al abrirlo.
 
-[Unreleased]: https://github.com/geomark27/signal-aduana/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/geomark27/signal-aduana/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/geomark27/signal-aduana/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/geomark27/signal-aduana/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/geomark27/signal-aduana/releases/tag/v0.1.0
