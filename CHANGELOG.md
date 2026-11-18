@@ -11,6 +11,10 @@ usa esa sección como notas del release en GitHub (ver «Publicar una versión»
 
 ## [Unreleased]
 
+### Cambiado
+
+- Las listas de tareas y de señales tienen búsqueda por clave o texto, filtros con su conteo (por estado, por documento de despliegue o por severidad) y un selector de filas por página que se recuerda. Todas usan el mismo paginado.
+
 ## [0.1.0] - 2026-11-18
 
 ### Añadido
