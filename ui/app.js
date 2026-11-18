@@ -152,29 +152,6 @@ let docs = {},
     docState = "idle",
     docError = "",
     prMode = "keywords"; // prMode: "pr" when the development panel was read // docs[key] = url
-const SIG_PAGE = 4;
-let sigPage = 0,
-    sigCount = 0;
-const T_PAGE = 20;
-let tPage = 0,
-    tSig = "";
-let collapsed = {};
-try {
-    collapsed = JSON.parse(localStorage.getItem("spe.collapsed") || "{}") || {};
-} catch (e) {}
-function applyCollapse() {
-    for (const [k, pid] of [
-        ["boards", "pBoards"],
-        ["signals", "pSignals"],
-    ]) {
-        const c = !!collapsed[k];
-        $(k + "Body").hidden = c;
-        $(pid).classList.toggle("collapsed", c);
-        document
-            .querySelector(`[data-panel="${k}"]`)
-            .setAttribute("aria-expanded", String(!c));
-    }
-}
 let view = "week",
     board = "Todos",
     weekKey = null,
@@ -183,6 +160,14 @@ let view = "week",
 try {
     const s = localStorage.getItem("spe.board");
     if (s) board = s;
+} catch (e) {}
+const TABS = ["resumen", "tareas", "senales", "despliegues"];
+let tab = "resumen",
+    signalCounts = { crit: 0, warn: 0 },
+    weekTaskCount = 0;
+try {
+    const s = localStorage.getItem("spe.tab");
+    if (TABS.includes(s)) tab = s;
 } catch (e) {}
 
 /* ---------- dates (Ecuador time) ---------- */
@@ -252,6 +237,140 @@ const esc = (s) =>
         /[&<>"]/g,
         (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
     );
+
+/* ---------- list component ---------- */
+const listStates = {};
+const normalizeText = (s) =>
+    String(s ?? "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase();
+const stripTags = (s) =>
+    String(s ?? "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&");
+function readListSize(id, sizes, fallback) {
+    try {
+        const n = Number(localStorage.getItem(`spe.list.${id}.size`));
+        if (sizes.includes(n)) return n;
+    } catch (e) {}
+    return fallback;
+}
+function buildListBar(id, st) {
+    const cfg = st.cfg;
+    const tools = $(id + "Tools"),
+        pager = $(id + "Pager");
+    tools.innerHTML = `<label class="lsearch"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="search" placeholder="${esc(cfg.searchLabel)}" aria-label="${esc(cfg.searchLabel)}" autocomplete="off" spellcheck="false"></label>
+    <div class="lchips" role="group" aria-label="Filtrar"></div>
+    <label class="lsize">Filas <select aria-label="Filas por página">${cfg.sizes.map((n) => `<option value="${n}">${n}</option>`).join("")}</select></label>`;
+    st.chipsEl = tools.querySelector(".lchips");
+    st.sizeEl = tools.querySelector("select");
+    const redraw = () => renderList(id, st.cfg);
+    tools.addEventListener("input", (e) => {
+        if (!e.target.matches("input")) return;
+        st.q = e.target.value;
+        st.page = 0;
+        redraw();
+    });
+    tools.addEventListener("click", (e) => {
+        const c = e.target.closest("[data-lfilter]");
+        if (!c || c.dataset.lfilter === st.filter) return;
+        st.filter = c.dataset.lfilter;
+        st.page = 0;
+        redraw();
+    });
+    tools.addEventListener("change", (e) => {
+        if (!e.target.matches("select")) return;
+        st.size = Number(e.target.value);
+        st.page = 0;
+        try {
+            localStorage.setItem(`spe.list.${id}.size`, String(st.size));
+        } catch (err) {}
+        redraw();
+    });
+    pager.addEventListener("click", (e) => {
+        const d = e.target.closest("[data-lpage]"),
+            s = e.target.closest("[data-lstep]");
+        if (d) st.page = Number(d.dataset.lpage);
+        else if (s) st.page += Number(s.dataset.lstep);
+        else return;
+        redraw();
+        if (st.cfg.onPage) st.cfg.onPage();
+    });
+}
+function renderList(id, cfg) {
+    let st = listStates[id];
+    if (!st) {
+        st = listStates[id] = {
+            q: "",
+            filter: "all",
+            page: 0,
+            size: readListSize(id, cfg.sizes, cfg.defaultSize),
+            resetKey: null,
+            cfg,
+        };
+        buildListBar(id, st);
+    }
+    st.cfg = cfg;
+    if (!cfg.sizes.includes(st.size)) st.size = cfg.defaultSize;
+    const keyChanged = cfg.resetKey !== st.resetKey;
+    if (keyChanged) {
+        st.resetKey = cfg.resetKey;
+        st.page = 0;
+    }
+    const nq = normalizeText(st.q.trim());
+    const searched = nq
+        ? cfg.items.filter((i) => normalizeText(cfg.text(i)).includes(nq))
+        : cfg.items;
+    let active = cfg.filters.find((f) => f.id === st.filter);
+    if (
+        st.filter !== "all" &&
+        (!active ||
+            !cfg.items.length ||
+            (keyChanged && !searched.some(active.test)))
+    ) {
+        st.filter = "all";
+        st.page = 0;
+        active = undefined;
+    }
+    const filtered = active ? searched.filter(active.test) : searched;
+    const chips = [
+        { id: "all", label: "Todas", n: searched.length },
+        ...cfg.filters.map((f) => ({
+            id: f.id,
+            label: f.label,
+            n: searched.filter(f.test).length,
+        })),
+    ].filter((c) => c.id === "all" || c.id === st.filter || c.n > 0);
+    st.chipsEl.innerHTML = chips
+        .map(
+            (c) =>
+                `<button type="button" class="chip" aria-pressed="${c.id === st.filter}" data-lfilter="${c.id}">${esc(c.label)} <span class="n">${c.n}</span></button>`,
+        )
+        .join("");
+    st.sizeEl.value = String(st.size);
+    const pages = Math.max(1, Math.ceil(filtered.length / st.size));
+    st.page = Math.min(Math.max(0, st.page), pages - 1);
+    const from = st.page * st.size;
+    cfg.renderBody(filtered.slice(from, from + st.size), {
+        empty: cfg.items.length
+            ? "Nada coincide con la búsqueda o el filtro."
+            : cfg.emptyText,
+    });
+    const pg = $(id + "Pager"),
+        L = cfg.pagerLabels;
+    pg.hidden = pages < 2;
+    pg.innerHTML =
+        pages < 2
+            ? ""
+            : `<div class="dots" role="group" aria-label="${L.group}">${Array.from({ length: pages }, (_, k) => `<button type="button" data-lpage="${k}" aria-label="Página ${k + 1}" aria-current="${k === st.page}"></button>`).join("")}</div>
+    <div class="pnav"><span>${from + 1}–${Math.min(filtered.length, from + st.size)} de ${filtered.length}</span>
+    <button type="button" class="btn" data-lstep="-1" aria-label="${L.prev}" ${st.page === 0 ? "disabled" : ""}>‹</button>
+    <button type="button" class="btn" data-lstep="1" aria-label="${L.next}" ${st.page >= pages - 1 ? "disabled" : ""}>›</button></div>`;
+}
 
 /* ---------- view (computed in Rust) ----------
    `viewData` is the latest `compute_view` response; `VC` keeps its quick-access derivatives (maps by key).
@@ -347,7 +466,7 @@ function docKpi() {
                 : miss
                   ? `<span class="over">${miss} sin documento</span>`
                   : "todas con documento";
-    return `<button type="button" class="kpi" data-view="nodoc" aria-pressed="${view === "nodoc"}" title="Tareas con PR de la semana que tienen documento de despliegue"><span class="label">Doc. de despliegue</span><span class="v">${v}</span><span class="d">${d}</span><span class="go">Ver lista →</span></button>`;
+    return `<button type="button" class="kpi" data-view="nodoc" title="Tareas con PR de la semana que tienen documento de despliegue"><span class="label">Doc. de despliegue</span><span class="v">${v}</span><span class="d">${d}</span><span class="go">Ver lista →</span></button>`;
 }
 function holidayNote() {
     const H = viewData.hours,
@@ -440,11 +559,11 @@ function renderKpis() {
         (i) => inBoard(i) && !i.resDay && i.due && i.due < viewData.today,
     );
     $("kpis").innerHTML = `
-  <button type="button" class="kpi" data-view="worked" aria-pressed="${view === "worked"}"><span class="label">Tareas trabajadas</span><span class="v">${VC.worked.size}</span><span class="d">con horas en la semana</span><span class="go">Ver lista →</span></button>
-  <button type="button" class="kpi" data-view="done" aria-pressed="${view === "done"}"><span class="label">Concluidas</span><span class="v">${VC.resolved.length}</span><span class="d">${s.withDue ? `${s.onTime} de ${s.withDue} a tiempo` : "sin vencimiento para medir"}</span><span class="go">Ver lista →</span></button>
+  <button type="button" class="kpi" data-view="worked"><span class="label">Tareas trabajadas</span><span class="v">${VC.worked.size}</span><span class="d">con horas en la semana</span><span class="go">Ver lista →</span></button>
+  <button type="button" class="kpi" data-view="done"><span class="label">Concluidas</span><span class="v">${VC.resolved.length}</span><span class="d">${s.withDue ? `${s.onTime} de ${s.withDue} a tiempo` : "sin vencimiento para medir"}</span><span class="go">Ver lista →</span></button>
   ${docKpi()}
   <div class="kpi"><span class="label">Estimado vs real</span><span class="v">${s.est ? (varPct > 0 ? "+" : "") + varPct.toFixed(0) + " %" : "—"}</span><span class="d">${s.est ? `${fh(s.est)} est. · ${fh(s.spent)} reales` : "sin estimaciones"}</span></div>
-  <button type="button" class="kpi" data-view="open" aria-pressed="${view === "open"}"><span class="label">Abiertas ahora</span><span class="v">${open.length}</span><span class="d">${overdue.length ? `<span class="over">${overdue.length} vencidas</span>` : "ninguna vencida"}</span><span class="go">Ver lista →</span></button>`;
+  <button type="button" class="kpi" data-view="open"><span class="label">Abiertas ahora</span><span class="v">${open.length}</span><span class="d">${overdue.length ? `<span class="over">${overdue.length} vencidas</span>` : "ninguna vencida"}</span><span class="go">Ver lista →</span></button>`;
 }
 
 function stackBars(el, cols, maxV, refV, opts) {
@@ -585,11 +704,6 @@ function renderBoards() {
             ? `<button type="button" class="linkbtn" data-open-board="${esc(r.board)}" title="${esc(stTxt(r))}">${r.open} abiertas</button>`
             : `<span class="mini">0 abiertas</span>`;
     const totB = active.reduce((a, r) => a + r.secs, 0);
-    $("boardsSum").textContent = collapsed.boards
-        ? active.length
-            ? `${fh(totB)} en ${active.length} ${active.length === 1 ? "tablero" : "tableros"} esta semana`
-            : "Sin horas esta semana"
-        : "Semana seleccionada · clic en «abiertas» para ver la lista";
     $("boards").innerHTML =
         (active.length
             ? active
@@ -793,16 +907,11 @@ function renderSignals() {
     out.sort(
         (a, b) => rank[a.sev] - rank[b.sev],
     ); /* stable order: high alerts first */
-    const pages = Math.max(1, Math.ceil(out.length / SIG_PAGE));
-    if (out.length !== sigCount) {
-        sigCount = out.length;
-        sigPage = 0;
-    }
-    sigPage = Math.min(Math.max(0, sigPage), pages - 1);
     const cnt = { crit: 0, warn: 0, info: 0 };
     out.forEach((o) => {
         if (o.sev in cnt) cnt[o.sev]++;
     });
+    signalCounts = { crit: cnt.crit, warn: cnt.warn };
     const sumTxt = [
         cnt.crit && `${cnt.crit} alta${cnt.crit > 1 ? "s" : ""}`,
         cnt.warn && `${cnt.warn} media${cnt.warn > 1 ? "s" : ""}`,
@@ -813,20 +922,34 @@ function renderSignals() {
     $("signalsSum").textContent = sumTxt
         ? `${out.length} ${out.length === 1 ? "señal" : "señales"}: ${sumTxt}`
         : "Sin alertas";
-    const slice = out.slice(sigPage * SIG_PAGE, sigPage * SIG_PAGE + SIG_PAGE);
-    $("signals").innerHTML = slice
-        .map(
-            (o) =>
-                `<li><span class="sev ${o.sev}">${tag[o.sev]}</span><div><p>${o.t}</p><small>${o.sub}</small></div></li>`,
-        )
-        .join("");
-    const pg = $("sigPager");
-    pg.hidden = pages < 2;
-    if (pages > 1)
-        pg.innerHTML = `<div class="dots" role="group" aria-label="Páginas de señales">${Array.from({ length: pages }, (_, k) => `<button type="button" data-sigpage="${k}" aria-label="Página ${k + 1}" aria-current="${k === sigPage}"></button>`).join("")}</div>
-    <div class="pnav"><span>${sigPage * SIG_PAGE + 1}–${Math.min(out.length, (sigPage + 1) * SIG_PAGE)} de ${out.length}</span>
-    <button type="button" class="btn" data-sigstep="-1" aria-label="Señales anteriores" ${sigPage === 0 ? "disabled" : ""}>‹</button>
-    <button type="button" class="btn" data-sigstep="1" aria-label="Señales siguientes" ${sigPage >= pages - 1 ? "disabled" : ""}>›</button></div>`;
+    renderList("sig", {
+        items: out,
+        filters: [
+            { id: "crit", label: "Altas", test: (o) => o.sev === "crit" },
+            { id: "warn", label: "Medias", test: (o) => o.sev === "warn" },
+            { id: "info", label: "Info", test: (o) => o.sev === "info" },
+        ],
+        text: (o) => `${o.t} ${stripTags(o.sub)}`,
+        sizes: [4, 8, 20],
+        defaultSize: 4,
+        resetKey: [board, weekKey, out.length].join("|"),
+        searchLabel: "Buscar en las señales",
+        emptyText: "Sin señales",
+        pagerLabels: {
+            group: "Páginas de señales",
+            prev: "Señales anteriores",
+            next: "Señales siguientes",
+        },
+        renderBody: (pageItems, ctx) => {
+            $("signals").innerHTML =
+                pageItems
+                    .map(
+                        (o) =>
+                            `<li><span class="sev ${o.sev}">${tag[o.sev]}</span><div><p>${o.t}</p><small>${o.sub}</small></div></li>`,
+                    )
+                    .join("") || `<li>${ctx.empty}</li>`;
+        },
+    });
 }
 
 function docCell(i) {
@@ -838,13 +961,77 @@ function docCell(i) {
         return `<span class="mini" title="${prMode === "pr" ? "La tarea no tiene pull requests vinculados" : "Reunión, capacitación, soporte, análisis o revisión"}">${prMode === "pr" ? "Sin PR · no aplica" : "No aplica"}</span>`;
     return `<span class="mini">${docState === "loading" ? "…" : "—"}</span>`;
 }
+const docHint = (n) =>
+    `${n} tareas con PR concluidas en la semana${viewData.week === mondayOf(viewData.today) ? " o en pruebas" : ""} · primero las que faltan`;
+const boardSuffix = () =>
+    viewData.board !== "Todos" ? ` · tablero ${viewData.board}` : "";
+const summaryCell = (i) =>
+    `<td><div class="sum">${esc(i.summary)}</div>${i.sprint ? `<small class="label" style="letter-spacing:.04em">${esc(i.sprint)}</small>` : ""}</td>`;
+const boardCell = (i) =>
+    `<td><span class="tag" title="Asignado por ${esc(i.boardHow)}"><i style="background:${bColor(i.board)}"></i>${esc(i.board)}</span><br><small class="mini">${esc(i.comp)}</small></td>`;
+const resDayCell = (i) =>
+    `<td class="num">${i.resDay ? fmtD(i.resDay) + (i.late > 0 ? `<span class="lateb">+${i.late} d</span>` : i.late !== null ? `<span class="okb">a tiempo</span>` : "") + (i.noFin ? `<br><small class="mini">sin Fin desarrollo</small>` : "") : "—"}</td>`;
+const SEG_VIEWS = [
+    ["week", "Semana"],
+    ["worked", "Trabajadas"],
+    ["done", "Concluidas"],
+    ["open", "Abiertas"],
+];
+function renderDocs() {
+    const weekKey = viewData.week,
+        rank = (i) => ({ missing: 0, unknown: 1, ok: 2, na: 3 })[docStatus(i)];
+    const items = docWeek(weekKey).sort(
+        (a, b) => rank(a) - rank(b) || a.key.localeCompare(b.key),
+    );
+    $("dHint").textContent = docHint(items.length) + boardSuffix();
+    renderList("d", {
+        items,
+        filters: [
+            ["missing", "Faltan"],
+            ["ok", "Con documento"],
+            ["na", "No aplica"],
+            ["unknown", "Sin revisar"],
+        ].map(([id, label]) => ({
+            id,
+            label,
+            test: (i) => docStatus(i) === id,
+        })),
+        text: (i) => `${i.key} ${i.summary}`,
+        sizes: [10, 20, 50],
+        defaultSize: 20,
+        resetKey: [viewData.board, weekKey, docState].join("|"),
+        searchLabel: "Buscar por clave o resumen",
+        emptyText:
+            "No hay tareas con PR para revisar en esta semana y este tablero.",
+        pagerLabels: {
+            group: "Páginas de despliegues",
+            prev: "Despliegues anteriores",
+            next: "Despliegues siguientes",
+        },
+        onPage: goDocs,
+        renderBody: (pageRows, ctx) => {
+            $("dbody").innerHTML =
+                pageRows
+                    .map(
+                        (i) => `<tr>
+    <td><a class="key" href="${SITE}${i.key}" target="_blank" rel="noopener">${i.key}</a></td>
+    ${summaryCell(i)}
+    ${boardCell(i)}
+    <td>${statusPill(i)}</td>
+    ${resDayCell(i)}
+    <td>${docCell(i)}</td></tr>`,
+                    )
+                    .join("") ||
+                `<tr><td colspan="6" class="empty">${ctx.empty}</td></tr>`;
+        },
+    });
+}
 function renderTable() {
     const issues = VC.issues,
         weekKey = viewData.week,
         board = viewData.board,
         today = viewData.today,
         end = addDays(weekKey, 4);
-    const isCurrentWeek = weekKey === mondayOf(today);
     const VIEWS = {
         week: {
             title: "Tareas de la semana",
@@ -865,15 +1052,6 @@ function renderTable() {
             hint: (n) => `${n} tareas con Fin desarrollo en la semana`,
             f: (i) => i.resDay && i.resDay >= weekKey && i.resDay <= end,
         },
-        nodoc: {
-            title: "Documentos de despliegue de la semana",
-            hint: (n) =>
-                `${n} tareas con PR concluidas en la semana${isCurrentWeek ? " o en pruebas" : ""} · primero las que faltan`,
-            f: (() => {
-                const set = new Set(docWeek(weekKey).map((i) => i.key));
-                return (i) => set.has(i.key);
-            })(),
-        },
         open: {
             title: "Abiertas ahora",
             hint: (n) => `${n} tareas sin finalizar, de cualquier semana`,
@@ -882,7 +1060,6 @@ function renderTable() {
     };
     const V = VIEWS[view] || VIEWS.week;
     $("tTitle").textContent = V.title;
-    $("tReset").hidden = view === "week";
     const rows = issues
         .filter((i) => inBoard(i) && V.f(i))
         .map((i) => {
@@ -911,11 +1088,6 @@ function renderTable() {
             a.key.localeCompare(b.key)
         );
     });
-    if (view === "nodoc") {
-        const rank = (i) =>
-            ({ missing: 0, unknown: 1, ok: 2, na: 3 })[docStatus(i)];
-        rows.sort((a, b) => rank(a) - rank(b));
-    }
     document.querySelectorAll("th[data-sort]").forEach((th) => {
         const on = th.dataset.sort === sortKey;
         th.classList.toggle("sorted", on);
@@ -925,43 +1097,54 @@ function renderTable() {
             on ? (sortDir > 0 ? "ascending" : "descending") : "none",
         );
     });
-    $("tHint").textContent =
-        V.hint(rows.length) + (board !== "Todos" ? ` · tablero ${board}` : "");
-    /* At most 20 rows per page; back to the first one when the view, board, week or sort changes */
-    const sigT = [view, board, weekKey, sortKey, sortDir].join("|");
-    if (sigT !== tSig) {
-        tSig = sigT;
-        tPage = 0;
-    }
-    const tPages = Math.max(1, Math.ceil(rows.length / T_PAGE));
-    tPage = Math.min(Math.max(0, tPage), tPages - 1);
-    const allRows = rows;
-    const pageRows = rows.slice(tPage * T_PAGE, tPage * T_PAGE + T_PAGE);
-    const tp = $("tPager");
-    tp.hidden = tPages < 2;
-    if (tPages > 1)
-        tp.innerHTML = `<div class="dots" role="group" aria-label="Páginas de la tabla">${Array.from({ length: tPages }, (_, k) => `<button type="button" data-tpage="${k}" aria-label="Página ${k + 1}" aria-current="${k === tPage}"></button>`).join("")}</div>
-    <div class="pnav"><span>${tPage * T_PAGE + 1}–${Math.min(allRows.length, (tPage + 1) * T_PAGE)} de ${allRows.length}</span>
-    <button type="button" class="btn" data-tstep="-1" aria-label="Tareas anteriores" ${tPage === 0 ? "disabled" : ""}>‹</button>
-    <button type="button" class="btn" data-tstep="1" aria-label="Tareas siguientes" ${tPage >= tPages - 1 ? "disabled" : ""}>›</button></div>`;
-    $("tbody").innerHTML =
-        pageRows
-            .map(
-                (i) => `<tr>
+    $("tHint").textContent = V.hint(rows.length) + boardSuffix();
+    const viewName = VIEWS[view] ? view : "week";
+    weekTaskCount = issues.filter((i) => inBoard(i) && VIEWS.week.f(i)).length;
+    $("viewSeg").innerHTML = SEG_VIEWS.map(
+        ([id, label]) =>
+            `<button type="button" class="segb" data-seg="${id}" aria-pressed="${id === viewName}">${label} <span class="n">${issues.filter((i) => inBoard(i) && VIEWS[id].f(i)).length}</span></button>`,
+    ).join("");
+    const catFilters = [
+        ["new", "Por hacer"],
+        ["indeterminate", "En curso"],
+        ["done", "Concluidas"],
+    ].map(([id, label]) => ({ id, label, test: (i) => i.cat === id }));
+    renderList("t", {
+        items: rows,
+        filters: catFilters,
+        text: (i) => `${i.key} ${i.summary}`,
+        sizes: [10, 20, 50],
+        defaultSize: 20,
+        resetKey: [view, board, weekKey, sortKey, sortDir].join("|"),
+        searchLabel: "Buscar por clave o resumen",
+        emptyText: "No hay tareas en esta vista para este tablero.",
+        pagerLabels: {
+            group: "Páginas de la tabla",
+            prev: "Tareas anteriores",
+            next: "Tareas siguientes",
+        },
+        onPage: goTable,
+        renderBody: (pageRows, ctx) => {
+            $("tbody").innerHTML =
+                pageRows
+                    .map(
+                        (i) => `<tr>
     <td class="num">${i.act ? `${WEEKDAYS[(new Date(i.act + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(i.act)}${i.act.slice(0, 4) !== weekKey.slice(0, 4) ? ` <small class="mini">${i.act.slice(0, 4)}</small>` : ""}` : "—"}</td>
     <td><a class="key" href="${SITE}${i.key}" target="_blank" rel="noopener">${i.key}</a></td>
-    <td><div class="sum">${esc(i.summary)}</div>${i.sprint ? `<small class="label" style="letter-spacing:.04em">${esc(i.sprint)}</small>` : ""}</td>
-    <td><span class="tag" title="Asignado por ${esc(i.boardHow)}"><i style="background:${bColor(i.board)}"></i>${esc(i.board)}</span><br><small class="mini">${esc(i.comp)}</small></td>
+    ${summaryCell(i)}
+    ${boardCell(i)}
     <td>${statusPill(i)}</td>
     <td class="r num">${i.wk ? fh(i.wk) : "—"}</td>
     <td class="r num ${i.est && i.spent > i.est * 1.2 ? "over" : ""}">${fh(i.spent)} / ${i.est ? fh(i.est) : "—"}</td>
     <td class="num">${fmtD(i.start)}</td>
     <td class="num ${!i.resDay && i.due && i.due < today ? "over" : ""}">${fmtD(i.due)}</td>
-    <td class="num">${i.resDay ? fmtD(i.resDay) + (i.late > 0 ? `<span class="lateb">+${i.late} d</span>` : i.late !== null ? `<span class="okb">a tiempo</span>` : "") + (i.noFin ? `<br><small class="mini">sin Fin desarrollo</small>` : "") : "—"}</td>
+    ${resDayCell(i)}
     <td>${docCell(i)}</td></tr>`,
-            )
-            .join("") ||
-        `<tr><td colspan="11" class="empty">No hay tareas en esta vista para este tablero.</td></tr>`;
+                    )
+                    .join("") ||
+                `<tr><td colspan="11" class="empty">${ctx.empty}</td></tr>`;
+        },
+    });
 }
 
 function renderTrace() {
@@ -974,6 +1157,39 @@ function renderTrace() {
   <div>${source === "cache" ? "Datos guardados en este equipo, pendientes de actualizar" : simulated ? "Datos ficticios del modo simulado" : "Datos en vivo de Jira"} del ${when.toLocaleString("es-EC", { dateStyle: "medium", timeStyle: "short" })}. Los últimos datos cargados se guardan en este equipo para abrir más rápido y se borran al cerrar sesión; la app los actualiza sola cada 15 minutos mientras está abierta. Si la dejas en la bandeja de Windows, te avisa al cierre de la jornada si faltan horas y los lunes si la semana pasada quedó incompleta; puedes ajustarlo en «Preferencias».</div>`;
 }
 
+function setTcount(id, n, cls, title) {
+    const el = $(id);
+    el.hidden = !n;
+    el.textContent = n || "";
+    el.className = "tcount" + (n && cls ? " " + cls : "");
+    if (n && title) el.title = title;
+    else el.removeAttribute("title");
+}
+function renderTabCounts() {
+    setTcount("tcTareas", weekTaskCount);
+    const { crit, warn } = signalCounts;
+    if (crit)
+        setTcount(
+            "tcSenales",
+            crit,
+            "crit",
+            `${crit} ${crit === 1 ? "señal alta" : "señales altas"}`,
+        );
+    else if (warn)
+        setTcount(
+            "tcSenales",
+            warn,
+            "warn",
+            `${warn} ${warn === 1 ? "señal media" : "señales medias"}`,
+        );
+    else setTcount("tcSenales", 0);
+    const miss =
+        docState === "done"
+            ? docWeek(viewData.week).filter((i) => docStatus(i) === "missing")
+                  .length
+            : 0;
+    setTcount("tcDocs", miss, "crit", `${miss} con PR sin documento`);
+}
 function paint() {
     const iw = isoWeek(viewData.week);
     $("wTitle").textContent = `Semana ${iw.w} · ${iw.y}`;
@@ -989,6 +1205,8 @@ function paint() {
     renderBoards();
     renderSignals();
     renderTable();
+    renderDocs();
+    renderTabCounts();
     renderTrace();
 }
 /* Requests the view from Rust and draws. Asynchronous: each call carries a number and only the last one paints; while the response is in flight what is
@@ -1026,13 +1244,11 @@ function repaint() {
 /* ---------- events ---------- */
 $("prevW").onclick = () => {
     weekKey = addDays(weekKey, -7);
-    sigPage = 0;
     render();
 };
 $("nextW").onclick = () => {
     if (weekKey >= mondayOf(currentToday())) return;
     weekKey = addDays(weekKey, 7);
-    sigPage = 0;
     render();
 }; /* with fast clicks the button was not yet disabled */
 $("todayW").onclick = () => {
@@ -1271,6 +1487,7 @@ async function enterApp(info) {
     $("logoutBtn").hidden = false;
     sessionActive = true;
     startAuto();
+    selectTab(tab);
     setGate("Cargando tus tareas…", "Leyendo tus tareas de Jira.");
     const g = gen;
     try {
@@ -1556,10 +1773,59 @@ async function refresh(force) {
     }
 }
 $("refreshBtn").onclick = () => refresh(true);
-$("kpis").onclick = (e) => {
-    const k = e.target.closest("[data-view]");
-    if (!k) return;
-    view = view === k.dataset.view ? "week" : k.dataset.view;
+const scrollToEl = (id) =>
+    $(id).scrollIntoView({
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+        block: "start",
+    });
+const goTable = () => scrollToEl("tableHead");
+const goDocs = () => scrollToEl("dTitle");
+function selectTab(name, { focus = false } = {}) {
+    if (!TABS.includes(name)) name = "resumen";
+    tab = name;
+    for (const t of TABS) {
+        const on = t === name;
+        $("tab-" + t).setAttribute("aria-selected", String(on));
+        $("tab-" + t).tabIndex = on ? 0 : -1;
+        $("pane-" + t).hidden = !on;
+    }
+    try {
+        localStorage.setItem("spe.tab", name);
+    } catch (e) {}
+    if (focus) $("tab-" + name).focus();
+    /* The new pane starts right below the sticky bar, not halfway down where the previous one was scrolled. */
+    const barBottom = document
+            .querySelector(".stickybar")
+            .getBoundingClientRect().bottom,
+        paneTop = $("pane-" + name).getBoundingClientRect().top;
+    if (paneTop < barBottom)
+        window.scrollBy({
+            top: paneTop - barBottom - 8,
+            behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+                ? "auto"
+                : "smooth",
+        });
+}
+$("tabs").onclick = (e) => {
+    const t = e.target.closest("[data-tab]");
+    if (t) selectTab(t.dataset.tab);
+};
+$("tabs").onkeydown = (e) => {
+    const i = TABS.indexOf(tab);
+    const next = {
+        ArrowRight: (i + 1) % TABS.length,
+        ArrowLeft: (i + TABS.length - 1) % TABS.length,
+        Home: 0,
+        End: TABS.length - 1,
+    }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    selectTab(TABS[next], { focus: true });
+};
+function chooseView(v) {
+    view = v;
     if (view === "open") {
         sortKey = "due";
         sortDir = 1;
@@ -1567,41 +1833,24 @@ $("kpis").onclick = (e) => {
         sortKey = "act";
         sortDir = -1;
     }
+}
+$("kpis").onclick = (e) => {
+    const k = e.target.closest("[data-view]");
+    if (!k) return;
+    if (k.dataset.view === "nodoc") {
+        selectTab("despliegues");
+        return;
+    }
+    chooseView(k.dataset.view);
     repaint();
-    if (view !== "week")
-        $("tableHead").scrollIntoView({
-            behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-                ? "auto"
-                : "smooth",
-            block: "start",
-        });
+    selectTab("tareas");
 };
-$("tReset").onclick = () => {
-    view = "week";
+$("viewSeg").onclick = (e) => {
+    const b = e.target.closest("[data-seg]");
+    if (!b) return;
+    chooseView(b.dataset.seg);
     repaint();
 };
-$("tPager").onclick = (e) => {
-    if (!viewData) return;
-    const d = e.target.closest("[data-tpage]"),
-        s = e.target.closest("[data-tstep]");
-    if (d) tPage = +d.dataset.tpage;
-    else if (s) tPage += +s.dataset.tstep;
-    else return;
-    renderTable();
-    $("tableHead").scrollIntoView({
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-        block: "start",
-    });
-};
-const goTable = () =>
-    $("tableHead").scrollIntoView({
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-        block: "start",
-    });
 $("boards").onclick = (e) => {
     const b = e.target.closest("[data-open-board]");
     if (!b) return;
@@ -1610,40 +1859,20 @@ $("boards").onclick = (e) => {
     sortKey = "due";
     sortDir = 1;
     render();
-    goTable();
+    selectTab("tareas");
 };
-$("sigPager").onclick = (e) => {
-    if (!viewData) return;
-    const d = e.target.closest("[data-sigpage]"),
-        s = e.target.closest("[data-sigstep]");
-    if (d) sigPage = +d.dataset.sigpage;
-    else if (s) sigPage += +s.dataset.sigstep;
-    else return;
-    renderSignals();
-};
-document.querySelectorAll("[data-panel]").forEach(
-    (b) =>
-        (b.onclick = () => {
-            const k = b.dataset.panel;
-            collapsed[k] = !collapsed[k];
-            try {
-                localStorage.setItem(
-                    "spe.collapsed",
-                    JSON.stringify(collapsed),
-                );
-            } catch (err) {}
-            applyCollapse();
-            repaint();
-        }),
-);
-applyCollapse();
 $("signals").onclick = (e) => {
     const b = e.target.closest("[data-goview]");
     if (!b) return;
+    if (b.dataset.goview === "nodoc") {
+        selectTab("despliegues");
+        return;
+    }
     view = b.dataset.goview;
     repaint();
-    goTable();
+    selectTab("tareas");
 };
+selectTab(tab);
 
 /* ---------- connection, sign-out and external links ---------- */
 $("connForm").onsubmit = async (ev) => {

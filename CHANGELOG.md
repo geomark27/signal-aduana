@@ -11,6 +11,11 @@ usa esa sección como notas del release en GitHub (ver «Publicar una versión»
 
 ## [Unreleased]
 
+### Cambiado
+
+- La pantalla se organiza en pestañas: Resumen (aviso de horas, indicadores, gráficos y horas por tablero), Tareas (con un selector de vista: semana, trabajadas, concluidas o abiertas), Señales y Despliegues. La semana, los tableros y las pestañas quedan fijos arriba, cada pestaña muestra su contador y se recuerda la última abierta. Los paneles plegables ya no existen.
+- Las listas de tareas y de señales tienen búsqueda por clave o texto, filtros con su conteo (por estado, por documento de despliegue o por severidad) y un selector de filas por página que se recuerda. Todas usan el mismo paginado.
+
 ## [0.1.0] - 2026-11-18
 
 ### Añadido

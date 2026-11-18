@@ -64,12 +64,14 @@ Las de `CLAUDE.md`, que mandan sobre este documento. En esta fase pesan en espec
 | 6.7 | Diagnóstico anónimo: la app arma un resumen sin datos reales para reportar | Sonnet 5.5 medio | `tarea/6.7-diagnostico-anonimo` | B |
 | 6.8 | Flujo de release: `make bump`, `make release` y GitHub Actions (adelantado de la fase 7, sin firma ni actualizador) | Sonnet 5.5 medio + orquestador | `tarea/6.8-release` | B |
 | 6.9 | Versión 0.1.0: `make bump ver=0.1.0`, `make promote` y el primer `make release` | Autor y orquestador | `tarea/6.9-version-0-1-0` | B |
-| 6.6, 6.10+ | Una corrección por hallazgo, con su prueba | Según el caso | por hallazgo | C |
+| 6.10 | Componente Lista: búsqueda, filtros, filas por página y paginado únicos para todas las listas | Sonnet 5.5 medio | `tarea/6.10-componente-lista` | E |
+| 6.11 | Pestañas (propuesta A): Resumen · Tareas · Señales · Despliegues | Sonnet 5.5 medio | `tarea/6.11-pestanas` | E |
+| 6.6 y libres | Una corrección por hallazgo, con su prueba | Según el caso | por hallazgo | C |
 | (libre) | Cierre de la fase | Orquestador | `tarea/N.M-cierre-fase-6` | D |
 
-Los números siguen al roadmap (6.1 a 6.6). Las correcciones toman el 6.6 y después del 6.10 en
-adelante (el 6.8 y el 6.9 se usaron para el flujo de release y la versión 0.1.0, pedidos por el
-autor el 2026-11-18); el cierre toma el primer número libre cuando llegue.
+Los números siguen al roadmap (6.1 a 6.6). Las correcciones toman el 6.6 y después el primer
+número libre (del 6.8 al 6.11 se usaron para el flujo de release, la versión 0.1.0 y el rediseño,
+pedidos por el autor el 2026-11-18); el cierre también toma el primer número libre.
 
 ## Orden
 
@@ -189,12 +191,26 @@ de una respuesta sin datos reales.
 clave, título, correo ni URL del origen.
 
 
-## Ola C — Correcciones (6.6, 6.10+)
+## Ola C — Correcciones (6.6 y números libres)
 
 Una tarea por hallazgo. El orquestador escribe su plan breve: objetivo, archivos, la prueba que
 reproduce la forma anonimizada y el criterio. Lo presenta al autor antes de lanzarlo. Los hallazgos
 de la interfaz y los de Rust no comparten tarea. Si un hallazgo cambia los ids de los campos
 personalizados, se decide si van fijos o se configuran (decisión 3).
+
+## Ola E — Rediseño de la interfaz (propuesta A)
+
+Pedido por el autor el 2026-11-18, que eligió la propuesta A entre tres prototipos con datos
+ficticios: pestañas Resumen · Tareas · Señales · Despliegues, con la semana y los tableros fijos
+arriba, y un único componente de lista para todas las secciones.
+
+- **6.10 Componente Lista.** Búsqueda, filtros con conteo, filas por página recordadas y un solo
+  paginado para la tabla de tareas y Señales. No cambia el diseño ni ninguna regla.
+- **6.11 Pestañas.** El diseño de la propuesta A sobre el componente de la 6.10.
+
+Van en serie porque las dos tocan `ui/app.js`, `ui/index.html` y `ui/styles.css`. El autor las
+revisa en la app (`make run` en modo simulado) antes de fusionar, y salen en la versión 0.2.0. Las
+pruebas con el Jira real siguen en paralelo con la v0.1.0.
 
 ## Ola D — Cierre
 

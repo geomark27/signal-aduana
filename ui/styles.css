@@ -168,25 +168,45 @@ svg .sel{fill:var(--accent-soft)}
 .okb{display:inline-block;margin-left:4px;font-size:10.5px;padding:0 5px;border-radius:4px;background:var(--ok-soft);color:var(--ok)}
 
 /* signals */
-.grid2.top{align-items:start}
-.ptoggle{border:0;background:none;padding:0;display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:inherit;text-align:left}
-.ptoggle h2{display:inline}
-.ptoggle .chev{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted);font-size:11px;transition:transform .15s}
-.ptoggle[aria-expanded="false"] .chev{transform:rotate(-90deg)}
-@media (prefers-reduced-motion:reduce){.ptoggle .chev{transition:none}}
 .psum{color:var(--muted);font-size:12.5px}
-.panel.collapsed{gap:0}
 .pager{display:flex;align-items:center;gap:8px;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px}
 .pager .dots{display:flex;gap:5px;flex-wrap:wrap}
 .pager .dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer}
 .pager .dots button[aria-current="true"]{background:var(--accent)}
 .pager .pnav{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .pager .pnav .btn{padding:3px 9px;font-size:13px}
+.ltools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#tTools{margin:2px 0 10px}
+.lsearch{display:flex;align-items:center;gap:6px;flex:1 1 180px;max-width:320px;min-width:0;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--muted);background:var(--surface)}
+.lsearch:focus-within{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
+.lsearch input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:inherit}
+.lchips{display:flex;flex-wrap:wrap;gap:6px}
+.lchips .chip .n{color:var(--muted)}
+.lchips .chip[aria-pressed="true"] .n{color:inherit;opacity:.75}
+.lsize{margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px}
+.lsize select{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;padding:4px 6px}
 .signals{display:grid;gap:8px;margin:0;padding:0;list-style:none}
 .signals li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;border-radius:8px;background:var(--sunk);align-items:start}
 .signals li .sev{font:600 10.5px var(--mono);padding:2px 6px;border-radius:4px;letter-spacing:.04em}
 .sev.crit{background:var(--crit-soft);color:var(--crit)} .sev.warn{background:var(--warn-soft);color:var(--warn)} .sev.ok{background:var(--ok-soft);color:var(--ok)} .sev.info{background:var(--accent-soft);color:var(--accent)}
 .signals li p{margin:0} .signals li small{color:var(--muted);display:block}
+
+/* tabs */
+.stickybar{position:sticky;top:0;z-index:5;background:var(--bg);display:grid;gap:10px;padding-block:8px 0}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line)}
+.tabs [role="tab"]{border:0;border-bottom:2px solid transparent;background:transparent;padding:10px 14px;color:var(--muted);font:inherit;cursor:pointer;white-space:nowrap}
+.tabs [role="tab"]:hover{color:var(--ink)}
+.tabs [role="tab"][aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+.tabs [role="tab"]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tcount{display:inline-block;font:600 11px var(--mono);padding:1px 7px;border-radius:999px;background:var(--sunk);color:var(--ink);margin-left:4px}
+.tcount.crit{background:var(--crit-soft);color:var(--crit)}
+.tcount.warn{background:var(--warn-soft);color:var(--warn)}
+.pane{display:grid;gap:16px;min-width:0}
+.pane:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border-radius:10px;background:var(--sunk);justify-self:start}
+.segb{border:0;background:transparent;padding:7px 14px;border-radius:8px;color:var(--ink);cursor:pointer}
+.segb[aria-pressed="true"]{background:var(--surface);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.segb .n{color:var(--muted)}
 
 /* table */
 .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
