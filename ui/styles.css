@@ -182,6 +182,17 @@ svg .sel{fill:var(--accent-soft)}
 .pager .dots button[aria-current="true"]{background:var(--accent)}
 .pager .pnav{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .pager .pnav .btn{padding:3px 9px;font-size:13px}
+.ltools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#signalsBody .ltools{margin-bottom:12px}
+#tTools{margin:2px 0 10px}
+.lsearch{display:flex;align-items:center;gap:6px;flex:1 1 180px;max-width:320px;min-width:0;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--muted);background:var(--surface)}
+.lsearch:focus-within{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
+.lsearch input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:inherit}
+.lchips{display:flex;flex-wrap:wrap;gap:6px}
+.lchips .chip .n{color:var(--muted)}
+.lchips .chip[aria-pressed="true"] .n{color:inherit;opacity:.75}
+.lsize{margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px}
+.lsize select{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;padding:4px 6px}
 .signals{display:grid;gap:8px;margin:0;padding:0;list-style:none}
 .signals li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;border-radius:8px;background:var(--sunk);align-items:start}
 .signals li .sev{font:600 10.5px var(--mono);padding:2px 6px;border-radius:4px;letter-spacing:.04em}

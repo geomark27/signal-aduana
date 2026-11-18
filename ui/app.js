@@ -152,12 +152,6 @@ let docs = {},
     docState = "idle",
     docError = "",
     prMode = "keywords"; // prMode: "pr" when the development panel was read // docs[key] = url
-const SIG_PAGE = 4;
-let sigPage = 0,
-    sigCount = 0;
-const T_PAGE = 20;
-let tPage = 0,
-    tSig = "";
 let collapsed = {};
 try {
     collapsed = JSON.parse(localStorage.getItem("spe.collapsed") || "{}") || {};
@@ -252,6 +246,140 @@ const esc = (s) =>
         /[&<>"]/g,
         (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
     );
+
+/* ---------- list component ---------- */
+const listStates = {};
+const normalizeText = (s) =>
+    String(s ?? "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase();
+const stripTags = (s) =>
+    String(s ?? "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&");
+function readListSize(id, sizes, fallback) {
+    try {
+        const n = Number(localStorage.getItem(`spe.list.${id}.size`));
+        if (sizes.includes(n)) return n;
+    } catch (e) {}
+    return fallback;
+}
+function buildListBar(id, st) {
+    const cfg = st.cfg;
+    const tools = $(id + "Tools"),
+        pager = $(id + "Pager");
+    tools.innerHTML = `<label class="lsearch"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="search" placeholder="${esc(cfg.searchLabel)}" aria-label="${esc(cfg.searchLabel)}" autocomplete="off" spellcheck="false"></label>
+    <div class="lchips" role="group" aria-label="Filtrar"></div>
+    <label class="lsize">Filas <select aria-label="Filas por página">${cfg.sizes.map((n) => `<option value="${n}">${n}</option>`).join("")}</select></label>`;
+    st.chipsEl = tools.querySelector(".lchips");
+    st.sizeEl = tools.querySelector("select");
+    const redraw = () => renderList(id, st.cfg);
+    tools.addEventListener("input", (e) => {
+        if (!e.target.matches("input")) return;
+        st.q = e.target.value;
+        st.page = 0;
+        redraw();
+    });
+    tools.addEventListener("click", (e) => {
+        const c = e.target.closest("[data-lfilter]");
+        if (!c || c.dataset.lfilter === st.filter) return;
+        st.filter = c.dataset.lfilter;
+        st.page = 0;
+        redraw();
+    });
+    tools.addEventListener("change", (e) => {
+        if (!e.target.matches("select")) return;
+        st.size = Number(e.target.value);
+        st.page = 0;
+        try {
+            localStorage.setItem(`spe.list.${id}.size`, String(st.size));
+        } catch (err) {}
+        redraw();
+    });
+    pager.addEventListener("click", (e) => {
+        const d = e.target.closest("[data-lpage]"),
+            s = e.target.closest("[data-lstep]");
+        if (d) st.page = Number(d.dataset.lpage);
+        else if (s) st.page += Number(s.dataset.lstep);
+        else return;
+        redraw();
+        if (st.cfg.onPage) st.cfg.onPage();
+    });
+}
+function renderList(id, cfg) {
+    let st = listStates[id];
+    if (!st) {
+        st = listStates[id] = {
+            q: "",
+            filter: "all",
+            page: 0,
+            size: readListSize(id, cfg.sizes, cfg.defaultSize),
+            resetKey: null,
+            cfg,
+        };
+        buildListBar(id, st);
+    }
+    st.cfg = cfg;
+    if (!cfg.sizes.includes(st.size)) st.size = cfg.defaultSize;
+    const keyChanged = cfg.resetKey !== st.resetKey;
+    if (keyChanged) {
+        st.resetKey = cfg.resetKey;
+        st.page = 0;
+    }
+    const nq = normalizeText(st.q.trim());
+    const searched = nq
+        ? cfg.items.filter((i) => normalizeText(cfg.text(i)).includes(nq))
+        : cfg.items;
+    let active = cfg.filters.find((f) => f.id === st.filter);
+    if (
+        st.filter !== "all" &&
+        (!active ||
+            !cfg.items.length ||
+            (keyChanged && !searched.some(active.test)))
+    ) {
+        st.filter = "all";
+        st.page = 0;
+        active = undefined;
+    }
+    const filtered = active ? searched.filter(active.test) : searched;
+    const chips = [
+        { id: "all", label: "Todas", n: searched.length },
+        ...cfg.filters.map((f) => ({
+            id: f.id,
+            label: f.label,
+            n: searched.filter(f.test).length,
+        })),
+    ].filter((c) => c.id === "all" || c.id === st.filter || c.n > 0);
+    st.chipsEl.innerHTML = chips
+        .map(
+            (c) =>
+                `<button type="button" class="chip" aria-pressed="${c.id === st.filter}" data-lfilter="${c.id}">${esc(c.label)} <span class="n">${c.n}</span></button>`,
+        )
+        .join("");
+    st.sizeEl.value = String(st.size);
+    const pages = Math.max(1, Math.ceil(filtered.length / st.size));
+    st.page = Math.min(Math.max(0, st.page), pages - 1);
+    const from = st.page * st.size;
+    cfg.renderBody(filtered.slice(from, from + st.size), {
+        empty: cfg.items.length
+            ? "Nada coincide con la búsqueda o el filtro."
+            : cfg.emptyText,
+    });
+    const pg = $(id + "Pager"),
+        L = cfg.pagerLabels;
+    pg.hidden = pages < 2;
+    pg.innerHTML =
+        pages < 2
+            ? ""
+            : `<div class="dots" role="group" aria-label="${L.group}">${Array.from({ length: pages }, (_, k) => `<button type="button" data-lpage="${k}" aria-label="Página ${k + 1}" aria-current="${k === st.page}"></button>`).join("")}</div>
+    <div class="pnav"><span>${from + 1}–${Math.min(filtered.length, from + st.size)} de ${filtered.length}</span>
+    <button type="button" class="btn" data-lstep="-1" aria-label="${L.prev}" ${st.page === 0 ? "disabled" : ""}>‹</button>
+    <button type="button" class="btn" data-lstep="1" aria-label="${L.next}" ${st.page >= pages - 1 ? "disabled" : ""}>›</button></div>`;
+}
 
 /* ---------- view (computed in Rust) ----------
    `viewData` is the latest `compute_view` response; `VC` keeps its quick-access derivatives (maps by key).
@@ -793,12 +921,6 @@ function renderSignals() {
     out.sort(
         (a, b) => rank[a.sev] - rank[b.sev],
     ); /* stable order: high alerts first */
-    const pages = Math.max(1, Math.ceil(out.length / SIG_PAGE));
-    if (out.length !== sigCount) {
-        sigCount = out.length;
-        sigPage = 0;
-    }
-    sigPage = Math.min(Math.max(0, sigPage), pages - 1);
     const cnt = { crit: 0, warn: 0, info: 0 };
     out.forEach((o) => {
         if (o.sev in cnt) cnt[o.sev]++;
@@ -813,20 +935,34 @@ function renderSignals() {
     $("signalsSum").textContent = sumTxt
         ? `${out.length} ${out.length === 1 ? "señal" : "señales"}: ${sumTxt}`
         : "Sin alertas";
-    const slice = out.slice(sigPage * SIG_PAGE, sigPage * SIG_PAGE + SIG_PAGE);
-    $("signals").innerHTML = slice
-        .map(
-            (o) =>
-                `<li><span class="sev ${o.sev}">${tag[o.sev]}</span><div><p>${o.t}</p><small>${o.sub}</small></div></li>`,
-        )
-        .join("");
-    const pg = $("sigPager");
-    pg.hidden = pages < 2;
-    if (pages > 1)
-        pg.innerHTML = `<div class="dots" role="group" aria-label="Páginas de señales">${Array.from({ length: pages }, (_, k) => `<button type="button" data-sigpage="${k}" aria-label="Página ${k + 1}" aria-current="${k === sigPage}"></button>`).join("")}</div>
-    <div class="pnav"><span>${sigPage * SIG_PAGE + 1}–${Math.min(out.length, (sigPage + 1) * SIG_PAGE)} de ${out.length}</span>
-    <button type="button" class="btn" data-sigstep="-1" aria-label="Señales anteriores" ${sigPage === 0 ? "disabled" : ""}>‹</button>
-    <button type="button" class="btn" data-sigstep="1" aria-label="Señales siguientes" ${sigPage >= pages - 1 ? "disabled" : ""}>›</button></div>`;
+    renderList("sig", {
+        items: out,
+        filters: [
+            { id: "crit", label: "Altas", test: (o) => o.sev === "crit" },
+            { id: "warn", label: "Medias", test: (o) => o.sev === "warn" },
+            { id: "info", label: "Info", test: (o) => o.sev === "info" },
+        ],
+        text: (o) => `${o.t} ${stripTags(o.sub)}`,
+        sizes: [4, 8, 20],
+        defaultSize: 4,
+        resetKey: [board, weekKey, out.length].join("|"),
+        searchLabel: "Buscar en las señales",
+        emptyText: "Sin señales",
+        pagerLabels: {
+            group: "Páginas de señales",
+            prev: "Señales anteriores",
+            next: "Señales siguientes",
+        },
+        renderBody: (pageItems, ctx) => {
+            $("signals").innerHTML =
+                pageItems
+                    .map(
+                        (o) =>
+                            `<li><span class="sev ${o.sev}">${tag[o.sev]}</span><div><p>${o.t}</p><small>${o.sub}</small></div></li>`,
+                    )
+                    .join("") || `<li>${ctx.empty}</li>`;
+        },
+    });
 }
 
 function docCell(i) {
@@ -927,27 +1063,38 @@ function renderTable() {
     });
     $("tHint").textContent =
         V.hint(rows.length) + (board !== "Todos" ? ` · tablero ${board}` : "");
-    /* At most 20 rows per page; back to the first one when the view, board, week or sort changes */
-    const sigT = [view, board, weekKey, sortKey, sortDir].join("|");
-    if (sigT !== tSig) {
-        tSig = sigT;
-        tPage = 0;
-    }
-    const tPages = Math.max(1, Math.ceil(rows.length / T_PAGE));
-    tPage = Math.min(Math.max(0, tPage), tPages - 1);
-    const allRows = rows;
-    const pageRows = rows.slice(tPage * T_PAGE, tPage * T_PAGE + T_PAGE);
-    const tp = $("tPager");
-    tp.hidden = tPages < 2;
-    if (tPages > 1)
-        tp.innerHTML = `<div class="dots" role="group" aria-label="Páginas de la tabla">${Array.from({ length: tPages }, (_, k) => `<button type="button" data-tpage="${k}" aria-label="Página ${k + 1}" aria-current="${k === tPage}"></button>`).join("")}</div>
-    <div class="pnav"><span>${tPage * T_PAGE + 1}–${Math.min(allRows.length, (tPage + 1) * T_PAGE)} de ${allRows.length}</span>
-    <button type="button" class="btn" data-tstep="-1" aria-label="Tareas anteriores" ${tPage === 0 ? "disabled" : ""}>‹</button>
-    <button type="button" class="btn" data-tstep="1" aria-label="Tareas siguientes" ${tPage >= tPages - 1 ? "disabled" : ""}>›</button></div>`;
-    $("tbody").innerHTML =
-        pageRows
-            .map(
-                (i) => `<tr>
+    const isDoc = view === "nodoc";
+    const docFilters = [
+        ["missing", "Faltan"],
+        ["ok", "Con documento"],
+        ["na", "No aplica"],
+        ["unknown", "Sin revisar"],
+    ].map(([id, label]) => ({ id, label, test: (i) => docStatus(i) === id }));
+    const catFilters = [
+        ["new", "Por hacer"],
+        ["indeterminate", "En curso"],
+        ["done", "Concluidas"],
+    ].map(([id, label]) => ({ id, label, test: (i) => i.cat === id }));
+    renderList("t", {
+        items: rows,
+        filters: isDoc ? docFilters : catFilters,
+        text: (i) => `${i.key} ${i.summary}`,
+        sizes: [10, 20, 50],
+        defaultSize: 20,
+        resetKey: [view, board, weekKey, sortKey, sortDir].join("|"),
+        searchLabel: "Buscar por clave o resumen",
+        emptyText: "No hay tareas en esta vista para este tablero.",
+        pagerLabels: {
+            group: "Páginas de la tabla",
+            prev: "Tareas anteriores",
+            next: "Tareas siguientes",
+        },
+        onPage: goTable,
+        renderBody: (pageRows, ctx) => {
+            $("tbody").innerHTML =
+                pageRows
+                    .map(
+                        (i) => `<tr>
     <td class="num">${i.act ? `${WEEKDAYS[(new Date(i.act + "T00:00:00Z").getUTCDay() + 6) % 7]} ${fmtD(i.act)}${i.act.slice(0, 4) !== weekKey.slice(0, 4) ? ` <small class="mini">${i.act.slice(0, 4)}</small>` : ""}` : "—"}</td>
     <td><a class="key" href="${SITE}${i.key}" target="_blank" rel="noopener">${i.key}</a></td>
     <td><div class="sum">${esc(i.summary)}</div>${i.sprint ? `<small class="label" style="letter-spacing:.04em">${esc(i.sprint)}</small>` : ""}</td>
@@ -959,9 +1106,11 @@ function renderTable() {
     <td class="num ${!i.resDay && i.due && i.due < today ? "over" : ""}">${fmtD(i.due)}</td>
     <td class="num">${i.resDay ? fmtD(i.resDay) + (i.late > 0 ? `<span class="lateb">+${i.late} d</span>` : i.late !== null ? `<span class="okb">a tiempo</span>` : "") + (i.noFin ? `<br><small class="mini">sin Fin desarrollo</small>` : "") : "—"}</td>
     <td>${docCell(i)}</td></tr>`,
-            )
-            .join("") ||
-        `<tr><td colspan="11" class="empty">No hay tareas en esta vista para este tablero.</td></tr>`;
+                    )
+                    .join("") ||
+                `<tr><td colspan="11" class="empty">${ctx.empty}</td></tr>`;
+        },
+    });
 }
 
 function renderTrace() {
@@ -1026,13 +1175,11 @@ function repaint() {
 /* ---------- events ---------- */
 $("prevW").onclick = () => {
     weekKey = addDays(weekKey, -7);
-    sigPage = 0;
     render();
 };
 $("nextW").onclick = () => {
     if (weekKey >= mondayOf(currentToday())) return;
     weekKey = addDays(weekKey, 7);
-    sigPage = 0;
     render();
 }; /* with fast clicks the button was not yet disabled */
 $("todayW").onclick = () => {
@@ -1580,21 +1727,6 @@ $("tReset").onclick = () => {
     view = "week";
     repaint();
 };
-$("tPager").onclick = (e) => {
-    if (!viewData) return;
-    const d = e.target.closest("[data-tpage]"),
-        s = e.target.closest("[data-tstep]");
-    if (d) tPage = +d.dataset.tpage;
-    else if (s) tPage += +s.dataset.tstep;
-    else return;
-    renderTable();
-    $("tableHead").scrollIntoView({
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-        block: "start",
-    });
-};
 const goTable = () =>
     $("tableHead").scrollIntoView({
         behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -1611,15 +1743,6 @@ $("boards").onclick = (e) => {
     sortDir = 1;
     render();
     goTable();
-};
-$("sigPager").onclick = (e) => {
-    if (!viewData) return;
-    const d = e.target.closest("[data-sigpage]"),
-        s = e.target.closest("[data-sigstep]");
-    if (d) sigPage = +d.dataset.sigpage;
-    else if (s) sigPage += +s.dataset.sigstep;
-    else return;
-    renderSignals();
 };
 document.querySelectorAll("[data-panel]").forEach(
     (b) =>
