@@ -1,0 +1,57 @@
+[package]
+name = "signal-aduana"
+version = "0.1.0"
+edition = "2021"
+description = "Signal Aduana: horas, tareas y estados de Jira por semana (escritorio Windows)"
+authors = ["Torres & Torres - Tecnología"]
+rust-version = "1.80"
+
+[lib]
+name = "signal_aduana"
+path = "src/lib.rs"
+
+[[bin]]
+name = "signal-aduana"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Ventana de escritorio (WebView2 en Windows) y apertura de enlaces en el navegador
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-autostart = "2"
+
+# JSON y configuración
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Cliente HTTP hacia Jira/Confluence (TLS en Rust puro, sin OpenSSL)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+url = "2"
+futures = "0.3"
+tokio = { version = "1", features = ["sync", "time"] }
+
+# Secretos: el token vive en el Administrador de credenciales de Windows y en memoria envuelto en SecretString
+keyring = { version = "3", features = ["windows-native", "linux-native"] }
+secrecy = "0.10"
+
+# Errores, fechas y texto
+thiserror = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+regex = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+wiremock = "0.6"
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

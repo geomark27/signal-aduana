@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Signal Aduana</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Signal <span>Aduana</span></h1>
+      <p id="who">Tus horas, tareas y estados de Jira por semana y por tablero</p>
+    </div>
+    <div class="sync">
+      <span><span class="dot" id="syncDot"></span> <span id="syncText">Sin datos todavía</span></span>
+      <button class="btn" id="refreshBtn" type="button" disabled hidden>Actualizar desde Jira</button>
+      <button class="btn" id="prefsBtn" type="button" aria-haspopup="dialog">Preferencias</button>
+      <button class="btn" id="logoutBtn" type="button" hidden>Cerrar sesión</button>
+    </div>
+  </header>
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="gate" id="gate">
+    <h2 id="gateTitle">Iniciando…</h2>
+    <p id="gateText">Comprobando si ya tienes una sesión guardada en este equipo.</p>
+  </section>
+
+  <section class="gate connect" id="connect" hidden>
+    <h2>Conecta tu cuenta de Jira</h2>
+    <span class="simtag" id="simTag" hidden>Modo simulado · datos ficticios</span>
+    <p>Signal Aduana lee solo tus tareas y tus horas, con tu propio usuario de Atlassian.</p>
+    <div class="notice" id="connNotice" hidden></div>
+    <form class="connform" id="connForm" autocomplete="off" novalidate>
+      <label class="field"><span class="label">Sitio de Jira</span>
+        <input type="text" id="siteInput" name="site" placeholder="https://empresa.atlassian.net" autocomplete="off" spellcheck="false"></label>
+      <label class="field"><span class="label">Correo de Atlassian</span>
+        <input type="email" id="emailInput" name="email" placeholder="nombre@empresa.com" autocomplete="off" spellcheck="false"></label>
+      <label class="field"><span class="label">API token</span>
+        <input type="password" id="tokenInput" name="token" autocomplete="off" spellcheck="false"></label>
+      <div class="formerr" id="connError" role="alert" hidden></div>
+      <button class="btn primary" id="connBtn" type="submit">Conectar</button>
+    </form>
+    <p class="mini" id="simNote" hidden>Modo simulado: cualquier token sirve; el token «rechazar» simula uno inválido.</p>
+    <p class="mini">Crea tu API token clásico en <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener">id.atlassian.com → API tokens</a>. El token se guarda en el Administrador de credenciales de Windows y nunca en archivos.</p>
+  </section>
+
+  <div class="inner" id="main" hidden>
+
+  <section class="controls" aria-label="Filtros">
+    <div class="weeknav">
+      <button class="btn arrow" id="prevW" type="button" aria-label="Semana anterior">&#8249;</button>
+      <div class="weekname"><b id="wTitle">Semana</b><small id="wRange"></small></div>
+      <button class="btn arrow" id="nextW" type="button" aria-label="Semana siguiente">&#8250;</button>
+      <button class="btn" id="todayW" type="button">Esta semana</button>
+    </div>
+    <div class="chips" id="boardChips" role="group" aria-label="Tablero"></div>
+  </section>
+
+  <section class="halert" id="hoursAlert" aria-live="polite"></section>
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid2">
+    <div class="panel">
+      <div class="phead"><h2>Horas por semana</h2><span class="hint">Últimas 12 semanas · clic en una barra para verla</span></div>
+      <div id="weeklyChart"></div>
+      <div class="legend" id="legend1"></div>
+    </div>
+    <div class="panel">
+      <div class="phead"><h2>Horas por día</h2><span class="hint">Línea punteada = jornada de 8 h</span></div>
+      <div id="dailyChart"></div>
+    </div>
+  </section>
+
+  <section class="grid2 top">
+    <div class="panel" id="pBoards">
+      <div class="phead"><button type="button" class="ptoggle" data-panel="boards" aria-expanded="true" aria-controls="boardsBody"><span class="chev" aria-hidden="true">▼</span><h2>Horas por tablero</h2></button><span class="hint" id="boardsSum">Semana seleccionada · clic en «abiertas» para ver la lista</span></div>
+      <div id="boardsBody"><div class="boards" id="boards"></div></div>
+    </div>
+    <div class="panel" id="pSignals">
+      <div class="phead"><button type="button" class="ptoggle" data-panel="signals" aria-expanded="true" aria-controls="signalsBody"><span class="chev" aria-hidden="true">▼</span><h2>Señales</h2></button><span class="hint" id="signalsSum">Reglas simples sobre la semana</span></div>
+      <div id="signalsBody"><ul class="signals" id="signals"></ul><div class="pager" id="sigPager" hidden></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="phead" id="tableHead"><h2 id="tTitle">Tareas de la semana</h2><span class="hint"><span id="tHint"></span> <button type="button" class="linkbtn" id="tReset" hidden>Ver todas las de la semana</button></span></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th data-sort="act" title="Último día con horas tuyas en la semana; si no hay, fecha de fin, de creación o de última actualización">Fecha</th><th data-sort="key">Clave</th><th data-sort="summary">Resumen</th><th data-sort="board">Tablero</th><th data-sort="status">Estado</th>
+          <th data-sort="wk" class="r">Horas semana</th><th data-sort="spent" class="r">Real / Est.</th><th data-sort="start">Inicio</th><th data-sort="due">Vence</th><th data-sort="resDay">Fin desarrollo</th><th>Despliegue</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="tPager" hidden></div>
+  </section>
+
+  <footer id="trace"></footer>
+  </div>
+</div>
+
+<dialog id="prefsDlg" aria-labelledby="prefsTitle">
+  <form class="prefs" id="prefsForm" novalidate>
+    <h2 id="prefsTitle">Preferencias</h2>
+    <p class="mini">Se guardan en este equipo; no dependen de tu cuenta de Jira y no se borran al cerrar sesión.</p>
+    <div class="notice" id="prefsSimNote" hidden>En modo simulado no se registra el inicio con Windows y los avisos salen marcados como [Simulado].</div>
+    <fieldset>
+      <legend class="label">Avisos de Windows</legend>
+      <label class="check"><input type="checkbox" id="prefNotifications"><span>Avisos activos<small>Te avisa si faltan horas al cierre de la jornada y si no hay conexión con Jira.</small></span></label>
+      <label class="field"><span class="label">Hora de cierre de la jornada (hora de Ecuador)</span>
+        <input type="time" id="prefEndOfDay" step="60"></label>
+      <label class="check"><input type="checkbox" id="prefWeekly"><span>Resumen del lunes<small>El lunes te avisa si la semana pasada quedó incompleta.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Aplicación</legend>
+      <label class="check"><input type="checkbox" id="prefAutostart"><span>Iniciar con Windows<small>Arranca oculta en la bandeja al iniciar sesión en el equipo.</small></span></label>
+      <label class="check"><input type="checkbox" id="prefTray"><span>Minimizar a la bandeja al cerrar<small>Cerrar la ventana la esconde; para salir usa «Salir» en el menú de la bandeja.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Diagnóstico</legend>
+      <p class="mini">Arma un resumen sin datos reales (sin claves, títulos, nombres, correos ni URLs) para reportar un problema. Revísalo antes de compartirlo.</p>
+      <button class="btn" id="diagBtn" type="button">Generar diagnóstico</button>
+      <textarea id="diagText" readonly rows="10" spellcheck="false" aria-label="Diagnóstico anónimo" hidden></textarea>
+      <button class="btn" id="diagCopy" type="button" hidden>Copiar</button>
+      <span id="diagStatus" class="mini" aria-live="polite"></span>
+    </fieldset>
+    <div class="formerr" id="prefsError" role="alert" hidden></div>
+    <div class="pactions">
+      <button class="btn" id="prefsCancel" type="button">Cancelar</button>
+      <button class="btn primary" id="prefsSave" type="submit">Guardar</button>
+    </div>
+  </form>
+</dialog>
+<script src="app.js" defer></script>
+</body>
+</html>
