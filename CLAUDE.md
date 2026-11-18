@@ -115,7 +115,7 @@ corre el autor.
 tag. Lo visible de cada tarea se anota en `[Unreleased]` de `CHANGELOG.md`.
 
 ```bash
-make tarea n=6.10 tema=version-0.1.1   # la versión se sube en una tarea
+make tarea n=6.10 tema=version-0-1-1   # la versión se sube en una tarea (tema sin puntos)
 make bump bump=patch                   # o minor|major, o ver=X.Y.Z; DRY_RUN=1 simula
 make check · make commit · make ship   # a develop
 make promote                           # PR develop → main, con merge commit

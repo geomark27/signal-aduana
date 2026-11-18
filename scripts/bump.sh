@@ -22,7 +22,7 @@ dry_run=false
 
 branch=$(git branch --show-current)
 [[ $branch == tarea/* ]] \
-  || die "la versión se sube en una tarea: make tarea n=N.M tema=version-X.Y.Z"
+  || die "la versión se sube en una tarea: make tarea n=N.M tema=version-X-Y-Z"
 [[ -z $(git status --porcelain) ]] || die "hay cambios sin commitear: haz make commit antes de subir la versión"
 
 current=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)

@@ -11,6 +11,8 @@ usa esa sección como notas del release en GitHub (ver «Publicar una versión»
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-18
+
 ### Añadido
 
 - Tablero semanal con las horas, tareas y estados de Jira de la persona: indicadores de la semana,
@@ -36,3 +38,6 @@ usa esa sección como notas del release en GitHub (ver «Publicar una versión»
 
 - La comparación con el Jira real (fase 6) sigue en curso.
 - El instalador no tiene firma de código: Windows SmartScreen muestra un aviso al abrirlo.
+
+[Unreleased]: https://github.com/geomark27/signal-aduana/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/geomark27/signal-aduana/releases/tag/v0.1.0
