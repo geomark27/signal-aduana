@@ -115,7 +115,7 @@ corre el autor.
 tag. Lo visible de cada tarea se anota en `[Unreleased]` de `CHANGELOG.md`.
 
 ```bash
-make tarea n=6.10 tema=version-0-1-1   # la versión se sube en una tarea (tema sin puntos)
+make tarea n=6.20 tema=version-0-3-1   # la versión se sube en una tarea (tema sin puntos)
 make bump bump=patch                   # o minor|major, o ver=X.Y.Z; DRY_RUN=1 simula
 make check · make commit · make ship   # a develop
 make promote                           # PR develop → main, con merge commit
@@ -129,7 +129,16 @@ make release                           # tag vX.Y.Z en origin/main y release en 
   archivos y que el tag está libre.
 - Al llegar el tag, GitHub Actions (`.github/workflows/release.yml`) compila el instalador NSIS en
   Windows, lo adjunta al release como `Signal-Aduana-windows-x64-setup.exe` y lo publica.
-- El instalador no va firmado y no hay actualizador: los dos quedan para la fase 7.
+- **Actualizador** (desde la 6.13): la app consulta `latest.json` del último release y se actualiza
+  sola. Cada release va firmado con la llave del actualizador: el workflow usa el secreto
+  `TAURI_SIGNING_PRIVATE_KEY` y publica `latest.json`. La llave se crea **una sola vez** con
+  `make updater-key` dentro de una tarea: guarda la privada en `~/.tauri/signal-aduana.key`, la sube
+  como secreto y escribe la pública en `tauri.conf.json`. Hay que respaldarla, porque si se pierde
+  las versiones instaladas ya no se actualizan solas. Claude nunca la ejecuta ni ve la llave.
+  `make release` se niega mientras falte la llave o el secreto.
+- El instalador no lleva firma de código de Windows (SmartScreen avisa): queda para la fase 7.
+- El número de tarea de una versión es el siguiente libre del plan: antes de `make tarea`, revisa el
+  mapa de tareas para no repetir uno.
 - El repo es público, así que el instalador también lo es (decisión del autor, 2026-11-18).
 - `make version` muestra la versión actual y el último tag; `make notes`, lo pendiente de publicar.
 - Claude no ejecuta `bump`, `promote` ni `release` sin el «sí» del autor; con `DRY_RUN=1` sí, porque no

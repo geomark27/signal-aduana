@@ -3,7 +3,7 @@
 #   1. verifica que origin/main tenga todo develop, la versión de main y que el tag esté libre;
 #   2. pone el tag vX.Y.Z sobre origin/main, lo sube y crea el release en borrador con `gh`.
 # Al recibir el tag, GitHub Actions (.github/workflows/release.yml) compila el instalador de
-# Windows, lo adjunta al release y lo publica.
+# Windows y lo firma para el actualizador, lo adjunta al release con latest.json y lo publica.
 # Se corre desde cualquier carpeta del repo; nunca cambia de rama ni hace commits.
 #
 # Uso: scripts/release.sh [--dry-run]     (YES=1 no pregunta)
@@ -33,6 +33,10 @@ app=$(git show origin/main:tauri.conf.json | sed -n 's/^  "version": "\(.*\)",$/
 [[ $app == "$version" ]] \
   || die "origin/main dice $version en Cargo.toml y '$app' en tauri.conf.json: corrígelo con make bump en una tarea"
 tag="v$version"
+
+# Sin la llave, las versiones instaladas no podrían verificar ni recibir actualizaciones.
+! git show origin/main:tauri.conf.json | grep -q '"pubkey": "PENDIENTE'   || die "falta la llave del actualizador en main: corre make updater-key en una tarea y fusiónala"
+gh secret list --json name -q '.[].name' | grep -qx TAURI_SIGNING_PRIVATE_KEY   || die "el repo no tiene el secreto TAURI_SIGNING_PRIVATE_KEY: corre make updater-key"
 
 taken="ya existe: sube la versión con make bump en una tarea"
 git rev-parse -q --verify "refs/tags/$tag" >/dev/null && die "$tag $taken"

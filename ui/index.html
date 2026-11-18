@@ -21,6 +21,11 @@
     </div>
   </header>
   <div class="notice" id="notice" hidden></div>
+  <section class="updbar" id="updBar" role="status" aria-live="polite" hidden>
+    <div class="updtext"><b id="updTitle"></b><details id="updNotesBox" hidden><summary>Qué trae</summary><pre id="updNotes"></pre></details></div>
+    <button class="btn primary" id="updInstall" type="button">Actualizar ahora</button>
+    <button class="btn" id="updLater" type="button">Más tarde</button>
+  </section>
 
   <section class="gate" id="gate">
     <h2 id="gateTitle">Iniciando…</h2>
@@ -142,6 +147,12 @@
       <legend class="label">Aplicación</legend>
       <label class="check"><input type="checkbox" id="prefAutostart"><span>Iniciar con Windows<small>Arranca oculta en la bandeja al iniciar sesión en el equipo.</small></span></label>
       <label class="check"><input type="checkbox" id="prefTray"><span>Minimizar a la bandeja al cerrar<small>Cerrar la ventana la esconde; para salir usa «Salir» en el menú de la bandeja.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Actualizaciones</legend>
+      <p class="mini" id="updVersion">Versión instalada: —</p>
+      <button type="button" class="btn" id="updCheck">Buscar actualizaciones</button>
+      <span class="mini" id="updStatus" aria-live="polite"></span>
     </fieldset>
     <fieldset>
       <legend class="label">Diagnóstico</legend>

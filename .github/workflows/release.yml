@@ -1,7 +1,8 @@
 # Compila el instalador de Windows al subir un tag vX.Y.Z (lo hace `make release`), lo adjunta al
 # release y lo publica cuando termina bien. Si algo falla, el release queda en borrador y se puede
-# relanzar el workflow desde la pestaña Actions. El instalador no va firmado (sin firma de código)
-# y la app no tiene actualizador: no hay llaves, secretos ni latest.json.
+# relanzar el workflow desde la pestaña Actions. El instalador lleva la firma del actualizador
+# (secreto TAURI_SIGNING_PRIVATE_KEY, ver make updater-key) y se publica latest.json con ella.
+# No es firma de código de Windows: SmartScreen sigue avisando.
 name: Release
 
 on:
@@ -26,6 +27,9 @@ jobs:
         run: |
           app=$(sed -n 's/^  "version": "\(.*\)",$/\1/p' tauri.conf.json)
           [[ "v$app" == "$TAG" ]] || { echo "::error::tauri.conf.json dice $app y el tag es $TAG"; exit 1; }
+      - name: La llave del actualizador está configurada
+        run: |
+          ! grep -q '"pubkey": "PENDIENTE' tauri.conf.json || { echo "::error::tauri.conf.json aún no tiene la llave pública del actualizador: corre make updater-key"; exit 1; }
       - name: Crear el release en borrador si aún no existe
         run: |
           gh release view "$TAG" >/dev/null 2>&1 && exit 0
@@ -45,26 +49,48 @@ jobs:
 
       # La CLI de Tauri por npx trae binarios precompilados (cargo install tardaría ~10 min).
       # Solo se usa aquí; la UI sigue sin npm.
+      # tauri.release.conf.json activa los artefactos del actualizador (la firma .sig).
       - name: Compilar
         shell: bash
-        run: npx --yes @tauri-apps/cli@2 build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: npx --yes @tauri-apps/cli@2 build --config tauri.release.conf.json
 
       # Nombre fijo, así releases/latest/download/Signal-Aduana-windows-x64-setup.exe siempre
-      # apunta a la última versión.
+      # apunta a la última versión. La firma va aparte (sigs/) para armar latest.json en «publish».
       - name: Subir al release
         shell: bash
         run: |
-          mkdir -p dist
+          mkdir -p dist sigs
           f=$(find target -type f -path '*/release/bundle/nsis/*' -name '*-setup.exe' | head -1)
           [[ -n $f ]] || { echo "::error::no se generó el instalador NSIS (*-setup.exe)"; exit 1; }
+          [[ -f $f.sig ]] || { echo "::error::no se generó la firma del actualizador ($f.sig): revisa el secreto TAURI_SIGNING_PRIVATE_KEY y tauri.release.conf.json"; exit 1; }
           cp "$f" dist/Signal-Aduana-windows-x64-setup.exe
-          ls -l dist
+          cp "$f.sig" sigs/Signal-Aduana-windows-x64-setup.exe.sig
+          ls -l dist sigs
           gh release upload "$TAG" dist/* --clobber
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigs-windows
+          path: sigs/
 
   publish:
     name: Publicar
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sigs-*
+          merge-multiple: true
+          path: sigs
+
+      - name: Subir latest.json
+        run: bash scripts/updater-manifest.sh "$TAG" sigs
+
       - name: Publicar el release
         run: gh release edit "$TAG" --draft=false --latest

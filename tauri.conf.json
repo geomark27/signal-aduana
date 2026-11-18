@@ -44,5 +44,12 @@
         "installerHooks": "windows/hooks.nsh"
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "PENDIENTE: ejecuta make updater-key",
+      "endpoints": ["https://github.com/geomark27/signal-aduana/releases/latest/download/latest.json"],
+      "windows": { "installMode": "passive" }
+    }
   }
 }

@@ -28,7 +28,7 @@ GUARD_RAMA = case "$(BRANCH)" in main|$(BASE)|"") echo "✗ no se sube ni se abr
 GH_OK = command -v gh >/dev/null && gh auth status >/dev/null 2>&1
 
 .PHONY: help sync tarea status worktrees update commit push pr merge ship finish prune promote \
-        version notes bump release \
+        version notes bump release updater-key \
         build test lint ui-check ui-format fmt-ui run bitacora check
 
 ##@ Git
@@ -228,7 +228,11 @@ notes: ## Muestra lo pendiente de publicar ([Unreleased] de CHANGELOG.md)
 bump: ## En una tarea: sube la versión y pasa [Unreleased] del CHANGELOG a la versión: make bump bump=patch|minor|major | ver=X.Y.Z (DRY_RUN=1 simula)
 	@bash scripts/bump.sh "$(bump)" "$(ver)" $(if $(DRY_RUN),--dry-run)
 
+updater-key: ## Una sola vez, en una tarea: crea la llave de firma del actualizador, la sube como secreto a GitHub y escribe la pública en tauri.conf.json
+	@bash scripts/updater-key.sh
+
 release: ## Tras make promote: pone el tag vX.Y.Z en origin/main y crea el release; Actions compila el instalador (DRY_RUN=1 simula)
+	@[ -z "$(bump)$(ver)" ] || { echo "✗ make release no sube la versión: hazlo con make bump en una tarea (make tarea n=N.M tema=version-X-Y-Z)" >&2; exit 1; }
 	@YES="$(yes)" bash scripts/release.sh $(if $(DRY_RUN),--dry-run)
 
 ##@ Calidad
