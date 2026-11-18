@@ -11,6 +11,7 @@ use tauri::{AppHandle, State};
 use crate::autostart;
 use crate::cache::{self, Snapshot};
 use crate::desktop;
+use crate::diagnostics;
 use crate::domain::{self, View, ViewInput};
 use crate::error::{AppError, AppResult};
 use crate::jira::model::Issue;
@@ -141,6 +142,27 @@ pub fn save_preferences(
     Ok(saved)
 }
 
+/// Anonymous diagnostics (JSON text) of a load walk against the active source.
+#[tauri::command]
+pub async fn build_diagnostics(state: State<'_, AppState>) -> AppResult<String> {
+    build_diagnostics_for(&state).await
+}
+
+async fn build_diagnostics_for(state: &AppState) -> AppResult<String> {
+    let simulated = state.simulated;
+    with_session(state, |s| async move {
+        let facts = diagnostics::SessionFacts {
+            site: s.site.as_text(),
+            email: s.email.clone(),
+            name: s.user.name.clone(),
+            account_id: s.user.account_id.clone(),
+        };
+        let report = diagnostics::build(&s.source, &facts, simulated, crate::jira::simulated::today_ecuador()).await?;
+        Ok(diagnostics::to_text(&report))
+    })
+    .await
+}
+
 async fn read_cache_for(state: &AppState) -> AppResult<Option<Snapshot>> {
     let s = state.current().await?;
     Ok(cache::read(&state.data_dir, state.simulated, &s.user.account_id, &s.site.as_text()))
@@ -181,5 +203,18 @@ mod tests {
         save_cache_for(&e, serde_json::json!({ "format": 1 })).await.unwrap();
         let i = read_cache_for(&e).await.unwrap().unwrap();
         assert_eq!(i.data, serde_json::json!({ "format": 1 }));
+    }
+
+    #[tokio::test]
+    async fn diagnostics_require_session_and_return_json() {
+        let dir = tempfile::tempdir().unwrap();
+        let e = AppState::new(true, dir.path().to_path_buf(), dir.path().join("data"), Box::new(MemorySecretStore::default()));
+        assert!(matches!(build_diagnostics_for(&e).await, Err(AppError::NoSession)));
+
+        session::sign_in(&e, "https://x.atlassian.net", "a@b.com", "t").await.unwrap();
+        let text = build_diagnostics_for(&e).await.unwrap();
+        let v: Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(v["app"]["mode"], "simulated");
+        assert!(!text.contains("atlassian.net"));
     }
 }

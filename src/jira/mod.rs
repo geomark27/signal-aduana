@@ -220,24 +220,9 @@ pub async fn read_worklogs(f: &Source, keys: &[String], since_ms: i64, me: Optio
     Ok(WorklogsResult { by_key, failed, error: last.map(|e| e.to_string()) })
 }
 
-/// What the UI does on load (no documents or PRs): issues + own worklogs since the Monday of
-/// `today - 98 days` (instant 00:00 of that Monday in UTC-5). Each issue ends up with `worklogs`, `wlTotal` and,
-/// if `spent` was 0, `spent` = sum of its worklogs. Returns the input format of `compute_view`.
-pub async fn load_for_summary(
-    f: &Source,
-    me: Option<&str>,
-    today: chrono::NaiveDate,
-) -> AppResult<Vec<serde_json::Map<String, Value>>> {
+/// Hours window of the summary: the Monday of `today - 98 days` as `YYYY-MM-DD` and its 00:00 instant in UTC-5 (ms).
+pub fn summary_window(today: chrono::NaiveDate) -> AppResult<(String, i64)> {
     use chrono::{Datelike, Duration};
-
-    let issues = load_issues(f, me).await?;
-    let mut issues: Vec<serde_json::Map<String, Value>> = issues
-        .iter()
-        .map(|t| match serde_json::to_value(t) {
-            Ok(Value::Object(m)) => Ok(m),
-            _ => Err(AppError::Format("tarea no serializable".into())),
-        })
-        .collect::<AppResult<_>>()?;
 
     let back = today - Duration::days(98);
     let since_monday = back - Duration::days(i64::from(back.weekday().num_days_from_monday()));
@@ -247,6 +232,27 @@ pub async fn load_for_summary(
         .ok_or_else(|| AppError::Format("hora no válida".into()))?
         .and_utc()
         .timestamp_millis();
+    Ok((since, after_ms))
+}
+
+/// What the UI does on load (no documents or PRs): issues + own worklogs since the Monday of
+/// `today - 98 days` (instant 00:00 of that Monday in UTC-5). Each issue ends up with `worklogs`, `wlTotal` and,
+/// if `spent` was 0, `spent` = sum of its worklogs. Returns the input format of `compute_view`.
+pub async fn load_for_summary(
+    f: &Source,
+    me: Option<&str>,
+    today: chrono::NaiveDate,
+) -> AppResult<Vec<serde_json::Map<String, Value>>> {
+    let issues = load_issues(f, me).await?;
+    let mut issues: Vec<serde_json::Map<String, Value>> = issues
+        .iter()
+        .map(|t| match serde_json::to_value(t) {
+            Ok(Value::Object(m)) => Ok(m),
+            _ => Err(AppError::Format("tarea no serializable".into())),
+        })
+        .collect::<AppResult<_>>()?;
+
+    let (since, after_ms) = summary_window(today)?;
 
     let keys = keys_with_hours(f, &since).await?;
     let hours = if keys.is_empty() { None } else { Some(read_worklogs(f, &keys, after_ms, me).await?) };
