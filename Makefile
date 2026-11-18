@@ -28,6 +28,7 @@ GUARD_RAMA = case "$(BRANCH)" in main|$(BASE)|"") echo "✗ no se sube ni se abr
 GH_OK = command -v gh >/dev/null && gh auth status >/dev/null 2>&1
 
 .PHONY: help sync tarea status worktrees update commit push pr merge ship finish prune promote \
+        version notes bump release \
         build test lint ui-check ui-format fmt-ui run bitacora check
 
 ##@ Git
@@ -214,6 +215,21 @@ promote: ## Revisa lo que falta llevar de develop a main y ofrece crear el PR (y
 		url=$$($(REPO_URL_SH)); echo "gh no está autenticado; abre el PR aquí:"; echo "$$url/compare/$(MAIN)...$(BASE)?expand=1"; \
 	fi; \
 	echo "Recuerda: este PR se fusiona con merge commit (nunca squash ni rebase and merge); make promote no fusiona."
+
+##@ Versiones
+
+version: ## Muestra la versión actual y el último tag
+	@echo "versión: $$(sed -n 's/^version = "\(.*\)"$$/\1/p' Cargo.toml | head -1)"
+	@echo "último tag: $$(git tag -l 'v[0-9]*' --sort=-v:refname | head -1 | grep . || echo 'ninguno')"
+
+notes: ## Muestra lo pendiente de publicar ([Unreleased] de CHANGELOG.md)
+	@bash scripts/changelog-notes.sh Unreleased
+
+bump: ## En una tarea: sube la versión y pasa [Unreleased] del CHANGELOG a la versión: make bump bump=patch|minor|major | ver=X.Y.Z (DRY_RUN=1 simula)
+	@bash scripts/bump.sh "$(bump)" "$(ver)" $(if $(DRY_RUN),--dry-run)
+
+release: ## Tras make promote: pone el tag vX.Y.Z en origin/main y crea el release; Actions compila el instalador (DRY_RUN=1 simula)
+	@YES="$(yes)" bash scripts/release.sh $(if $(DRY_RUN),--dry-run)
 
 ##@ Calidad
 

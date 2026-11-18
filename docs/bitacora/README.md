@@ -57,6 +57,7 @@ Sin entradas: se hicieron antes de que existiera la bitácora. Su historia está
 |---|---|---|---|---|
 | [026](./fase-6/026-plan-fase-6.md) | 6.0 Plan de la fase 6 | `tarea/6.0-plan-fase-6` | 2026-11-18 | `PLAN-FASE-6.md`: reglas de datos reales (el autor prueba y reporta formas anonimizadas), 6.H heredado de Windows, 6.1 a 6.5 con lo que mirar en el cliente real, 6.7 diagnóstico anónimo (aprobada); decisiones: respaldo por palabras para PR, ids de campos fijos; Tecnología ya autorizó los tokens; `delegar.json` al plan nuevo |
 | [027](./fase-6/027-diagnostico-anonimo.md) | 6.7 Diagnóstico anónimo |  | 2026-11-18 | Comando : recorre la carga con la sesión activa y devuelve JSON sin valores de Jira (pasos con tiempos y errores, conteos, , forma de cada campo de ); mensajes de error anonimizados (, , , …); sección «Diagnóstico» en Preferencias con «Copiar». Sin probar en la app ni con Jira real |
+| [028](./fase-6/028-release.md) | 6.8 Flujo de release | `tarea/6.8-release` | 2026-11-18 | `make bump` (en una tarea: versión en `Cargo.toml`, `Cargo.lock` y `tauri.conf.json`; `[Unreleased]` del `CHANGELOG.md` a la versión) y `make release` (solo pone el tag en `origin/main` tras `make promote` y crea el borrador); workflow de Actions en Windows que adjunta el NSIS sin firmar con nombre fijo y publica; sin actualizador; repo público por decisión del autor. Workflow sin probar |
 
 ## Formato de cada entrada
 

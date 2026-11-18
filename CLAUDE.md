@@ -109,6 +109,32 @@ fusiona). Siguen mandando las reglas de arriba: Claude no ejecuta `commit`, `pus
 `ship`, `finish`, `update`, `prune` ni `promote` sin el «sí» del autor, y `check` y `run` (largos) los
 corre el autor.
 
+### Publicar una versión
+
+`main` solo recibe PR desde `develop`: nadie hace commit directo en `main` y el release solo pone el
+tag. Lo visible de cada tarea se anota en `[Unreleased]` de `CHANGELOG.md`.
+
+```bash
+make tarea n=6.10 tema=version-0.1.1   # la versión se sube en una tarea
+make bump bump=patch                   # o minor|major, o ver=X.Y.Z; DRY_RUN=1 simula
+make check · make commit · make ship   # a develop
+make promote                           # PR develop → main, con merge commit
+make release                           # tag vX.Y.Z en origin/main y release en borrador (DRY_RUN=1 simula)
+```
+
+- `make bump` cambia la versión en `Cargo.toml`, `Cargo.lock` y `tauri.conf.json`, y pasa la sección
+  `[Unreleased]` del CHANGELOG a `[X.Y.Z] - fecha`. Acepta la versión actual si su tag aún no existe.
+- `make release` se corre desde cualquier carpeta, sin cambiar de rama. Antes de crear nada
+  comprueba tres cosas: que `main` tiene todo lo de `develop`, que la versión coincide en los dos
+  archivos y que el tag está libre.
+- Al llegar el tag, GitHub Actions (`.github/workflows/release.yml`) compila el instalador NSIS en
+  Windows, lo adjunta al release como `Signal-Aduana-windows-x64-setup.exe` y lo publica.
+- El instalador no va firmado y no hay actualizador: los dos quedan para la fase 7.
+- El repo es público, así que el instalador también lo es (decisión del autor, 2026-11-18).
+- `make version` muestra la versión actual y el último tag; `make notes`, lo pendiente de publicar.
+- Claude no ejecuta `bump`, `promote` ni `release` sin el «sí» del autor; con `DRY_RUN=1` sí, porque no
+  modifican nada.
+
 ## Bitácora (obligatoria)
 
 Una entrada por tarea en `docs/bitacora/fase-N/NNN-<tema>.md` (NNN global; el tema es el de la rama

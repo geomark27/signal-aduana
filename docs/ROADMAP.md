@@ -124,6 +124,11 @@ reportar problemas.
 **Decide el autor y Tecnología:** certificado, canal de distribución, política de actualización y
 si la caché va cifrada.
 
+**Adelantado en la fase 6 (tarea 6.8, 2026-11-18):** parte de la 7.2 y de la 7.7, a pedido del autor.
+Ya existen `make bump`, `make release` y un workflow de GitHub Actions que compila el instalador NSIS
+sin firmar y lo publica en los releases del repositorio, que es público por decisión del autor. Siguen
+pendientes la firma (7.1), el actualizador (7.3) y la decisión del canal con Tecnología.
+
 ---
 
 ## Fase 8 — Evolución (opcional)
